@@ -18,9 +18,15 @@ const SwapInterface = () => {
         {/* Tabs */}
         <Tabs defaultValue="instant" className="w-full">
           <TabsList className="grid w-full grid-cols-3 bg-muted/30">
-            <TabsTrigger value="instant" className="text-sm">Instant</TabsTrigger>
-            <TabsTrigger value="trigger" className="text-sm">Trigger</TabsTrigger>
-            <TabsTrigger value="recurring" className="text-sm">Recurring</TabsTrigger>
+            <TabsTrigger value="instant" className="text-sm flex items-center gap-1">
+              <span>⚡</span> Instant
+            </TabsTrigger>
+            <TabsTrigger value="trigger" className="text-sm flex items-center gap-1">
+              <span>🔫</span> Trigger
+            </TabsTrigger>
+            <TabsTrigger value="recurring" className="text-sm flex items-center gap-1">
+              <span>🔄</span> Recurring
+            </TabsTrigger>
           </TabsList>
           
           <TabsContent value="instant" className="mt-6 space-y-4">
