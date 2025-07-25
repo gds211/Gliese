@@ -13,7 +13,7 @@ const SwapInterface = () => {
   const [buyToken, setBuyToken] = useState("USDC");
 
   return (
-    <Card className="w-full max-w-lg mx-auto bg-card/10 backdrop-blur-lg border border-border/20 shadow-glow-cosmic">
+    <Card className="w-full max-w-lg mx-auto bg-card/10 backdrop-blur-lg border border-border/20 shadow-lg">
       <div className="p-8 space-y-6">
         {/* Tabs */}
         <Tabs defaultValue="instant" className="w-full">
