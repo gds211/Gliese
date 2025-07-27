@@ -1,5 +1,6 @@
 import Navigation from "@/components/Navigation";
 import SwapInterface from "@/components/SwapInterface";
+import BlackHoleCursor from "@/components/BlackHoleCursor";
 import cosmicBackground from "@/assets/cosmic-background.jpg";
 
 const Index = () => {
@@ -23,6 +24,9 @@ const Index = () => {
           <SwapInterface />
         </div>
       </div>
+      
+      {/* Black hole cursor effect */}
+      <BlackHoleCursor />
     </div>
   );
 };
