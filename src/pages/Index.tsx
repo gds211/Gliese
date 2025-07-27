@@ -12,7 +12,7 @@ const Index = () => {
       />
       
       {/* Overlay for better text readability */}
-      <div className="absolute inset-0 bg-background/60 backdrop-blur-[2px]" />
+      <div className="absolute inset-0 bg-background/20 backdrop-blur-[1px]" />
       
       {/* Content */}
       <div className="relative z-10">
