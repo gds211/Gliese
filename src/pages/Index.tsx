@@ -19,7 +19,7 @@ const Index = () => {
         <Navigation />
         
         {/* Main Content Area */}
-        <div className="flex items-center justify-center min-h-[calc(100vh-80px)]">
+        <div className="flex items-start justify-center min-h-[calc(100vh-80px)] pt-20">
           <SwapInterface />
         </div>
       </div>
