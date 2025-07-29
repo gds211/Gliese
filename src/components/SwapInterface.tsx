@@ -4,7 +4,7 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card } from "@/components/ui/card";
-import { ArrowUpDown, Zap } from "lucide-react";
+import { ArrowUpDown } from "lucide-react";
 
 const SwapInterface = () => {
   const [sellAmount, setSellAmount] = useState("0.0925");
@@ -18,13 +18,13 @@ const SwapInterface = () => {
         {/* Tabs */}
         <Tabs defaultValue="instant" className="w-full">
           <TabsList className="grid w-full grid-cols-3 bg-muted/40 h-10">
-            <TabsTrigger value="instant" className="text-sm flex items-center gap-2 h-8">
+            <TabsTrigger value="instant" className="text-sm flex items-center gap-2 h-8 data-[state=active]:text-foreground data-[state=inactive]:text-muted-foreground">
               <span>⚡</span> Instant
             </TabsTrigger>
-            <TabsTrigger value="trigger" className="text-sm flex items-center gap-2 h-8">
-              <Zap className="h-3 w-3" /> Trigger
+            <TabsTrigger value="trigger" className="text-sm flex items-center gap-2 h-8 data-[state=active]:text-foreground data-[state=inactive]:text-muted-foreground">
+              <span>🔫</span> Trigger
             </TabsTrigger>
-            <TabsTrigger value="recurring" className="text-sm flex items-center gap-2 h-8">
+            <TabsTrigger value="recurring" className="text-sm flex items-center gap-2 h-8 data-[state=active]:text-foreground data-[state=inactive]:text-muted-foreground">
               <span>🔄</span> Recurring
             </TabsTrigger>
           </TabsList>
