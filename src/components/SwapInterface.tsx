@@ -29,9 +29,9 @@ const SwapInterface = () => {
             </TabsTrigger>
           </TabsList>
           
-          <TabsContent value="instant" className="mt-4 space-y-4">
+          <TabsContent value="instant" className="mt-4 space-y-3">
             {/* Selling Section */}
-            <div className="space-y-2">
+            <div className="space-y-3">
               <div className="flex items-center justify-between">
                 <label className="text-sm text-muted-foreground">Selling</label>
                 <div className="flex items-center gap-2 text-xs text-muted-foreground">
@@ -44,10 +44,10 @@ const SwapInterface = () => {
                   </Button>
                 </div>
               </div>
-              <div className="relative bg-background/60 rounded-lg border border-border/60 p-4">
-                <div className="flex items-center justify-between">
+              <div className="relative bg-background/60 rounded-xl border border-border/60 p-4">
+                <div className="flex items-center justify-between mb-2">
                   <Select value={sellToken} onValueChange={setSellToken}>
-                    <SelectTrigger className="w-24 h-8 bg-transparent border-none p-0 focus:ring-0">
+                    <SelectTrigger className="w-28 h-8 bg-muted/60 rounded-full border-none p-2 focus:ring-0">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
@@ -59,11 +59,11 @@ const SwapInterface = () => {
                   <Input 
                     value={sellAmount}
                     onChange={(e) => setSellAmount(e.target.value)}
-                    className="border-none bg-transparent text-right text-2xl font-medium focus-visible:ring-0 p-0 h-auto"
+                    className="border-none bg-transparent text-right text-3xl font-semibold focus-visible:ring-0 p-0 h-auto text-muted-foreground"
                     placeholder="0.00"
                   />
                 </div>
-                <div className="text-right text-sm text-muted-foreground mt-1">
+                <div className="text-right text-sm text-muted-foreground">
                   $0
                 </div>
               </div>
@@ -74,22 +74,22 @@ const SwapInterface = () => {
               <Button
                 variant="ghost"
                 size="sm"
-                className="rounded-full h-8 w-8 p-0 bg-background/60 hover:bg-background/80"
+                className="h-8 w-8 p-0 bg-background/60 hover:bg-background/80 rounded-md"
               >
                 <ArrowUpDown className="h-4 w-4" />
               </Button>
             </div>
 
             {/* Buying Section */}
-            <div className="space-y-2">
+            <div className="space-y-3">
               <div className="flex items-center justify-between">
                 <label className="text-sm text-muted-foreground">Buying</label>
                 <span className="text-xs text-muted-foreground">≈ 0.09255339 SOL</span>
               </div>
-              <div className="relative bg-background/60 rounded-lg border border-border/60 p-4">
-                <div className="flex items-center justify-between">
+              <div className="relative bg-background/60 rounded-xl border border-border/60 p-4">
+                <div className="flex items-center justify-between mb-2">
                   <Select value={buyToken} onValueChange={setBuyToken}>
-                    <SelectTrigger className="w-24 h-8 bg-transparent border-none p-0 focus:ring-0">
+                    <SelectTrigger className="w-28 h-8 bg-muted/60 rounded-full border-none p-2 focus:ring-0">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
@@ -98,14 +98,11 @@ const SwapInterface = () => {
                       <SelectItem value="DAI">DAI</SelectItem>
                     </SelectContent>
                   </Select>
-                  <Input 
-                    value={buyAmount}
-                    onChange={(e) => setBuyAmount(e.target.value)}
-                    className="border-none bg-transparent text-right text-2xl font-medium focus-visible:ring-0 p-0 h-auto"
-                    placeholder="0.00"
-                  />
+                  <div className="text-right">
+                    <div className="text-3xl font-semibold text-muted-foreground">0.00</div>
+                  </div>
                 </div>
-                <div className="text-right text-sm text-muted-foreground mt-1">
+                <div className="text-right text-sm text-muted-foreground">
                   $0
                 </div>
               </div>
