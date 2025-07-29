@@ -13,18 +13,18 @@ const SwapInterface = () => {
   const [buyToken, setBuyToken] = useState("USDC");
 
   return (
-    <Card className="w-full max-w-lg mx-auto bg-muted/30 backdrop-blur-md border border-muted/50 shadow-2xl">
-      <div className="p-8 space-y-6">
+    <Card className="w-full max-w-lg mx-auto bg-muted/40 backdrop-blur-md border border-muted/60 shadow-2xl">
+      <div className="p-6 space-y-5">
         {/* Tabs */}
         <Tabs defaultValue="instant" className="w-full">
-          <TabsList className="grid w-full grid-cols-3 bg-muted/30">
-            <TabsTrigger value="instant" className="text-sm flex items-center gap-1">
+          <TabsList className="grid w-full grid-cols-3 bg-muted/40 h-11">
+            <TabsTrigger value="instant" className="text-sm flex items-center gap-1 h-9">
               <span>⚡</span> Instant
             </TabsTrigger>
-            <TabsTrigger value="trigger" className="text-sm flex items-center gap-1">
+            <TabsTrigger value="trigger" className="text-sm flex items-center gap-1 h-9">
               <span>🔫</span> Trigger
             </TabsTrigger>
-            <TabsTrigger value="recurring" className="text-sm flex items-center gap-1">
+            <TabsTrigger value="recurring" className="text-sm flex items-center gap-1 h-9">
               <span>🔄</span> Recurring
             </TabsTrigger>
           </TabsList>
@@ -35,7 +35,7 @@ const SwapInterface = () => {
               <label className="text-sm text-muted-foreground">Selling</label>
               <div className="flex gap-2">
                 <Select value={sellToken} onValueChange={setSellToken}>
-                  <SelectTrigger className="w-32 bg-background/50 border-border/50">
+                  <SelectTrigger className="w-32 h-11 bg-background/60 border-border/60">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -48,7 +48,7 @@ const SwapInterface = () => {
                   <Input 
                     value={sellAmount}
                     onChange={(e) => setSellAmount(e.target.value)}
-                    className="bg-background/50 border-border/50 text-right pr-12"
+                    className="h-11 bg-background/60 border-border/60 text-right pr-12"
                   />
                   <button className="absolute right-2 top-1/2 -translate-y-1/2 text-xs text-muted-foreground hover:text-foreground">
                     MAX
@@ -65,7 +65,7 @@ const SwapInterface = () => {
               <Button
                 variant="ghost"
                 size="sm"
-                className="rounded-full h-8 w-8 p-0 bg-background/50 hover:bg-background/70"
+                className="rounded-full h-10 w-10 p-0 bg-background/60 hover:bg-background/80"
               >
                 <ArrowUpDown className="h-4 w-4" />
               </Button>
@@ -76,7 +76,7 @@ const SwapInterface = () => {
               <label className="text-sm text-muted-foreground">Buying</label>
               <div className="flex gap-2">
                 <Select value={buyToken} onValueChange={setBuyToken}>
-                  <SelectTrigger className="w-32 bg-background/50 border-border/50">
+                  <SelectTrigger className="w-32 h-11 bg-background/60 border-border/60">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -88,7 +88,7 @@ const SwapInterface = () => {
                 <Input 
                   value={buyAmount}
                   onChange={(e) => setBuyAmount(e.target.value)}
-                  className="flex-1 bg-background/50 border-border/50"
+                  className="flex-1 h-11 bg-background/60 border-border/60"
                 />
               </div>
               <div className="text-xs text-muted-foreground text-right">
@@ -97,7 +97,7 @@ const SwapInterface = () => {
             </div>
 
             {/* Swap Button */}
-            <Button className="w-full mt-6 bg-primary hover:bg-primary/90 text-primary-foreground font-semibold">
+            <Button className="w-full h-12 mt-6 bg-primary hover:bg-primary/90 text-primary-foreground font-semibold">
               Swap
             </Button>
           </TabsContent>

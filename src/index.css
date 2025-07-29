@@ -24,8 +24,8 @@ All colors MUST be HSL.
     --secondary: 240 15% 20%;
     --secondary-foreground: 210 40% 95%;
 
-    --muted: 240 10% 15%;
-    --muted-foreground: 210 20% 65%;
+    --muted: 240 15% 10%;
+    --muted-foreground: 210 20% 60%;
 
     --accent: 270 100% 70%; /* Purple cosmic accent */
     --accent-foreground: 220 30% 5%;
@@ -33,8 +33,8 @@ All colors MUST be HSL.
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 210 40% 98%;
 
-    --border: 240 15% 20%;
-    --input: 240 15% 20%;
+    --border: 240 15% 15%;
+    --input: 240 15% 15%;
     --ring: 15 100% 65%;
 
     --radius: 0.75rem;
@@ -79,8 +79,8 @@ All colors MUST be HSL.
     --secondary: 240 15% 20%;
     --secondary-foreground: 210 40% 95%;
 
-    --muted: 240 10% 15%;
-    --muted-foreground: 210 20% 65%;
+    --muted: 240 15% 10%;
+    --muted-foreground: 210 20% 60%;
 
     --accent: 270 100% 70%;
     --accent-foreground: 220 30% 5%;
@@ -88,8 +88,8 @@ All colors MUST be HSL.
     --destructive: 0 62.8% 30.6%;
     --destructive-foreground: 210 40% 98%;
 
-    --border: 240 15% 20%;
-    --input: 240 15% 20%;
+    --border: 240 15% 15%;
+    --input: 240 15% 15%;
     --ring: 15 100% 65%;
     --sidebar-background: 240 5.9% 10%;
     --sidebar-foreground: 240 4.8% 95.9%;
