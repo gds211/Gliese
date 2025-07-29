@@ -18,14 +18,14 @@ const SwapInterface = () => {
         {/* Tabs */}
         <Tabs defaultValue="instant" className="w-full">
           <TabsList className="grid w-full grid-cols-3 bg-muted/40 h-10">
-            <TabsTrigger value="instant" className="text-sm flex items-center gap-2 h-8 data-[state=active]:text-foreground data-[state=inactive]:text-muted-foreground">
-              <span>⚡</span> Instant
+            <TabsTrigger value="instant" className="text-sm flex items-center gap-2 h-8 data-[state=active]:text-primary data-[state=inactive]:text-muted-foreground">
+              <span className="data-[state=active]:text-primary data-[state=inactive]:text-muted-foreground">⚡</span> Instant
             </TabsTrigger>
-            <TabsTrigger value="trigger" className="text-sm flex items-center gap-2 h-8 data-[state=active]:text-foreground data-[state=inactive]:text-muted-foreground">
-              <span>🔫</span> Trigger
+            <TabsTrigger value="trigger" className="text-sm flex items-center gap-2 h-8 data-[state=active]:text-primary data-[state=inactive]:text-muted-foreground">
+              <span className="data-[state=active]:text-primary data-[state=inactive]:text-muted-foreground">🔫</span> Trigger
             </TabsTrigger>
-            <TabsTrigger value="recurring" className="text-sm flex items-center gap-2 h-8 data-[state=active]:text-foreground data-[state=inactive]:text-muted-foreground">
-              <span>🔄</span> Recurring
+            <TabsTrigger value="recurring" className="text-sm flex items-center gap-2 h-8 data-[state=active]:text-primary data-[state=inactive]:text-muted-foreground">
+              <span className="data-[state=active]:text-primary data-[state=inactive]:text-muted-foreground">🔄</span> Recurring
             </TabsTrigger>
           </TabsList>
           
