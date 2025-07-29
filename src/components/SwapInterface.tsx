@@ -4,7 +4,7 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card } from "@/components/ui/card";
-import { ArrowUpDown } from "lucide-react";
+import { ArrowUpDown, Zap } from "lucide-react";
 
 const SwapInterface = () => {
   const [sellAmount, setSellAmount] = useState("0.0925");
@@ -13,50 +13,59 @@ const SwapInterface = () => {
   const [buyToken, setBuyToken] = useState("USDC");
 
   return (
-    <Card className="w-full max-w-lg mx-auto bg-muted/40 backdrop-blur-md border border-muted/60 shadow-2xl">
-      <div className="p-6 space-y-5">
+    <Card className="w-full max-w-md mx-auto bg-muted/40 backdrop-blur-md border border-muted/60 shadow-2xl">
+      <div className="p-4 space-y-4">
         {/* Tabs */}
         <Tabs defaultValue="instant" className="w-full">
-          <TabsList className="grid w-full grid-cols-3 bg-muted/40 h-11">
-            <TabsTrigger value="instant" className="text-sm flex items-center gap-1 h-9">
+          <TabsList className="grid w-full grid-cols-3 bg-muted/40 h-10">
+            <TabsTrigger value="instant" className="text-sm flex items-center gap-2 h-8">
               <span>⚡</span> Instant
             </TabsTrigger>
-            <TabsTrigger value="trigger" className="text-sm flex items-center gap-1 h-9">
-              <span>🔫</span> Trigger
+            <TabsTrigger value="trigger" className="text-sm flex items-center gap-2 h-8">
+              <Zap className="h-3 w-3" /> Trigger
             </TabsTrigger>
-            <TabsTrigger value="recurring" className="text-sm flex items-center gap-1 h-9">
+            <TabsTrigger value="recurring" className="text-sm flex items-center gap-2 h-8">
               <span>🔄</span> Recurring
             </TabsTrigger>
           </TabsList>
           
-          <TabsContent value="instant" className="mt-6 space-y-4">
+          <TabsContent value="instant" className="mt-4 space-y-4">
             {/* Selling Section */}
             <div className="space-y-2">
-              <label className="text-sm text-muted-foreground">Selling</label>
-              <div className="flex gap-2">
-                <Select value={sellToken} onValueChange={setSellToken}>
-                  <SelectTrigger className="w-32 h-11 bg-background/60 border-border/60">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="MON">MON</SelectItem>
-                    <SelectItem value="ETH">ETH</SelectItem>
-                    <SelectItem value="BTC">BTC</SelectItem>
-                  </SelectContent>
-                </Select>
-                <div className="flex-1 relative">
+              <div className="flex items-center justify-between">
+                <label className="text-sm text-muted-foreground">Selling</label>
+                <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                  <span>≈ 0.00 USDC</span>
+                  <Button variant="ghost" size="sm" className="h-5 px-2 text-xs">
+                    HALF
+                  </Button>
+                  <Button variant="ghost" size="sm" className="h-5 px-2 text-xs">
+                    MAX
+                  </Button>
+                </div>
+              </div>
+              <div className="relative bg-background/60 rounded-lg border border-border/60 p-4">
+                <div className="flex items-center justify-between">
+                  <Select value={sellToken} onValueChange={setSellToken}>
+                    <SelectTrigger className="w-24 h-8 bg-transparent border-none p-0 focus:ring-0">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="MON">MON</SelectItem>
+                      <SelectItem value="ETH">ETH</SelectItem>
+                      <SelectItem value="BTC">BTC</SelectItem>
+                    </SelectContent>
+                  </Select>
                   <Input 
                     value={sellAmount}
                     onChange={(e) => setSellAmount(e.target.value)}
-                    className="h-11 bg-background/60 border-border/60 text-right pr-12"
+                    className="border-none bg-transparent text-right text-2xl font-medium focus-visible:ring-0 p-0 h-auto"
+                    placeholder="0.00"
                   />
-                  <button className="absolute right-2 top-1/2 -translate-y-1/2 text-xs text-muted-foreground hover:text-foreground">
-                    MAX
-                  </button>
                 </div>
-              </div>
-              <div className="text-xs text-muted-foreground text-right">
-                $0.01
+                <div className="text-right text-sm text-muted-foreground mt-1">
+                  $0
+                </div>
               </div>
             </div>
 
@@ -65,7 +74,7 @@ const SwapInterface = () => {
               <Button
                 variant="ghost"
                 size="sm"
-                className="rounded-full h-10 w-10 p-0 bg-background/60 hover:bg-background/80"
+                className="rounded-full h-8 w-8 p-0 bg-background/60 hover:bg-background/80"
               >
                 <ArrowUpDown className="h-4 w-4" />
               </Button>
@@ -73,32 +82,41 @@ const SwapInterface = () => {
 
             {/* Buying Section */}
             <div className="space-y-2">
-              <label className="text-sm text-muted-foreground">Buying</label>
-              <div className="flex gap-2">
-                <Select value={buyToken} onValueChange={setBuyToken}>
-                  <SelectTrigger className="w-32 h-11 bg-background/60 border-border/60">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="USDC">USDC</SelectItem>
-                    <SelectItem value="USDT">USDT</SelectItem>
-                    <SelectItem value="DAI">DAI</SelectItem>
-                  </SelectContent>
-                </Select>
-                <Input 
-                  value={buyAmount}
-                  onChange={(e) => setBuyAmount(e.target.value)}
-                  className="flex-1 h-11 bg-background/60 border-border/60"
-                />
+              <div className="flex items-center justify-between">
+                <label className="text-sm text-muted-foreground">Buying</label>
+                <span className="text-xs text-muted-foreground">≈ 0.09255339 SOL</span>
               </div>
-              <div className="text-xs text-muted-foreground text-right">
-                $0.0098
+              <div className="relative bg-background/60 rounded-lg border border-border/60 p-4">
+                <div className="flex items-center justify-between">
+                  <Select value={buyToken} onValueChange={setBuyToken}>
+                    <SelectTrigger className="w-24 h-8 bg-transparent border-none p-0 focus:ring-0">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="USDC">USDC</SelectItem>
+                      <SelectItem value="USDT">USDT</SelectItem>
+                      <SelectItem value="DAI">DAI</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <Input 
+                    value={buyAmount}
+                    onChange={(e) => setBuyAmount(e.target.value)}
+                    className="border-none bg-transparent text-right text-2xl font-medium focus-visible:ring-0 p-0 h-auto"
+                    placeholder="0.00"
+                  />
+                </div>
+                <div className="text-right text-sm text-muted-foreground mt-1">
+                  $0
+                </div>
               </div>
             </div>
 
             {/* Swap Button */}
-            <Button className="w-full h-12 mt-6 bg-primary hover:bg-primary/90 text-primary-foreground font-semibold">
-              Swap
+            <Button 
+              className="w-full h-12 mt-6 bg-primary hover:bg-primary/90 text-primary-foreground font-medium"
+              disabled={!sellAmount || sellAmount === "0" || sellAmount === "0.0"}
+            >
+              {!sellAmount || sellAmount === "0" || sellAmount === "0.0" ? "Enter an amount" : "Swap"}
             </Button>
           </TabsContent>
           
