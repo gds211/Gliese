@@ -117,8 +117,8 @@ const SwapInterface = () => {
             </Button>
 
             {/* Footer Info */}
-            <div className="flex items-center justify-center gap-2 mt-4 text-xs text-muted-foreground">
-              <img src="/src/assets/gliese-logo.png" alt="Gliese" className="w-4 h-4" />
+            <div className="flex items-center justify-center gap-2 mt-8 text-xs text-muted-foreground">
+              <img src="/src/assets/gliese-logo.png" alt="Gliese" className="w-4 h-4 rounded-md" />
               <span>Wrapdrive v1.1</span>
               <span>0.02% FEE</span>
             </div>
