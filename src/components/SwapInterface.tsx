@@ -133,17 +133,13 @@ const SwapInterface = () => {
             </Button>
 
             {/* Footer Info */}
-            <div className="flex items-center justify-between mt-16 text-xs text-muted-foreground">
-              <div className="text-left">
-                <span>{priceRate}</span>
+            <div className="flex items-center justify-center gap-4 mt-16 text-xs text-muted-foreground">
+              <span>{priceRate}</span>
+              <div className="flex items-center gap-1 border-2 border-border px-2 py-1 rounded-lg">
+                <img src={glieseLogo} alt="Gliese" className="w-4 h-4 rounded-lg" />
+                <span>Wrapdrive v1.1</span>
               </div>
-              <div className="flex items-center gap-2">
-                <div className="flex items-center gap-1 border-2 border-border px-2 py-1 rounded-lg">
-                  <img src={glieseLogo} alt="Gliese" className="w-4 h-4 rounded-lg" />
-                  <span>Wrapdrive v1.1</span>
-                </div>
-                <span>0.02% FEE</span>
-              </div>
+              <span>0.02% FEE</span>
             </div>
           </TabsContent>
           
