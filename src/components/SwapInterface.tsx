@@ -5,6 +5,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card } from "@/components/ui/card";
 import { ArrowUpDown } from "lucide-react";
+import glieseLogo from "@/assets/gliese-logo.png";
 
 const SwapInterface = () => {
   const [sellAmount, setSellAmount] = useState("0.0925");
@@ -118,7 +119,7 @@ const SwapInterface = () => {
 
             {/* Footer Info */}
             <div className="flex items-center justify-center gap-2 mt-12 text-xs text-muted-foreground">
-              <img src="/src/assets/gliese-logo.png" alt="Gliese" className="w-4 h-4 rounded-lg" />
+              <img src={glieseLogo} alt="Gliese" className="w-4 h-4 rounded-lg" />
               <span>Wrapdrive v1.1</span>
               <span>0.02% FEE</span>
             </div>
