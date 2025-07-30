@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -12,6 +12,21 @@ const SwapInterface = () => {
   const [buyAmount, setBuyAmount] = useState("0.0002");
   const [sellToken, setSellToken] = useState("MON");
   const [buyToken, setBuyToken] = useState("USDC");
+  const [priceRate, setPriceRate] = useState("1 MON = 0.00215 USDC");
+
+  useEffect(() => {
+    const updatePriceRate = () => {
+      // Simulate price rate updates with random variations
+      const baseRate = 0.00215;
+      const variation = (Math.random() - 0.5) * 0.0001;
+      const newRate = (baseRate + variation).toFixed(5);
+      setPriceRate(`1 ${sellToken} = ${newRate} ${buyToken}`);
+    };
+
+    const interval = setInterval(updatePriceRate, 20000); // Update every 20 seconds
+    
+    return () => clearInterval(interval);
+  }, [sellToken, buyToken]);
 
   return (
     <Card className="w-full max-w-md mx-auto bg-muted/40 backdrop-blur-md border border-muted/60 shadow-2xl">
@@ -118,12 +133,17 @@ const SwapInterface = () => {
             </Button>
 
             {/* Footer Info */}
-            <div className="flex items-center justify-end gap-2 mt-16 text-xs text-muted-foreground">
-              <div className="flex items-center gap-1 border-2 border-border px-2 py-1 rounded-lg">
-                <img src={glieseLogo} alt="Gliese" className="w-4 h-4 rounded-lg" />
-                <span>Wrapdrive v1.1</span>
+            <div className="flex items-center justify-between mt-16 text-xs text-muted-foreground">
+              <div className="text-left">
+                <span>{priceRate}</span>
               </div>
-              <span>0.02% FEE</span>
+              <div className="flex items-center gap-2">
+                <div className="flex items-center gap-1 border-2 border-border px-2 py-1 rounded-lg">
+                  <img src={glieseLogo} alt="Gliese" className="w-4 h-4 rounded-lg" />
+                  <span>Wrapdrive v1.1</span>
+                </div>
+                <span>0.02% FEE</span>
+              </div>
             </div>
           </TabsContent>
           
