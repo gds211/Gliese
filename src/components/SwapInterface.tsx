@@ -90,9 +90,9 @@ const SwapInterface = () => {
               <Button
                 variant="ghost"
                 size="sm"
-                className="h-8 w-8 p-0 bg-background/60 hover:bg-background/80 rounded-md border border-border/40"
+                className="h-8 w-8 p-0 bg-background/60 hover:bg-white rounded-md border border-border/40 transition-colors duration-200"
               >
-                <ArrowUpDown className="h-4 w-4" />
+                <ArrowUpDown className="h-4 w-4 text-blue-600" />
               </Button>
             </div>
 
@@ -100,7 +100,6 @@ const SwapInterface = () => {
             <div className="space-y-3">
               <div className="flex items-center justify-between">
                 <label className="text-sm text-muted-foreground">Buying</label>
-                <span className="text-xs text-muted-foreground">≈ 0.09255339 SOL</span>
               </div>
               <div className="relative bg-background/60 rounded-xl border border-border/60 p-4">
                 <div className="flex items-center justify-between mb-2">
@@ -135,11 +134,13 @@ const SwapInterface = () => {
             {/* Footer Info */}
             <div className="flex items-center justify-between px-4 mt-16 text-xs text-muted-foreground">
               <span>{priceRate}</span>
-              <div className="flex items-center gap-1 border-2 border-border px-2 py-1 rounded-lg">
-                <img src={glieseLogo} alt="Gliese" className="w-4 h-4 rounded-lg" />
-                <span>Wrapdrive v1.1</span>
+              <div className="flex items-center gap-2">
+                <div className="flex items-center gap-1 border-2 border-border px-2 py-1 rounded-lg">
+                  <img src={glieseLogo} alt="Gliese" className="w-4 h-4 rounded-lg" />
+                  <span>Wrapdrive v1.1</span>
+                </div>
+                <span>0.02% FEE</span>
               </div>
-              <span>0.02% FEE</span>
             </div>
           </TabsContent>
           
