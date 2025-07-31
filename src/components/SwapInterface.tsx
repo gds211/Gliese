@@ -80,6 +80,9 @@ const SwapInterface = () => {
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="MON">MON</SelectItem>
+                      <SelectItem value="USDC">USDC</SelectItem>
+                      <SelectItem value="USDT">USDT</SelectItem>
+                      <SelectItem value="DAI">DAI</SelectItem>
                       <SelectItem value="ETH">ETH</SelectItem>
                       <SelectItem value="BTC">BTC</SelectItem>
                     </SelectContent>
@@ -121,9 +124,12 @@ const SwapInterface = () => {
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
+                      <SelectItem value="MON">MON</SelectItem>
                       <SelectItem value="USDC">USDC</SelectItem>
                       <SelectItem value="USDT">USDT</SelectItem>
                       <SelectItem value="DAI">DAI</SelectItem>
+                      <SelectItem value="ETH">ETH</SelectItem>
+                      <SelectItem value="BTC">BTC</SelectItem>
                     </SelectContent>
                   </Select>
                   <div className="text-right">
