@@ -14,6 +14,18 @@ const SwapInterface = () => {
   const [buyToken, setBuyToken] = useState("USDC");
   const [priceRate, setPriceRate] = useState("1 MON = 0.00215 USDC");
 
+  const handleSwapTokens = () => {
+    // Swap tokens
+    const tempToken = sellToken;
+    setSellToken(buyToken);
+    setBuyToken(tempToken);
+    
+    // Swap amounts
+    const tempAmount = sellAmount;
+    setSellAmount(buyAmount);
+    setBuyAmount(tempAmount);
+  };
+
   useEffect(() => {
     const updatePriceRate = () => {
       // Simulate price rate updates with random variations
@@ -90,6 +102,7 @@ const SwapInterface = () => {
               <Button
                 variant="ghost"
                 size="sm"
+                onClick={handleSwapTokens}
                 className="h-8 w-8 p-0 bg-background/60 hover:bg-white rounded-md border border-border/40 transition-colors duration-200"
               >
                 <ArrowUpDown className="h-4 w-4 text-blue-600" />
