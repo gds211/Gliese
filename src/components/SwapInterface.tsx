@@ -86,11 +86,11 @@ const SwapInterface = () => {
             </div>
 
             {/* Swap Arrow */}
-            <div className="flex justify-center">
+            <div className="flex justify-center -my-2 relative z-10">
               <Button
                 variant="ghost"
                 size="sm"
-                className="h-8 w-8 p-0 bg-background/60 hover:bg-background/80 rounded-md"
+                className="h-8 w-8 p-0 bg-background/60 hover:bg-background/80 rounded-md border border-border/40"
               >
                 <ArrowUpDown className="h-4 w-4" />
               </Button>
@@ -133,7 +133,7 @@ const SwapInterface = () => {
             </Button>
 
             {/* Footer Info */}
-            <div className="flex items-center justify-center gap-4 mt-16 text-xs text-muted-foreground">
+            <div className="flex items-center justify-between px-4 mt-16 text-xs text-muted-foreground">
               <span>{priceRate}</span>
               <div className="flex items-center gap-1 border-2 border-border px-2 py-1 rounded-lg">
                 <img src={glieseLogo} alt="Gliese" className="w-4 h-4 rounded-lg" />
