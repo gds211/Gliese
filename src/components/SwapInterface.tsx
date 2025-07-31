@@ -101,12 +101,12 @@ const SwapInterface = () => {
             </div>
 
             {/* Swap Arrow */}
-            <div className="flex justify-center -my-2 relative z-10">
+            <div className="flex justify-center relative z-10">
               <Button
                 variant="ghost"
                 size="sm"
                 onClick={handleSwapTokens}
-                className="h-8 w-8 p-0 bg-background/60 hover:bg-white rounded-md border border-border/40 transition-colors duration-200"
+                className="h-8 w-8 p-0 bg-background/60 hover:bg-white rounded-md border border-border/40 transition-colors duration-200 absolute -translate-y-1/2"
               >
                 <ArrowUpDown className="h-4 w-4 text-blue-600" />
               </Button>
