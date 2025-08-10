@@ -72,7 +72,7 @@ const SwapInterface = () => {
                   </Button>
                 </div>
               </div>
-              <div className="relative bg-background/80 rounded-xl border border-border/60 p-4 focus-within:border-white transition-colors duration-200">
+              <div className="relative bg-background/60 rounded-xl border border-border/60 p-4 focus-within:border-white transition-colors duration-200">
                 <div className="flex items-center justify-between mb-2">
                   <Select value={sellToken} onValueChange={setSellToken}>
                     <SelectTrigger className="w-28 h-8 bg-muted/60 rounded-full border-none p-2 focus:ring-0">
@@ -101,12 +101,12 @@ const SwapInterface = () => {
             </div>
 
             {/* Swap Arrow */}
-            <div className="flex justify-center -my-2 relative z-10">
+            <div className="flex justify-center relative z-10">
               <Button
                 variant="ghost"
                 size="sm"
                 onClick={handleSwapTokens}
-                className="h-8 w-8 p-0 bg-background/60 hover:bg-white rounded-md border border-border/40 transition-colors duration-200"
+                className="h-8 w-8 p-0 bg-background/60 hover:bg-white rounded-md border border-border/40 transition-colors duration-200 absolute -translate-y-1/2"
               >
                 <ArrowUpDown className="h-4 w-4 text-blue-600" />
               </Button>
@@ -117,7 +117,7 @@ const SwapInterface = () => {
               <div className="flex items-center justify-between">
                 <label className="text-sm text-muted-foreground">Buying</label>
               </div>
-              <div className="relative bg-background/80 rounded-xl border border-border/60 p-4">
+              <div className="relative bg-background/60 rounded-xl border border-border/60 p-4">
                 <div className="flex items-center justify-between mb-2">
                   <Select value={buyToken} onValueChange={setBuyToken}>
                     <SelectTrigger className="w-28 h-8 bg-muted/60 rounded-full border-none p-2 focus:ring-0">
