@@ -159,7 +159,7 @@ const SwapInterface = () => {
             </Button>
 
             {/* Footer Info */}
-            <div className="flex items-center justify-between px-4 mt-32 text-xs text-muted-foreground">
+            <div className="flex items-center justify-between px-4 mt-16 text-xs text-muted-foreground">
               <span>{priceRate}</span>
               <div className="flex items-center gap-2">
                 <div className="flex items-center gap-1 border-2 border-border px-2 py-1 rounded-lg">
