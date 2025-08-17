@@ -67,14 +67,14 @@ const SwapInterface = () => {
                   <Button 
                     variant="ghost" 
                     size="sm" 
-                    className="h-5 px-2 text-xs text-muted-foreground border border-muted-foreground/40 rounded hover:text-primary hover:border-primary transition-all duration-200"
+                    className="h-5 px-2 text-xs text-muted-foreground bg-muted border border-muted-foreground/40 rounded hover:text-primary hover:border-primary hover:bg-muted transition-all duration-200"
                   >
                     HALF
                   </Button>
                   <Button 
                     variant="ghost" 
                     size="sm" 
-                    className="h-5 px-2 text-xs text-muted-foreground border border-muted-foreground/40 rounded hover:text-primary hover:border-primary transition-all duration-200"
+                    className="h-5 px-2 text-xs text-muted-foreground bg-muted border border-muted-foreground/40 rounded hover:text-primary hover:border-primary hover:bg-muted transition-all duration-200"
                   >
                     MAX
                   </Button>
