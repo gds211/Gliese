@@ -16,17 +16,17 @@ const Navigation = () => {
   return (
     <nav className="flex items-center justify-between px-6 py-4 backdrop-blur-sm border-b border-border/20">
       {/* Logo */}
-      <div className="flex items-center gap-3">
+      <div className="flex items-center gap-3 h-10">
         <img 
           src={glieseLogo} 
           alt="Gliese" 
           className="w-8 h-8 rounded-full shadow-glow-cosmic"
         />
-        <span className="text-xl font-bold text-foreground">GLIESE</span>
+        <span className="text-xl font-bold text-foreground leading-none">GLIESE</span>
       </div>
 
       {/* Navigation Links */}
-      <div className="flex items-center gap-1 bg-card/70 rounded-lg p-1 backdrop-blur-sm">
+      <div className="flex items-center gap-1 bg-card/70 rounded-lg p-1 backdrop-blur-sm h-10">
         {navItems.map((item) => (
           <Button
             key={item.name}
@@ -34,7 +34,7 @@ const Navigation = () => {
             size="sm"
             onClick={() => setActiveTab(item.name)}
             className={`
-              px-4 py-2 transition-all duration-300
+              px-4 py-2 transition-all duration-300 h-8
               ${activeTab === item.name 
                 ? "bg-primary text-primary-foreground shadow-glow-cosmic" 
                 : "text-muted-foreground hover:text-foreground hover:bg-secondary/50"
@@ -49,7 +49,7 @@ const Navigation = () => {
       {/* Connect Wallet Button */}
       <Button 
         variant="default"
-        className="bg-primary text-primary-foreground hover:bg-primary/90 shadow-glow-cosmic transition-all duration-300 hover:scale-105"
+        className="bg-primary text-primary-foreground hover:bg-primary/90 shadow-glow-cosmic transition-all duration-300 hover:scale-105 h-10"
       >
         Connect Wallet
       </Button>
