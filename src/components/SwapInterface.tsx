@@ -80,7 +80,7 @@ const SwapInterface = () => {
                   </Button>
                 </div>
               </div>
-              <div className="relative bg-background/60 rounded-xl border border-border/60 p-4 focus-within:border-white transition-colors duration-200">
+              <div className="relative bg-transparent rounded-xl p-4">
                 <div className="flex items-center justify-between mb-2">
                   <Select value={sellToken} onValueChange={setSellToken}>
                     <SelectTrigger className="w-28 h-8 bg-muted/60 rounded-full border-none p-2 focus:ring-0">
@@ -98,7 +98,7 @@ const SwapInterface = () => {
                   <Input 
                     value={sellAmount}
                     onChange={(e) => setSellAmount(e.target.value)}
-                    className="border-none bg-transparent text-right text-8xl font-bold focus-visible:ring-0 focus-visible:outline-none p-0 h-auto text-foreground caret-white"
+                    className="border-none bg-transparent text-left text-9xl font-bold focus-visible:ring-0 focus-visible:outline-none focus-visible:border-none p-0 h-auto text-foreground caret-white shadow-none"
                     placeholder="0.00"
                   />
                 </div>
