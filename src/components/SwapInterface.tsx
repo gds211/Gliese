@@ -1,25 +1,18 @@
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card } from "@/components/ui/card";
 import { ArrowUpDown } from "lucide-react";
-import { AmountInput } from "@/components/ui/AmountInput";
-import { QuoteDisplay } from "@/components/ui/QuoteDisplay";
-import { useQuote } from "@/hooks/useQuote";
 import glieseLogo from "@/assets/gliese-logo.png";
 
 const SwapInterface = () => {
   const [sellAmount, setSellAmount] = useState("0.0925");
+  const [buyAmount, setBuyAmount] = useState("0.0002");
   const [sellToken, setSellToken] = useState("MON");
   const [buyToken, setBuyToken] = useState("USDC");
   const [priceRate, setPriceRate] = useState("1 MON = 0.00215 USDC");
-
-  const { quote, loading, error } = useQuote({
-    sellToken,
-    buyToken,
-    sellAmount,
-  });
 
   const handleSwapTokens = () => {
     // Swap tokens
@@ -27,8 +20,10 @@ const SwapInterface = () => {
     setSellToken(buyToken);
     setBuyToken(tempToken);
     
-    // Swap amount
-    setSellAmount(quote?.amountOut || "0");
+    // Swap amounts
+    const tempAmount = sellAmount;
+    setSellAmount(buyAmount);
+    setBuyAmount(tempAmount);
   };
 
   useEffect(() => {
@@ -85,7 +80,7 @@ const SwapInterface = () => {
                   </Button>
                 </div>
               </div>
-              <div className="relative bg-transparent rounded-xl p-4">
+              <div className="relative bg-background/60 rounded-xl border border-border/60 p-4 focus-within:border-white transition-colors duration-200">
                 <div className="flex items-center justify-between mb-2">
                   <Select value={sellToken} onValueChange={setSellToken}>
                     <SelectTrigger className="w-28 h-8 bg-muted/60 rounded-full border-none p-2 focus:ring-0">
@@ -100,10 +95,11 @@ const SwapInterface = () => {
                       <SelectItem value="BTC">BTC</SelectItem>
                     </SelectContent>
                   </Select>
-                  <AmountInput 
+                  <Input 
                     value={sellAmount}
                     onChange={(e) => setSellAmount(e.target.value)}
-                    align="right"
+                    className="border-none bg-transparent text-right text-3xl font-semibold focus-visible:ring-0 p-0 h-auto text-muted-foreground"
+                    placeholder="0.00"
                   />
                 </div>
                 <div className="text-right text-sm text-muted-foreground">
@@ -129,7 +125,7 @@ const SwapInterface = () => {
               <div className="flex items-center justify-between">
                 <label className="text-sm text-muted-foreground">Buying</label>
               </div>
-              <div className="relative bg-transparent rounded-xl p-4">
+              <div className="relative bg-background/60 rounded-xl border border-border/60 p-4">
                 <div className="flex items-center justify-between mb-2">
                   <Select value={buyToken} onValueChange={setBuyToken}>
                     <SelectTrigger className="w-28 h-8 bg-muted/60 rounded-full border-none p-2 focus:ring-0">
@@ -144,12 +140,9 @@ const SwapInterface = () => {
                       <SelectItem value="BTC">BTC</SelectItem>
                     </SelectContent>
                   </Select>
-                  <QuoteDisplay 
-                    quote={quote}
-                    loading={loading}
-                    error={error}
-                    className="text-right"
-                  />
+                  <div className="text-right">
+                    <div className="text-3xl font-semibold text-muted-foreground">0.00</div>
+                  </div>
                 </div>
                 <div className="text-right text-sm text-muted-foreground">
                   $0
@@ -160,19 +153,13 @@ const SwapInterface = () => {
             {/* Swap Button */}
             <Button 
               className="w-full h-12 mt-6 bg-primary hover:bg-primary/90 text-primary-foreground font-medium"
-              disabled={!sellAmount || parseFloat(sellAmount) <= 0 || !quote || loading}
+              disabled={!sellAmount || sellAmount === "0" || sellAmount === "0.0"}
             >
-              {!sellAmount || parseFloat(sellAmount) <= 0 
-                ? "Enter an amount" 
-                : loading 
-                ? "Getting quote..." 
-                : !quote 
-                ? "No quote available"
-                : "Swap"}
+              {!sellAmount || sellAmount === "0" || sellAmount === "0.0" ? "Enter an amount" : "Swap"}
             </Button>
 
             {/* Footer Info */}
-            <div className="flex items-center justify-between px-4 mt-16 text-xs text-muted-foreground">
+            <div className="flex items-center justify-between px-4 mt-32 text-xs text-muted-foreground">
               <span>{priceRate}</span>
               <div className="flex items-center gap-2">
                 <div className="flex items-center gap-1 border-2 border-border px-2 py-1 rounded-lg">
