@@ -13,6 +13,23 @@ const SwapInterface = () => {
   const [sellToken, setSellToken] = useState("MON");
   const [buyToken, setBuyToken] = useState("USDC");
   const [priceRate, setPriceRate] = useState("1 MON = 0.00215 USDC");
+  
+  // Mock crypto prices in USD
+  const cryptoPrices = {
+    MON: 0.00215,
+    USDC: 1.0,
+    USDT: 1.0,
+    DAI: 1.0,
+    ETH: 2650.0,
+    BTC: 43500.0
+  };
+
+  const calculateUSDValue = (amount: string, token: string): string => {
+    const numAmount = parseFloat(amount) || 0;
+    const price = cryptoPrices[token as keyof typeof cryptoPrices] || 0;
+    const usdValue = numAmount * price;
+    return usdValue < 0.01 && usdValue > 0 ? `$${usdValue.toFixed(6)}` : `$${usdValue.toFixed(2)}`;
+  };
 
   const handleSwapTokens = () => {
     // Swap tokens
@@ -103,7 +120,7 @@ const SwapInterface = () => {
                   />
                 </div>
                 <div className="text-right text-sm text-muted-foreground">
-                  $0
+                  {calculateUSDValue(sellAmount, sellToken)}
                 </div>
               </div>
             </div>
@@ -145,7 +162,7 @@ const SwapInterface = () => {
                   </div>
                 </div>
                 <div className="text-right text-sm text-muted-foreground">
-                  $0
+                  {calculateUSDValue(buyAmount, buyToken)}
                 </div>
               </div>
             </div>
