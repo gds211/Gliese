@@ -95,15 +95,17 @@ const SwapInterface = () => {
                       <SelectItem value="BTC">BTC</SelectItem>
                     </SelectContent>
                   </Select>
-                  <Input 
-                    value={sellAmount}
-                    onChange={(e) => setSellAmount(e.target.value)}
-                    className="!border-none !bg-transparent text-right text-4xl font-semibold !focus-visible:ring-0 !focus:ring-0 !outline-none pr-2 h-auto text-foreground !shadow-none !ring-0 !ring-offset-0"
-                    placeholder="0.00"
-                  />
-                </div>
-                <div className="text-right text-sm text-muted-foreground">
-                  $0
+                  <div className="flex items-center gap-2">
+                    <Input 
+                      value={sellAmount}
+                      onChange={(e) => setSellAmount(e.target.value)}
+                      className="!border-none !bg-transparent text-right text-4xl font-semibold !focus-visible:ring-0 !focus:ring-0 !outline-none pr-2 h-auto text-foreground !shadow-none !ring-0 !ring-offset-0"
+                      placeholder="0.00"
+                    />
+                    <span className="text-sm text-muted-foreground">
+                      ${(parseFloat(sellAmount || "0") * 0.00215).toFixed(2)}
+                    </span>
+                  </div>
                 </div>
               </div>
             </div>
