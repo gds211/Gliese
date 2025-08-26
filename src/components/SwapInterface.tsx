@@ -82,7 +82,7 @@ const SwapInterface = () => {
                 <div className="flex items-center gap-2 text-xs text-muted-foreground">
                   <span className="flex items-center gap-1">
                     <Wallet className="h-3 w-3" />
-                    ≈ 0.00 {sellToken}
+                    0.00 {sellToken}
                   </span>
                   <Button 
                     variant="ghost" 
