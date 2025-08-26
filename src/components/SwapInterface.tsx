@@ -4,7 +4,7 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card } from "@/components/ui/card";
-import { ArrowUpDown } from "lucide-react";
+import { ArrowUpDown, Wallet } from "lucide-react";
 import glieseLogo from "@/assets/gliese-logo.png";
 
 const SwapInterface = () => {
@@ -80,7 +80,10 @@ const SwapInterface = () => {
               <div className="flex items-center justify-between">
                 <label className="text-sm text-muted-foreground">Selling</label>
                 <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                  <span>≈ 0.00 USDC</span>
+                  <span className="flex items-center gap-1">
+                    <Wallet className="h-3 w-3" />
+                    ≈ 0.00 {sellToken}
+                  </span>
                   <Button 
                     variant="ghost" 
                     size="sm" 
