@@ -115,7 +115,8 @@ const SwapInterface = () => {
                   <Input 
                     value={sellAmount}
                     onChange={(e) => setSellAmount(e.target.value)}
-                    className="!border-none !bg-transparent text-right text-[8rem] font-semibold !focus-visible:ring-0 !focus:ring-0 !outline-none pr-2 h-auto text-foreground !shadow-none !ring-0 !ring-offset-0"
+                    style={{ fontSize: '6rem' }}
+                    className="!border-none !bg-transparent text-right font-semibold !focus-visible:ring-0 !focus:ring-0 !outline-none pr-2 h-auto text-foreground !shadow-none !ring-0 !ring-offset-0"
                     placeholder="0.00"
                   />
                 </div>
