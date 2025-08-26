@@ -31,19 +31,6 @@ const SwapInterface = () => {
     return usdValue < 0.01 && usdValue > 0 ? `$${usdValue.toFixed(6)}` : `$${usdValue.toFixed(2)}`;
   };
 
-  const calculateBuyAmount = (): string => {
-    const sellAmountNum = parseFloat(sellAmount) || 0;
-    if (sellAmountNum === 0) return "0.00";
-    
-    const sellPrice = cryptoPrices[sellToken as keyof typeof cryptoPrices] || 0;
-    const buyPrice = cryptoPrices[buyToken as keyof typeof cryptoPrices] || 0;
-    
-    if (buyPrice === 0) return "0.00";
-    
-    const buyAmountNum = (sellAmountNum * sellPrice) / buyPrice;
-    return buyAmountNum.toFixed(6);
-  };
-
   const handleSwapTokens = () => {
     // Swap tokens
     const tempToken = sellToken;
@@ -128,7 +115,8 @@ const SwapInterface = () => {
                   <Input 
                     value={sellAmount}
                     onChange={(e) => setSellAmount(e.target.value)}
-                    className="!border-none !bg-transparent text-right text-[8rem] font-semibold !focus-visible:ring-0 !focus:ring-0 !outline-none pr-2 h-auto text-foreground !shadow-none !ring-0 !ring-offset-0"
+                    style={{ fontSize: '6rem' }}
+                    className="!border-none !bg-transparent text-right font-semibold !focus-visible:ring-0 !focus:ring-0 !outline-none pr-2 h-auto text-foreground !shadow-none !ring-0 !ring-offset-0"
                     placeholder="0.00"
                   />
                 </div>
@@ -171,11 +159,11 @@ const SwapInterface = () => {
                     </SelectContent>
                   </Select>
                   <div className="text-right">
-                    <div className="text-[8rem] font-semibold text-foreground">{calculateBuyAmount()}</div>
+                    <div className="text-4xl font-semibold text-muted-foreground">0.00</div>
                   </div>
                 </div>
                 <div className="text-right text-sm text-muted-foreground">
-                  {calculateUSDValue(calculateBuyAmount(), buyToken)}
+                  {calculateUSDValue(buyAmount, buyToken)}
                 </div>
               </div>
             </div>
