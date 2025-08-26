@@ -158,7 +158,7 @@ const SwapInterface = () => {
                     </SelectContent>
                   </Select>
                   <div className="text-right">
-                    <div className="text-[8rem] font-semibold text-muted-foreground">0.00</div>
+                    <div className="text-4xl font-semibold text-muted-foreground">0.00</div>
                   </div>
                 </div>
                 <div className="text-right text-sm text-muted-foreground">
