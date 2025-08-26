@@ -9,7 +9,6 @@ import glieseLogo from "@/assets/gliese-logo.png";
 
 const SwapInterface = () => {
   const [sellAmount, setSellAmount] = useState("0.0925");
-  const [buyAmount, setBuyAmount] = useState("0.0002");
   const [sellToken, setSellToken] = useState("MON");
   const [buyToken, setBuyToken] = useState("USDC");
   const [priceRate, setPriceRate] = useState("1 MON = 0.00215 USDC");
@@ -22,6 +21,18 @@ const SwapInterface = () => {
     DAI: 1.0,
     ETH: 2650.0,
     BTC: 43500.0
+  };
+
+  // Calculate dynamic buy amount based on sell amount and exchange rates
+  const calculateBuyAmount = (): string => {
+    const sellPrice = cryptoPrices[sellToken as keyof typeof cryptoPrices] || 0;
+    const buyPrice = cryptoPrices[buyToken as keyof typeof cryptoPrices] || 0;
+    const sellAmountNum = parseFloat(sellAmount) || 0;
+    
+    if (sellPrice === 0 || buyPrice === 0 || sellAmountNum === 0) return "0.00";
+    
+    const buyAmountNum = (sellAmountNum * sellPrice) / buyPrice;
+    return buyAmountNum.toFixed(6);
   };
 
   const calculateUSDValue = (amount: string, token: string): string => {
@@ -37,10 +48,8 @@ const SwapInterface = () => {
     setSellToken(buyToken);
     setBuyToken(tempToken);
     
-    // Swap amounts
-    const tempAmount = sellAmount;
-    setSellAmount(buyAmount);
-    setBuyAmount(tempAmount);
+    // Swap amounts - use calculated buy amount
+    setSellAmount(calculateBuyAmount());
   };
 
   useEffect(() => {
@@ -158,11 +167,11 @@ const SwapInterface = () => {
                     </SelectContent>
                   </Select>
                   <div className="text-right">
-                    <div className="text-4xl font-semibold text-muted-foreground">0.00</div>
+                    <div className="text-[8rem] font-semibold text-muted-foreground">{calculateBuyAmount()}</div>
                   </div>
                 </div>
                 <div className="text-right text-sm text-muted-foreground">
-                  {calculateUSDValue(buyAmount, buyToken)}
+                  {calculateUSDValue(calculateBuyAmount(), buyToken)}
                 </div>
               </div>
             </div>
