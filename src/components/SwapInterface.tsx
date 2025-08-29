@@ -45,19 +45,13 @@ const SwapInterface = () => {
 
   useEffect(() => {
     const updatePriceRate = () => {
-      const sellPrice = cryptoPrices[sellToken as keyof typeof cryptoPrices] || 0;
-      const buyPrice = cryptoPrices[buyToken as keyof typeof cryptoPrices] || 0;
-      
-      if (sellPrice > 0 && buyPrice > 0) {
-        const exchangeRate = sellPrice / buyPrice;
-        // Add small random variation
-        const variation = (Math.random() - 0.5) * (exchangeRate * 0.001);
-        const newRate = (exchangeRate + variation).toFixed(5);
-        setPriceRate(`1 ${sellToken} = ${newRate} ${buyToken}`);
-      }
+      // Simulate price rate updates with random variations
+      const baseRate = 0.00215;
+      const variation = (Math.random() - 0.5) * 0.0001;
+      const newRate = (baseRate + variation).toFixed(5);
+      setPriceRate(`1 ${sellToken} = ${newRate} ${buyToken}`);
     };
 
-    updatePriceRate(); // Update immediately
     const interval = setInterval(updatePriceRate, 20000); // Update every 20 seconds
     
     return () => clearInterval(interval);
