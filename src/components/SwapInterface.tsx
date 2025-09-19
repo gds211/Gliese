@@ -1,10 +1,10 @@
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card } from "@/components/ui/card";
-import { ArrowUpDown, Wallet } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { ArrowUpDown, Wallet, Search, ChevronDown } from "lucide-react";
 import glieseLogo from "@/assets/gliese-logo.png";
 
 const SwapInterface = () => {
@@ -13,6 +13,9 @@ const SwapInterface = () => {
   const [sellToken, setSellToken] = useState("MON");
   const [buyToken, setBuyToken] = useState("USDC");
   const [priceRate, setPriceRate] = useState("1 MON = 0.00215 USDC");
+  const [showTokenModal, setShowTokenModal] = useState(false);
+  const [tokenSelectionType, setTokenSelectionType] = useState<'sell' | 'buy'>('sell');
+  const [searchTerm, setSearchTerm] = useState("");
   
   // Mock crypto prices in USD
   const cryptoPrices = {
@@ -23,6 +26,20 @@ const SwapInterface = () => {
     ETH: 2650.0,
     BTC: 43500.0
   };
+
+  const tokens = [
+    { symbol: "MON", name: "MON Token", price: cryptoPrices.MON },
+    { symbol: "USDC", name: "USD Coin", price: cryptoPrices.USDC },
+    { symbol: "USDT", name: "Tether USD", price: cryptoPrices.USDT },
+    { symbol: "DAI", name: "Dai Stablecoin", price: cryptoPrices.DAI },
+    { symbol: "ETH", name: "Ethereum", price: cryptoPrices.ETH },
+    { symbol: "BTC", name: "Bitcoin", price: cryptoPrices.BTC }
+  ];
+
+  const filteredTokens = tokens.filter(token => 
+    token.symbol.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    token.name.toLowerCase().includes(searchTerm.toLowerCase())
+  );
 
   const calculateUSDValue = (amount: string, token: string): string => {
     const numAmount = parseFloat(amount) || 0;
@@ -41,6 +58,21 @@ const SwapInterface = () => {
     const tempAmount = sellAmount;
     setSellAmount(buyAmount);
     setBuyAmount(tempAmount);
+  };
+
+  const openTokenModal = (type: 'sell' | 'buy') => {
+    setTokenSelectionType(type);
+    setShowTokenModal(true);
+    setSearchTerm("");
+  };
+
+  const selectToken = (token: string) => {
+    if (tokenSelectionType === 'sell') {
+      setSellToken(token);
+    } else {
+      setBuyToken(token);
+    }
+    setShowTokenModal(false);
   };
 
   useEffect(() => {
@@ -108,19 +140,14 @@ const SwapInterface = () => {
               </div>
               <div className="relative bg-background/60 rounded-xl border border-border/60 p-4 focus-within:border-white transition-colors duration-200">
                 <div className="flex items-center justify-between mb-2">
-                  <Select value={sellToken} onValueChange={setSellToken}>
-                    <SelectTrigger className="w-28 h-8 bg-muted/60 rounded-full border-none p-2 focus:ring-0">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="MON">MON</SelectItem>
-                      <SelectItem value="USDC">USDC</SelectItem>
-                      <SelectItem value="USDT">USDT</SelectItem>
-                      <SelectItem value="DAI">DAI</SelectItem>
-                      <SelectItem value="ETH">ETH</SelectItem>
-                      <SelectItem value="BTC">BTC</SelectItem>
-                    </SelectContent>
-                  </Select>
+                  <Button
+                    variant="ghost"
+                    onClick={() => openTokenModal('sell')}
+                    className="w-28 h-8 bg-muted/60 rounded-full border-none p-2 hover:bg-muted/80 flex items-center justify-between"
+                  >
+                    <span>{sellToken}</span>
+                    <ChevronDown className="h-3 w-3" />
+                  </Button>
                   <Input 
                     value={sellAmount}
                     onChange={(e) => setSellAmount(e.target.value)}
@@ -153,19 +180,14 @@ const SwapInterface = () => {
               </div>
               <div className="relative bg-background/60 rounded-xl border border-border/60 p-4">
                 <div className="flex items-center justify-between mb-2">
-                  <Select value={buyToken} onValueChange={setBuyToken}>
-                    <SelectTrigger className="w-28 h-8 bg-muted/60 rounded-full border-none p-2 focus:ring-0">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="MON">MON</SelectItem>
-                      <SelectItem value="USDC">USDC</SelectItem>
-                      <SelectItem value="USDT">USDT</SelectItem>
-                      <SelectItem value="DAI">DAI</SelectItem>
-                      <SelectItem value="ETH">ETH</SelectItem>
-                      <SelectItem value="BTC">BTC</SelectItem>
-                    </SelectContent>
-                  </Select>
+                  <Button
+                    variant="ghost"
+                    onClick={() => openTokenModal('buy')}
+                    className="w-28 h-8 bg-muted/60 rounded-full border-none p-2 hover:bg-muted/80 flex items-center justify-between"
+                  >
+                    <span>{buyToken}</span>
+                    <ChevronDown className="h-3 w-3" />
+                  </Button>
                   <div className="text-right">
                     <div className="text-4xl font-semibold text-muted-foreground">0.00</div>
                   </div>
@@ -210,6 +232,48 @@ const SwapInterface = () => {
           </TabsContent>
         </Tabs>
       </div>
+      
+      {/* Token Selection Modal */}
+      <Dialog open={showTokenModal} onOpenChange={setShowTokenModal}>
+        <DialogContent className="max-w-md mx-auto bg-white/95 backdrop-blur-md border border-white/60 shadow-2xl">
+          <DialogHeader>
+            <DialogTitle className="text-lg font-semibold">Select Token</DialogTitle>
+          </DialogHeader>
+          
+          <div className="space-y-4">
+            {/* Search Bar */}
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="Search tokens..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="pl-10 bg-muted/40 border-muted/60 focus:border-primary"
+              />
+            </div>
+            
+            {/* Token List */}
+            <div className="space-y-2 max-h-60 overflow-y-auto">
+              {filteredTokens.map((token) => (
+                <Button
+                  key={token.symbol}
+                  variant="ghost"
+                  onClick={() => selectToken(token.symbol)}
+                  className="w-full justify-between p-3 h-auto hover:bg-muted/60"
+                >
+                  <div className="flex flex-col items-start">
+                    <span className="font-medium">{token.symbol}</span>
+                    <span className="text-xs text-muted-foreground">{token.name}</span>
+                  </div>
+                  <span className="text-sm text-muted-foreground">
+                    ${token.price.toLocaleString()}
+                  </span>
+                </Button>
+              ))}
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </Card>
   );
 };
