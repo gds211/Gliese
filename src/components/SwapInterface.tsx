@@ -261,7 +261,7 @@ const SwapInterface = () => {
                     key={token.symbol}
                     variant="ghost"
                     onClick={() => selectToken(token.symbol)}
-                    className="w-full justify-start p-4 h-auto hover:bg-white/5 rounded-lg group"
+                    className="w-full justify-start py-4 pl-10 pr-4 h-auto hover:bg-white/5 rounded-lg group"
                   >
                     <div className="flex items-center w-full">
                       {/* Token Icon */}
@@ -269,8 +269,8 @@ const SwapInterface = () => {
                         {token.symbol.charAt(0)}
                       </div>
                       
-                      {/* Token Info - aligned to search input text position */}
-                      <div className="flex-1 text-left ml-10">
+                      {/* Token Info - positioned 8px after avatar */}
+                      <div className="flex-1 text-left ml-2">
                         <div className="flex items-center space-x-2">
                           <span className="font-medium text-white">{token.symbol}</span>
                           <div className="w-1 h-1 bg-green-400 rounded-full"></div>
