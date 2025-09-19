@@ -236,7 +236,7 @@ const SwapInterface = () => {
       
       {/* Token Selection Modal */}
       <Dialog open={showTokenModal} onOpenChange={setShowTokenModal}>
-        <DialogContent className="max-w-md mx-auto bg-black/20 backdrop-blur-xl border border-white/10 shadow-2xl">
+        <DialogContent className="max-w-md mx-auto bg-black backdrop-blur-xl border border-white/10 shadow-2xl">
           <DialogHeader className="pb-4">
             <DialogTitle className="text-lg font-semibold text-white">Select Token</DialogTitle>
           </DialogHeader>
@@ -263,14 +263,14 @@ const SwapInterface = () => {
                     onClick={() => selectToken(token.symbol)}
                     className="w-full justify-start p-4 h-auto hover:bg-white/5 rounded-lg group"
                   >
-                    <div className="flex items-center w-full">
+                    <div className="flex items-center space-x-3 w-full">
                       {/* Token Icon */}
                       <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-400 to-purple-600 flex items-center justify-center text-white font-semibold text-sm flex-shrink-0">
                         {token.symbol.charAt(0)}
                       </div>
                       
-                      {/* Token Info - aligned under search icon */}
-                      <div className="flex-1 text-left ml-7">
+                      {/* Token Info */}
+                      <div className="flex-1 text-left">
                         <div className="flex items-center space-x-2">
                           <span className="font-medium text-white">{token.symbol}</span>
                           <div className="w-1 h-1 bg-green-400 rounded-full"></div>
