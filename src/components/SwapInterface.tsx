@@ -4,6 +4,7 @@ import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Slider } from "@/components/ui/slider";
 import { ArrowUpDown, Wallet, Search, ChevronDown } from "lucide-react";
 import glieseLogo from "@/assets/gliese-logo.png";
 
@@ -16,6 +17,7 @@ const SwapInterface = () => {
   const [showTokenModal, setShowTokenModal] = useState(false);
   const [tokenSelectionType, setTokenSelectionType] = useState<'sell' | 'buy'>('sell');
   const [searchTerm, setSearchTerm] = useState("");
+  const [sliderValue, setSliderValue] = useState([50]);
   
   // Mock crypto prices in USD
   const cryptoPrices = {
@@ -289,6 +291,17 @@ const SwapInterface = () => {
                   </div>
                 </Button>
               ))}
+            </div>
+            
+            {/* Custom Slider */}
+            <div className="px-4 py-3">
+              <Slider
+                value={sliderValue}
+                onValueChange={setSliderValue}
+                max={100}
+                step={1}
+                className="w-full [&>*]:bg-transparent [&>*]:border-none [&_[role=slider]]:bg-white/20 [&_[role=slider]]:border-white/40 [&_[role=slider]]:w-3 [&_[role=slider]]:h-3 [&_.relative]:h-1 [&_.absolute]:bg-white/40"
+              />
             </div>
           </div>
         </DialogContent>
