@@ -236,7 +236,7 @@ const SwapInterface = () => {
       
       {/* Token Selection Modal */}
       <Dialog open={showTokenModal} onOpenChange={setShowTokenModal}>
-        <DialogContent className="max-w-md mx-auto bg-black backdrop-blur-xl border border-white/10 shadow-2xl">
+        <DialogContent className="max-w-md mx-auto backdrop-blur-xl border border-white/10 shadow-2xl" style={{ backgroundColor: '#000' }}>
           <DialogHeader className="pb-4">
             <DialogTitle className="text-lg font-semibold text-white">Select Token</DialogTitle>
           </DialogHeader>
@@ -246,7 +246,7 @@ const SwapInterface = () => {
             <div className="relative">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-white/60" />
               <Input
-                placeholder="Search any token. Include '=' for exact match."
+                placeholder="Search any token. Include '0x' for exact match."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="pl-10 bg-white/5 border border-white/20 text-white placeholder:text-white/40 focus:border-white/40 focus:bg-white/10"
@@ -254,7 +254,7 @@ const SwapInterface = () => {
             </div>
             
             {/* Token List */}
-            <ScrollArea className="h-[26rem] w-full pr-4">
+            <ScrollArea className="h-[28rem] w-full pr-4">
               <div className="space-y-1">
                 {filteredTokens.map((token, index) => (
                   <Button
@@ -269,8 +269,8 @@ const SwapInterface = () => {
                         {token.symbol.charAt(0)}
                       </div>
                       
-                      {/* Token Info - aligned to search icon position */}
-                      <div className="flex-1 text-left ml-2.5">
+                      {/* Token Info - aligned to search input text position */}
+                      <div className="flex-1 text-left ml-10">
                         <div className="flex items-center space-x-2">
                           <span className="font-medium text-white">{token.symbol}</span>
                           <div className="w-1 h-1 bg-green-400 rounded-full"></div>
