@@ -63,6 +63,20 @@ const SwapInterface = () => {
     return () => clearInterval(interval);
   }, [sellToken, buyToken]);
 
+  // Calculate buy amount based on sell amount and exchange rates
+  useEffect(() => {
+    const sellPrice = cryptoPrices[sellToken as keyof typeof cryptoPrices] || 0;
+    const buyPrice = cryptoPrices[buyToken as keyof typeof cryptoPrices] || 0;
+    const sellAmountNum = parseFloat(sellAmount) || 0;
+    
+    if (sellPrice > 0 && buyPrice > 0 && sellAmountNum > 0) {
+      const calculatedBuyAmount = (sellAmountNum * sellPrice) / buyPrice;
+      setBuyAmount(calculatedBuyAmount.toFixed(6));
+    } else {
+      setBuyAmount("0.00");
+    }
+  }, [sellAmount, sellToken, buyToken]);
+
   return (
     <Card className="w-full max-w-md mx-auto bg-muted/40 backdrop-blur-md border border-muted/60 shadow-2xl">
       <div className="p-4 space-y-4">
@@ -167,7 +181,7 @@ const SwapInterface = () => {
                     </SelectContent>
                   </Select>
                   <div className="text-right">
-                    <div className="text-4xl font-semibold text-muted-foreground">0.00</div>
+                    <div className="text-[8rem] font-semibold text-foreground">{buyAmount}</div>
                   </div>
                 </div>
                 <div className="text-right text-sm text-muted-foreground">
