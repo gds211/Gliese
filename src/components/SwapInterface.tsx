@@ -235,20 +235,20 @@ const SwapInterface = () => {
       
       {/* Token Selection Modal */}
       <Dialog open={showTokenModal} onOpenChange={setShowTokenModal}>
-        <DialogContent className="max-w-md mx-auto bg-muted/40 backdrop-blur-md border border-muted/60 shadow-2xl">
+        <DialogContent className="max-w-md mx-auto bg-black/20 backdrop-blur-xl border border-white/10 shadow-2xl">
           <DialogHeader className="pb-4">
-            <DialogTitle className="text-lg font-semibold text-foreground">Select Token</DialogTitle>
+            <DialogTitle className="text-lg font-semibold text-white">Select Token</DialogTitle>
           </DialogHeader>
           
           <div className="space-y-4">
             {/* Search Bar */}
             <div className="relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-white/60" />
               <Input
                 placeholder="Search any token. Include '=' for exact match."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10 bg-background/60 border border-border/60 text-foreground placeholder:text-muted-foreground focus:border-primary/50 focus:bg-background/80"
+                className="pl-10 bg-white/5 border border-white/20 text-white placeholder:text-white/40 focus:border-white/40 focus:bg-white/10"
               />
             </div>
             
@@ -259,31 +259,31 @@ const SwapInterface = () => {
                   key={token.symbol}
                   variant="ghost"
                   onClick={() => selectToken(token.symbol)}
-                  className="w-full justify-start p-4 h-auto hover:bg-muted/60 rounded-lg group transition-colors duration-200"
+                  className="w-full justify-start p-4 h-auto hover:bg-white/5 rounded-lg group"
                 >
                   <div className="flex items-center space-x-3 w-full">
                     {/* Token Icon */}
-                    <div className="w-8 h-8 rounded-full bg-muted/80 border border-border/40 flex items-center justify-center text-foreground font-semibold text-sm flex-shrink-0">
+                    <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-400 to-purple-600 flex items-center justify-center text-white font-semibold text-sm flex-shrink-0">
                       {token.symbol.charAt(0)}
                     </div>
                     
                     {/* Token Info */}
                     <div className="flex-1 text-left">
                       <div className="flex items-center space-x-2">
-                        <span className="font-medium text-foreground">{token.symbol}</span>
-                        <div className="w-1 h-1 bg-primary rounded-full"></div>
-                        <span className="text-xs text-primary font-medium">{Math.floor(Math.random() * 100)}</span>
+                        <span className="font-medium text-white">{token.symbol}</span>
+                        <div className="w-1 h-1 bg-green-400 rounded-full"></div>
+                        <span className="text-xs text-green-400 font-medium">{Math.floor(Math.random() * 100)}</span>
                       </div>
-                      <div className="text-xs text-muted-foreground">{token.name}</div>
-                      <div className="text-xs text-muted-foreground/80">
+                      <div className="text-xs text-white/60">{token.name}</div>
+                      <div className="text-xs text-white/40">
                         ${token.price.toLocaleString()} · {Math.random() > 0.5 ? '+' : '-'}{(Math.random() * 10).toFixed(2)}%
                       </div>
                     </div>
                     
                     {/* Right side info */}
                     <div className="text-right">
-                      <div className="text-xs text-muted-foreground">
-                        Balance: 0.00
+                      <div className="text-xs text-white/60">
+                        ${(Math.random() * 1000000).toFixed(0)}
                       </div>
                     </div>
                   </div>
