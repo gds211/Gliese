@@ -254,14 +254,14 @@ const SwapInterface = () => {
             </div>
             
             {/* Token List */}
-            <ScrollArea className="h-[28rem] w-full pr-4">
+            <ScrollArea className="h-[30rem] w-full pr-4">
               <div className="space-y-1">
                 {filteredTokens.map((token, index) => (
                   <Button
                     key={token.symbol}
                     variant="ghost"
                     onClick={() => selectToken(token.symbol)}
-                    className="w-full justify-start p-4 h-auto hover:bg-white/5 rounded-lg group"
+                    className="w-full justify-start pl-0 pr-4 py-4 h-auto hover:bg-white/5 rounded-lg group"
                   >
                     <div className="flex items-center w-full">
                       {/* Token Icon */}
@@ -270,7 +270,7 @@ const SwapInterface = () => {
                       </div>
                       
                       {/* Token Info - aligned to search input text position */}
-                      <div className="flex-1 text-left ml-10">
+                      <div className="flex-1 text-left ml-2">
                         <div className="flex items-center space-x-2">
                           <span className="font-medium text-white">{token.symbol}</span>
                           <div className="w-1 h-1 bg-green-400 rounded-full"></div>
