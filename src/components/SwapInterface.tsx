@@ -235,20 +235,20 @@ const SwapInterface = () => {
       
       {/* Token Selection Modal */}
       <Dialog open={showTokenModal} onOpenChange={setShowTokenModal}>
-        <DialogContent className="max-w-md mx-auto bg-black/20 backdrop-blur-xl border border-white/10 shadow-2xl">
+        <DialogContent className="max-w-md mx-auto bg-white/10 backdrop-blur-xl border border-white/20 shadow-2xl">
           <DialogHeader className="pb-4">
-            <DialogTitle className="text-lg font-semibold text-white">Select Token</DialogTitle>
+            <DialogTitle className="text-lg font-semibold text-foreground">Select Token</DialogTitle>
           </DialogHeader>
           
           <div className="space-y-4">
             {/* Search Bar */}
             <div className="relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-white/60" />
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
                 placeholder="Search any token. Include '=' for exact match."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10 bg-white/5 border border-white/20 text-white placeholder:text-white/40 focus:border-white/40 focus:bg-white/10"
+                className="pl-10 bg-white/20 border border-white/30 text-foreground placeholder:text-muted-foreground focus:border-white/50 focus:bg-white/30 backdrop-blur-sm"
               />
             </div>
             
@@ -259,7 +259,7 @@ const SwapInterface = () => {
                   key={token.symbol}
                   variant="ghost"
                   onClick={() => selectToken(token.symbol)}
-                  className="w-full justify-start p-4 h-auto hover:bg-white/5 rounded-lg group"
+                  className="w-full justify-start p-4 h-auto hover:bg-white/20 rounded-lg group backdrop-blur-sm"
                 >
                   <div className="flex items-center space-x-3 w-full">
                     {/* Token Icon */}
@@ -270,19 +270,19 @@ const SwapInterface = () => {
                     {/* Token Info */}
                     <div className="flex-1 text-left">
                       <div className="flex items-center space-x-2">
-                        <span className="font-medium text-white">{token.symbol}</span>
-                        <div className="w-1 h-1 bg-green-400 rounded-full"></div>
-                        <span className="text-xs text-green-400 font-medium">{Math.floor(Math.random() * 100)}</span>
+                        <span className="font-medium text-foreground">{token.symbol}</span>
+                        <div className="w-1 h-1 bg-green-500 rounded-full"></div>
+                        <span className="text-xs text-green-600 font-medium">{Math.floor(Math.random() * 100)}</span>
                       </div>
-                      <div className="text-xs text-white/60">{token.name}</div>
-                      <div className="text-xs text-white/40">
+                      <div className="text-xs text-muted-foreground">{token.name}</div>
+                      <div className="text-xs text-muted-foreground/70">
                         ${token.price.toLocaleString()} · {Math.random() > 0.5 ? '+' : '-'}{(Math.random() * 10).toFixed(2)}%
                       </div>
                     </div>
                     
                     {/* Right side info */}
                     <div className="text-right">
-                      <div className="text-xs text-white/60">
+                      <div className="text-xs text-muted-foreground">
                         ${(Math.random() * 1000000).toFixed(0)}
                       </div>
                     </div>
