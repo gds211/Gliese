@@ -254,14 +254,14 @@ const SwapInterface = () => {
             </div>
             
             {/* Token List */}
-            <ScrollArea className="h-[11.25rem] w-full" style={{ scrollbarWidth: 'thin' }}>
-              <div className="space-y-1 px-4">
+            <ScrollArea className="h-[30rem] w-full pr-4">
+              <div className="space-y-1">
                 {filteredTokens.map((token, index) => (
                   <Button
                     key={token.symbol}
                     variant="ghost"
                     onClick={() => selectToken(token.symbol)}
-                    className="w-full justify-start pl-0 pr-0 py-4 h-auto hover:bg-white/5 rounded-lg group -mx-4 px-4"
+                    className="w-full justify-start pl-0 pr-4 py-4 h-auto hover:bg-white/5 rounded-lg group"
                   >
                     <div className="flex items-center w-full">
                       {/* Token Icon */}
