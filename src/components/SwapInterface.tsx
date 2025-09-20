@@ -148,10 +148,10 @@ const SwapInterface = () => {
                   <Button
                     variant="ghost"
                     onClick={() => openTokenModal('sell')}
-                    className="w-28 h-8 bg-muted/60 rounded-full border-none p-2 hover:bg-muted/80 flex items-center justify-between"
+                    className="w-28 h-8 bg-muted/60 rounded-full border-none p-2 hover:bg-muted/80 flex items-center justify-between group"
                   >
                     <span>{sellToken}</span>
-                    <ChevronDown className="h-3 w-3" />
+                    <ChevronDown className="h-3 w-3 group-hover:text-white transition-colors" />
                   </Button>
                   <Input 
                     value={sellAmount}
@@ -188,10 +188,10 @@ const SwapInterface = () => {
                   <Button
                     variant="ghost"
                     onClick={() => openTokenModal('buy')}
-                    className="w-28 h-8 bg-muted/60 rounded-full border-none p-2 hover:bg-muted/80 flex items-center justify-between"
+                    className="w-28 h-8 bg-muted/60 rounded-full border-none p-2 hover:bg-muted/80 flex items-center justify-between group"
                   >
                     <span>{buyToken}</span>
-                    <ChevronDown className="h-3 w-3" />
+                    <ChevronDown className="h-3 w-3 group-hover:text-white transition-colors" />
                   </Button>
                   <div className="text-right">
                     <div className="text-4xl font-semibold text-muted-foreground">0.00</div>
