@@ -49,6 +49,10 @@ const SwapInterface = () => {
     return usdValue < 0.01 && usdValue > 0 ? `$${usdValue.toFixed(6)}` : `$${usdValue.toFixed(2)}`;
   };
 
+  const formatAddress = (address: string): string => {
+    return `${address.slice(0, 6)}...${address.slice(-6)}`;
+  };
+
   const handleSwapTokens = () => {
     // Swap tokens
     const tempToken = sellToken;
@@ -277,7 +281,7 @@ const SwapInterface = () => {
                         </div>
                         <div className="text-xs text-white/60">{token.name.toLowerCase()}</div>
                         <div className="text-xs text-white/40">
-                          {token.address}
+                          {formatAddress(token.address)}
                         </div>
                       </div>
                       
