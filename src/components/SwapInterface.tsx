@@ -236,7 +236,7 @@ const SwapInterface = () => {
       
       {/* Token Selection Modal */}
       <Dialog open={showTokenModal} onOpenChange={setShowTokenModal}>
-        <DialogOverlay className="fixed inset-0 z-50 bg-black/50 backdrop-blur-[2px]" />
+        <DialogOverlay className="fixed inset-0 z-50 bg-black/25 backdrop-blur-md" />
         <DialogContent className="max-w-md mx-auto backdrop-blur-xl border border-white/10 shadow-2xl" style={{ backgroundColor: '#000' }}>
           <DialogHeader className="pb-4">
             <DialogTitle className="text-lg font-semibold text-white">Select Token</DialogTitle>
