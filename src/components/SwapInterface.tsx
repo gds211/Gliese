@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card } from "@/components/ui/card";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogOverlay } from "@/components/ui/dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { ArrowUpDown, Wallet, Search, ChevronDown } from "lucide-react";
 import glieseLogo from "@/assets/gliese-logo.png";
@@ -236,6 +236,7 @@ const SwapInterface = () => {
       
       {/* Token Selection Modal */}
       <Dialog open={showTokenModal} onOpenChange={setShowTokenModal}>
+        <DialogOverlay className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm" />
         <DialogContent className="max-w-md mx-auto backdrop-blur-xl border border-white/10 shadow-2xl" style={{ backgroundColor: '#000' }}>
           <DialogHeader className="pb-4">
             <DialogTitle className="text-lg font-semibold text-white">Select Token</DialogTitle>
