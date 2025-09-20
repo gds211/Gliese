@@ -29,12 +29,12 @@ const SwapInterface = () => {
   };
 
   const tokens = [
-    { symbol: "MON", name: "MON Token", price: cryptoPrices.MON },
-    { symbol: "USDC", name: "USD Coin", price: cryptoPrices.USDC },
-    { symbol: "USDT", name: "Tether USD", price: cryptoPrices.USDT },
-    { symbol: "DAI", name: "Dai Stablecoin", price: cryptoPrices.DAI },
-    { symbol: "ETH", name: "Ethereum", price: cryptoPrices.ETH },
-    { symbol: "BTC", name: "Bitcoin", price: cryptoPrices.BTC }
+    { symbol: "MON", name: "MON Token", price: cryptoPrices.MON, address: "0xc12d74832bF295fD25793410D5c5495EeeD9EF09" },
+    { symbol: "USDC", name: "USD Coin", price: cryptoPrices.USDC, address: "0xA0b86a33E6441395bf3C6e8f1c7e9C9bB7B7b3b3" },
+    { symbol: "USDT", name: "Tether USD", price: cryptoPrices.USDT, address: "0xdAC17F958D2ee523a2206206994597C13D831ec7" },
+    { symbol: "DAI", name: "Dai Stablecoin", price: cryptoPrices.DAI, address: "0x6B175474E89094C44Da98b954EedeAC495271d0F" },
+    { symbol: "ETH", name: "Ethereum", price: cryptoPrices.ETH, address: "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2" },
+    { symbol: "BTC", name: "Bitcoin", price: cryptoPrices.BTC, address: "0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599" }
   ];
 
   const filteredTokens = tokens.filter(token => 
@@ -274,12 +274,10 @@ const SwapInterface = () => {
                       <div className="flex-1 text-left ml-2">
                         <div className="flex items-center space-x-2">
                           <span className="font-medium text-white">{token.symbol}</span>
-                          <div className="w-1 h-1 bg-green-400 rounded-full"></div>
-                          <span className="text-xs text-green-400 font-medium">{Math.floor(Math.random() * 100)}</span>
                         </div>
-                        <div className="text-xs text-white/60">{token.name}</div>
+                        <div className="text-xs text-white/60">{token.name.toLowerCase()}</div>
                         <div className="text-xs text-white/40">
-                          ${token.price.toLocaleString()} · {Math.random() > 0.5 ? '+' : '-'}{(Math.random() * 10).toFixed(2)}%
+                          {token.address}
                         </div>
                       </div>
                       
