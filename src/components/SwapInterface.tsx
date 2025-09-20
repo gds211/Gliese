@@ -254,13 +254,8 @@ const SwapInterface = () => {
             </div>
             
             {/* Token List */}
-            <ScrollArea 
-              className="w-full pr-4" 
-              style={{ 
-                height: `${Math.min(filteredTokens.length, 5) * 64 + 8}px` 
-              }}
-            >
-              <div className="space-y-1 py-1">
+            <ScrollArea className="h-[30rem] w-full pr-4">
+              <div className="space-y-1">
                 {filteredTokens.map((token, index) => (
                   <Button
                     key={token.symbol}
