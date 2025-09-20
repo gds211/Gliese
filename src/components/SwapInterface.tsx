@@ -254,42 +254,46 @@ const SwapInterface = () => {
             </div>
             
             {/* Token List */}
-            <ScrollArea className="h-[30rem] w-full pr-4">
-              <div className="space-y-1">
+            <ScrollArea className="h-[20rem] w-full" style={{ scrollbarWidth: 'thin' }}>
+              <div className="space-y-1 pr-4">
                 {filteredTokens.map((token, index) => (
-                  <Button
+                  <div
                     key={token.symbol}
-                    variant="ghost"
-                    onClick={() => selectToken(token.symbol)}
-                    className="w-full justify-start pl-0 pr-4 py-4 h-auto hover:bg-white/5 rounded-lg group"
+                    className="hover:bg-white/5 rounded-lg transition-colors"
                   >
-                    <div className="flex items-center w-full">
-                      {/* Token Icon */}
-                      <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-400 to-purple-600 flex items-center justify-center text-white font-semibold text-sm flex-shrink-0">
-                        {token.symbol.charAt(0)}
-                      </div>
-                      
-                      {/* Token Info - aligned to search input text position */}
-                      <div className="flex-1 text-left ml-2">
-                        <div className="flex items-center space-x-2">
-                          <span className="font-medium text-white">{token.symbol}</span>
-                          <div className="w-1 h-1 bg-green-400 rounded-full"></div>
-                          <span className="text-xs text-green-400 font-medium">{Math.floor(Math.random() * 100)}</span>
-                        </div>
-                        <div className="text-xs text-white/60">{token.name}</div>
-                        <div className="text-xs text-white/40">
-                          ${token.price.toLocaleString()} · {Math.random() > 0.5 ? '+' : '-'}{(Math.random() * 10).toFixed(2)}%
-                        </div>
-                      </div>
-                      
-                      {/* Right side info */}
-                      <div className="text-right">
-                        <div className="text-xs text-white/60">
-                          ${(Math.random() * 1000000).toFixed(0)}
-                        </div>
-                      </div>
-                    </div>
-                  </Button>
+                     <Button
+                       variant="ghost"
+                       onClick={() => selectToken(token.symbol)}
+                       className="w-full justify-start pl-0 pr-0 py-4 h-auto hover:bg-transparent rounded-lg group"
+                     >
+                       <div className="flex items-center w-full">
+                         {/* Token Icon */}
+                         <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-400 to-purple-600 flex items-center justify-center text-white font-semibold text-sm flex-shrink-0">
+                           {token.symbol.charAt(0)}
+                         </div>
+                         
+                         {/* Token Info - aligned to search input text position */}
+                         <div className="flex-1 text-left ml-2">
+                           <div className="flex items-center space-x-2">
+                             <span className="font-medium text-white">{token.symbol}</span>
+                             <div className="w-1 h-1 bg-green-400 rounded-full"></div>
+                             <span className="text-xs text-green-400 font-medium">{Math.floor(Math.random() * 100)}</span>
+                           </div>
+                           <div className="text-xs text-white/60">{token.name}</div>
+                           <div className="text-xs text-white/40">
+                             ${token.price.toLocaleString()} · {Math.random() > 0.5 ? '+' : '-'}{(Math.random() * 10).toFixed(2)}%
+                           </div>
+                         </div>
+                         
+                         {/* Right side info */}
+                         <div className="text-right">
+                           <div className="text-xs text-white/60">
+                             ${(Math.random() * 1000000).toFixed(0)}
+                           </div>
+                         </div>
+                       </div>
+                     </Button>
+                   </div>
                 ))}
               </div>
             </ScrollArea>
