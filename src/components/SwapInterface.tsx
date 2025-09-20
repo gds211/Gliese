@@ -254,49 +254,60 @@ const SwapInterface = () => {
             </div>
             
             {/* Token List */}
-            <ScrollArea className="h-[20rem] w-full" style={{ scrollbarWidth: 'thin' }}>
-              <div className="space-y-1 pr-4">
+            <div 
+              className="w-full pr-2"
+              style={{ 
+                height: filteredTokens.length < 5 ? `${16 + (filteredTokens.length * 68) + 16}px` : '340px',
+                maxHeight: '340px',
+                overflowY: filteredTokens.length >= 5 ? 'auto' : 'hidden',
+                scrollbarWidth: 'thin'
+              }}
+            >
+              <div className="space-y-1 py-4 pl-3" style={{
+                scrollbarWidth: 'thin',
+                scrollbarColor: 'rgba(255, 255, 255, 0.2) transparent'
+              }}>
                 {filteredTokens.map((token, index) => (
                   <div
                     key={token.symbol}
-                    className="hover:bg-white/5 rounded-lg transition-colors"
+                    className="relative rounded-lg transition-colors hover:before:absolute hover:before:inset-0 hover:before:bg-white/5 hover:before:rounded-lg hover:before:pointer-events-none"
                   >
-                     <Button
-                       variant="ghost"
-                       onClick={() => selectToken(token.symbol)}
-                       className="w-full justify-start pl-0 pr-0 py-4 h-auto hover:bg-transparent rounded-lg group"
-                     >
-                       <div className="flex items-center w-full">
-                         {/* Token Icon */}
-                         <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-400 to-purple-600 flex items-center justify-center text-white font-semibold text-sm flex-shrink-0">
-                           {token.symbol.charAt(0)}
-                         </div>
-                         
-                         {/* Token Info - aligned to search input text position */}
-                         <div className="flex-1 text-left ml-2">
-                           <div className="flex items-center space-x-2">
-                             <span className="font-medium text-white">{token.symbol}</span>
-                             <div className="w-1 h-1 bg-green-400 rounded-full"></div>
-                             <span className="text-xs text-green-400 font-medium">{Math.floor(Math.random() * 100)}</span>
-                           </div>
-                           <div className="text-xs text-white/60">{token.name}</div>
-                           <div className="text-xs text-white/40">
-                             ${token.price.toLocaleString()} · {Math.random() > 0.5 ? '+' : '-'}{(Math.random() * 10).toFixed(2)}%
-                           </div>
-                         </div>
-                         
-                         {/* Right side info */}
-                         <div className="text-right">
-                           <div className="text-xs text-white/60">
-                             ${(Math.random() * 1000000).toFixed(0)}
-                           </div>
-                         </div>
-                       </div>
-                     </Button>
-                   </div>
+                    <Button
+                      variant="ghost"
+                      onClick={() => selectToken(token.symbol)}
+                      className="w-full justify-start pl-0 pr-4 py-4 h-auto hover:bg-transparent rounded-lg group relative z-10"
+                    >
+                      <div className="flex items-center w-full">
+                        {/* Token Icon - aligned with search input left border */}
+                        <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-400 to-purple-600 flex items-center justify-center text-white font-semibold text-sm flex-shrink-0">
+                          {token.symbol.charAt(0)}
+                        </div>
+                        
+                        {/* Token Info - text starts 8px after avatar right edge */}
+                        <div className="flex-1 text-left" style={{ marginLeft: '8px' }}>
+                          <div className="flex items-center space-x-2">
+                            <span className="font-medium text-white">{token.symbol}</span>
+                            <div className="w-1 h-1 bg-green-400 rounded-full"></div>
+                            <span className="text-xs text-green-400 font-medium">{Math.floor(Math.random() * 100)}</span>
+                          </div>
+                          <div className="text-xs text-white/60">{token.name}</div>
+                          <div className="text-xs text-white/40">
+                            ${token.price.toLocaleString()} · {Math.random() > 0.5 ? '+' : '-'}{(Math.random() * 10).toFixed(2)}%
+                          </div>
+                        </div>
+                        
+                        {/* Right side info */}
+                        <div className="text-right">
+                          <div className="text-xs text-white/60">
+                            ${(Math.random() * 1000000).toFixed(0)}
+                          </div>
+                        </div>
+                      </div>
+                    </Button>
+                  </div>
                 ))}
               </div>
-            </ScrollArea>
+            </div>
           </div>
         </DialogContent>
       </Dialog>
