@@ -1,1 +1,0 @@
-export const YAK_ROUTER: `0x${string}` = '0xYOUR_ROUTER_ADDRESS';

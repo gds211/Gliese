@@ -1,28 +1,60 @@
-import { useAccount } from 'wagmi';
-import { useConnectModal, useAccountModal, useChainModal } from '@rainbow-me/rainbowkit';
+import { Button } from "@/components/ui/button";
+import { useState } from "react";
+import glieseLogo from "@/assets/gliese-logo.png";
 
-export default function Navigation() {
-  const { isConnected, address } = useAccount();
-  const { openConnectModal } = useConnectModal();
-  const { openAccountModal } = useAccountModal();
-  const { openChainModal } = useChainModal();
+const Navigation = () => {
+  const [activeTab, setActiveTab] = useState("Swap");
+  
+  const navItems = [
+    { name: "Swap", href: "#" },
+    { name: "Perps", href: "#" },
+    { name: "Markets", href: "#" },
+    { name: "Stake", href: "#" },
+    { name: "Bridge", href: "#" }
+  ];
 
   return (
-    <nav className="flex items-center justify-between p-4">
-      <div className="font-semibold">Yak Aggregator</div>
+    <nav className="flex items-center justify-between px-6 py-4 backdrop-blur-sm border-b border-border/20">
+      {/* Logo */}
+      <div className="flex items-center gap-3">
+        <img 
+          src={glieseLogo} 
+          alt="Gliese" 
+          className="w-8 h-8 rounded-full shadow-glow-cosmic"
+        />
+        <span className="text-xl font-bold text-foreground">GLIESE</span>
+      </div>
 
-      {!isConnected ? (
-        <button onClick={openConnectModal} className="rounded-2xl px-4 py-2 bg-black text-white hover:opacity-90">
-          Connect Wallet
-        </button>
-      ) : (
-        <div className="flex items-center gap-2">
-          <button onClick={openChainModal} className="rounded-xl px-3 py-2 border">Network</button>
-          <button onClick={openAccountModal} className="rounded-2xl px-3 py-2 border" title={address}>
-            {address?.slice(0, 6)}…{address?.slice(-4)}
-          </button>
-        </div>
-      )}
+      {/* Navigation Links */}
+      <div className="flex items-center gap-1 bg-card/70 rounded-lg p-1 backdrop-blur-sm">
+        {navItems.map((item) => (
+          <Button
+            key={item.name}
+            variant={activeTab === item.name ? "default" : "ghost"}
+            size="sm"
+            onClick={() => setActiveTab(item.name)}
+            className={`
+              px-4 py-2 transition-all duration-300
+              ${activeTab === item.name 
+                ? "bg-primary text-primary-foreground shadow-glow-cosmic" 
+                : "text-muted-foreground hover:text-foreground hover:bg-secondary/50"
+              }
+            `}
+          >
+            {item.name}
+          </Button>
+        ))}
+      </div>
+
+      {/* Connect Wallet Button */}
+      <Button 
+        variant="default"
+        className="bg-primary text-primary-foreground hover:bg-primary/90 shadow-glow-cosmic transition-all duration-300 hover:scale-105"
+      >
+        Connect Wallet
+      </Button>
     </nav>
   );
-}
+};
+
+export default Navigation;
