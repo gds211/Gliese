@@ -7,14 +7,16 @@ import '@rainbow-me/rainbowkit/styles.css';
 import { monadTestnet } from './chains';
 
 const WALLETCONNECT_PROJECT_ID =
-  import.meta.env.VITE_WALLETCONNECT_PROJECT_ID ?? '<YOUR_WC_PROJECT_ID>';
+  import.meta.env.VITE_WALLETCONNECT_PROJECT_ID ?? 'demo-project-id';
 
 export const wagmiConfig = createConfig(
   getDefaultConfig({
     appName: 'Yak Aggregator',
     projectId: WALLETCONNECT_PROJECT_ID,
     chains: [monadTestnet],
-    transports: { [monadTestnet.id]: http(monadTestnet.rpcUrls.default.http[0]) },
+    transports: { 
+      [monadTestnet.id]: http(monadTestnet.rpcUrls.default.http[0])
+    },
     ssr: false,
   })
 );
