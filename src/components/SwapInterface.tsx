@@ -194,7 +194,7 @@ const SwapInterface = () => {
                     <ChevronDown className="h-3 w-3" />
                   </Button>
                   <div className="text-right">
-                    <div className="text-[8rem] font-semibold text-foreground">
+                    <div className="text-4xl font-semibold text-foreground">
                       {(() => {
                         const sellPrice = cryptoPrices[sellToken as keyof typeof cryptoPrices] || 0;
                         const buyPrice = cryptoPrices[buyToken as keyof typeof cryptoPrices] || 0;
