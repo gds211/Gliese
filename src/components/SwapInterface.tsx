@@ -156,7 +156,7 @@ const SwapInterface = () => {
                   <Input 
                     value={sellAmount}
                     onChange={(e) => setSellAmount(e.target.value)}
-                    className="!border-none !bg-transparent text-right !text-[40px] md:!text-[50px] font-semibold !focus-visible:ring-0 !focus:ring-0 !outline-none pr-2 h-auto text-foreground !shadow-none !ring-0 !ring-offset-0"
+                    className="!border-none !bg-transparent text-right !text-[42px] font-semibold !focus-visible:ring-0 !focus:ring-0 !outline-none pr-2 h-auto text-foreground !shadow-none !ring-0 !ring-offset-0"
                     placeholder="0.00"
                   />
                 </div>
@@ -206,7 +206,7 @@ const SwapInterface = () => {
                       return "0.00";
                     })()}
                     readOnly
-                    className="!border-none !bg-transparent text-right !text-[40px] md:!text-[50px] font-semibold !focus-visible:ring-0 !focus:ring-0 !outline-none pr-2 h-auto text-foreground !shadow-none !ring-0 !ring-offset-0"
+                    className="!border-none !bg-transparent text-right !text-[42px] font-semibold !focus-visible:ring-0 !focus:ring-0 !outline-none pr-2 h-auto text-foreground !shadow-none !ring-0 !ring-offset-0"
                   />
                 </div>
                 <div className="text-right text-sm text-muted-foreground">
