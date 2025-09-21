@@ -1,15 +1,9 @@
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
-import { useAccount } from 'wagmi';
-import { useConnectModal, useAccountModal, useChainModal } from '@rainbow-me/rainbowkit';
 import glieseLogo from "@/assets/gliese-logo.png";
 
 const Navigation = () => {
   const [activeTab, setActiveTab] = useState("Swap");
-  const { isConnected, address } = useAccount();
-  const { openConnectModal } = useConnectModal();
-  const { openAccountModal } = useAccountModal();
-  const { openChainModal } = useChainModal();
   
   const navItems = [
     { name: "Swap", href: "#" },
@@ -53,35 +47,12 @@ const Navigation = () => {
       </div>
 
       {/* Connect Wallet Button */}
-      {!isConnected ? (
-        <Button 
-          variant="default"
-          onClick={openConnectModal}
-          className="bg-primary text-primary-foreground hover:bg-primary/90 shadow-glow-cosmic transition-all duration-300 hover:scale-105"
-        >
-          Connect Wallet
-        </Button>
-      ) : (
-        <div className="flex items-center gap-2">
-          <Button 
-            variant="outline" 
-            size="sm"
-            onClick={openChainModal}
-            className="border-border/20 hover:bg-secondary/50"
-          >
-            Network
-          </Button>
-          <Button 
-            variant="outline" 
-            size="sm"
-            onClick={openAccountModal}
-            className="border-border/20 hover:bg-secondary/50"
-            title={address}
-          >
-            {address?.slice(0, 6)}…{address?.slice(-4)}
-          </Button>
-        </div>
-      )}
+      <Button 
+        variant="default"
+        className="bg-primary text-primary-foreground hover:bg-primary/90 shadow-glow-cosmic transition-all duration-300 hover:scale-105"
+      >
+        Connect Wallet
+      </Button>
     </nav>
   );
 };
