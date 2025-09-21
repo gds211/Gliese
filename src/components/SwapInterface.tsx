@@ -193,21 +193,21 @@ const SwapInterface = () => {
                     <span>{buyToken}</span>
                     <ChevronDown className="h-3 w-3" />
                   </Button>
-                  <div className="text-right">
-                    <div className="text-[65px] font-semibold text-foreground">
-                      {(() => {
-                        const sellPrice = cryptoPrices[sellToken as keyof typeof cryptoPrices] || 0;
-                        const buyPrice = cryptoPrices[buyToken as keyof typeof cryptoPrices] || 0;
-                        const sellAmountNum = parseFloat(sellAmount) || 0;
-                        
-                        if (sellPrice > 0 && buyPrice > 0 && sellAmountNum > 0) {
-                          const calculatedAmount = (sellAmountNum * sellPrice) / buyPrice;
-                          return calculatedAmount.toFixed(4);
-                        }
-                        return "0.00";
-                      })()}
-                    </div>
-                  </div>
+                  <Input 
+                    value={(() => {
+                      const sellPrice = cryptoPrices[sellToken as keyof typeof cryptoPrices] || 0;
+                      const buyPrice = cryptoPrices[buyToken as keyof typeof cryptoPrices] || 0;
+                      const sellAmountNum = parseFloat(sellAmount) || 0;
+                      
+                      if (sellPrice > 0 && buyPrice > 0 && sellAmountNum > 0) {
+                        const calculatedAmount = (sellAmountNum * sellPrice) / buyPrice;
+                        return calculatedAmount.toFixed(4);
+                      }
+                      return "0.00";
+                    })()}
+                    readOnly
+                    className="!border-none !bg-transparent text-right text-[65px] font-semibold !focus-visible:ring-0 !focus:ring-0 !outline-none pr-2 h-auto text-foreground !shadow-none !ring-0 !ring-offset-0"
+                  />
                 </div>
                 <div className="text-right text-sm text-muted-foreground">
                   {calculateUSDValue(buyAmount, buyToken)}
