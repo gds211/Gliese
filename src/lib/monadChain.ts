@@ -1,31 +1,16 @@
-import type { Chain } from 'viem'
+// src/lib/monadChain.ts
+import type { Chain } from 'viem';
 
-export const monadChain: Chain = {
-  id: 10143,
-  name: 'Monad',
-  nativeCurrency: {
-    name: 'Monad',
-    symbol: 'MON',
-    decimals: 18,
-  },
+export const monadChain = {
+  id: 10_143,
+  name: 'Monad Testnet',
+  nativeCurrency: { name: 'Monad Testnet', symbol: 'MON', decimals: 18 },
   rpcUrls: {
-    default: {
-      http: ['https://rpc.monad.xyz'],
-    },
-    public: {
-      http: ['https://rpc.monad.xyz'],
-    },
+    default: { http: ['https://testnet-rpc.monad.xyz'] },
+    public:  { http: ['https://testnet-rpc.monad.xyz'] },
   },
   blockExplorers: {
-    default: {
-      name: 'Monad Explorer',
-      url: 'https://explorer.monad.xyz',
-    },
+    default: { name: 'SocialScan', url: 'https://monad-testnet.socialscan.io' },
   },
-  contracts: {
-    multicall3: {
-      address: '0xca11bde05977b3631167028862be2a173976ca11',
-      blockCreated: 0,
-    },
-  },
-}
+  iconBackground: '#0b0b0f',
+} as const satisfies Chain;
