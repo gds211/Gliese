@@ -1,36 +1,54 @@
 import { Button } from "@/components/ui/button";
-import { useAccount, useConnect, useDisconnect } from 'wagmi';
+import { useAccount, useChainId } from "wagmi";
+import { useConnectModal, useAccountModal, useChainModal } from "@rainbow-me/rainbowkit";
+import { PUBLIC_CONFIG } from "@/config/public";
 
-const WalletButton = () => {
+export default function WalletButton() {
   const { address, isConnected } = useAccount();
-  const { connect, connectors } = useConnect();
-  const { disconnect } = useDisconnect();
+  const chainId = useChainId();
 
-  const formatAddress = (address: string) => {
-    return `${address.slice(0, 6)}...${address.slice(-4)}`;
-  };
+  const { openConnectModal } = useConnectModal();
+  const { openAccountModal } = useAccountModal();
+  const { openChainModal } = useChainModal();
 
-  if (isConnected && address) {
+  const short = (addr?: string) => (addr ? `${addr.slice(0, 6)}…${addr.slice(-4)}` : "");
+
+  // Not connected -> open RainbowKit Connect modal
+  if (!isConnected) {
     return (
-      <Button 
-        variant="outline"
-        onClick={() => disconnect()}
-        className="bg-card/70 text-foreground hover:bg-secondary/50 border-border/20"
+      <Button
+        onClick={() => openConnectModal?.()}
+        className="bg-primary text-primary-foreground shadow-glow-cosmic hover:scale-105"
+        type="button"
       >
-        {formatAddress(address)}
+        Connect Wallet
       </Button>
     );
   }
 
+  // Wrong network -> open RainbowKit Chain modal
+  const wrongNetwork = chainId && chainId !== PUBLIC_CONFIG.CHAIN_ID;
+  if (wrongNetwork) {
+    return (
+      <Button
+        onClick={() => openChainModal?.()}
+        variant="destructive"
+        className="shadow-glow-cosmic"
+        type="button"
+      >
+        Wrong network — Switch
+      </Button>
+    );
+  }
+
+  // Connected & on correct network -> open RainbowKit Account modal
   return (
-    <Button 
-      variant="default"
-      onClick={() => connect({ connector: connectors[0] })}
-      className="bg-primary text-primary-foreground hover:bg-primary/90 shadow-glow-cosmic transition-all duration-300 hover:scale-105"
+    <Button
+      onClick={() => openAccountModal?.()}
+      className="bg-primary text-primary-foreground shadow-glow-cosmic"
+      type="button"
     >
-      Connect Wallet
+      {short(address)}
     </Button>
   );
-};
-
-export default WalletButton;
+}
