@@ -1,7 +1,7 @@
-import { Chain } from 'viem'
+import type { Chain } from 'viem'
 
 export const monadChain: Chain = {
-  id: 34_443,
+  id: 10143,
   name: 'Monad',
   nativeCurrency: {
     name: 'Monad',

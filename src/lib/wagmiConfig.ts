@@ -1,24 +1,18 @@
-import { createConfig, http } from 'wagmi'
-import { mainnet, sepolia } from 'wagmi/chains'
-import { coinbaseWallet, metaMask, walletConnect } from 'wagmi/connectors'
-import { monadChain } from './monadChain'
+import { getDefaultConfig } from '@rainbow-me/rainbowkit';
+import { http } from 'wagmi';
+import { monadChain } from './monadChain';
+import { PUBLIC_CONFIG, WALLETCONNECT_PROJECT_ID } from '@/config/public';
 
-const projectId = 'YOUR_WALLETCONNECT_PROJECT_ID'
+if (!WALLETCONNECT_PROJECT_ID || WALLETCONNECT_PROJECT_ID.length <= 20) {
+  throw new Error('WALLETCONNECT_PROJECT_ID missing/invalid in src/config/public.ts');
+}
 
-export const wagmiConfig = createConfig({
-  chains: [mainnet, sepolia, monadChain],
-  connectors: [
-    metaMask(),
-    coinbaseWallet({
-      appName: 'Gliese',
-    }),
-    walletConnect({
-      projectId,
-    }),
-  ],
+export const wagmiConfig = getDefaultConfig({
+  appName: PUBLIC_CONFIG.APP_NAME,
+  projectId: WALLETCONNECT_PROJECT_ID,
+  chains: [monadChain], // keep only chains you actually support
   transports: {
-    [mainnet.id]: http(),
-    [sepolia.id]: http(),
-    [monadChain.id]: http(),
+    [monadChain.id]: http(PUBLIC_CONFIG.RPC_URL), // explicit RPC (avoid public-rate limits)
   },
-})
+  ssr: false,
+});
