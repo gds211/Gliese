@@ -1,6 +1,6 @@
-import { defineChain } from 'viem'
+import { Chain } from 'viem'
 
-export const monadChain = defineChain({
+export const monadChain: Chain = {
   id: 34_443,
   name: 'Monad',
   nativeCurrency: {
@@ -10,6 +10,9 @@ export const monadChain = defineChain({
   },
   rpcUrls: {
     default: {
+      http: ['https://rpc.monad.xyz'],
+    },
+    public: {
       http: ['https://rpc.monad.xyz'],
     },
   },
@@ -25,4 +28,4 @@ export const monadChain = defineChain({
       blockCreated: 0,
     },
   },
-})
+}
