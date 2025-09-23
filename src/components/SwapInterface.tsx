@@ -203,7 +203,7 @@ const SwapInterface = () => {
                         const calculatedAmount = (sellAmountNum * sellPrice) / buyPrice;
                         return calculatedAmount.toFixed(4);
                       }
-                      return "0";
+                      return "0.00";
                     })()}
                     readOnly
                     className="!border-none !bg-transparent text-right !text-[30px] font-semibold !focus-visible:ring-0 !focus:ring-0 !outline-none pr-2 h-auto text-foreground !shadow-none !ring-0 !ring-offset-0"
