@@ -52,10 +52,14 @@ const SwapInterface = () => {
   );
 
   const { data: sellBal, isLoading: sellBalLoading } = useBalance({
-    address,
-    token: isNativeSell ? undefined : (selectedSellToken?.address as `0x${string}` | undefined),
+  address,
+  token: isNativeSell ? undefined : (selectedSellToken?.address as `0x${string}` | undefined),
+  query: {
     enabled: Boolean(isConnected && address && selectedSellToken),
-  });
+    refetchOnWindowFocus: false,
+  },
+});
+
 
   // Helper: format bigint to a trimmed decimal string (max 6 fractional digits)
   function formatAmount(raw: bigint, decimals: number, maxFrac: number = 6): string {
