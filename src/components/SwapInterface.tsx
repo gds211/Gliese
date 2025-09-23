@@ -1,65 +1,125 @@
-import { useState, useEffect } from "react";
+// src/components/SwapInterface.tsx
+import { useState, useEffect, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card } from "@/components/ui/card";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogOverlay } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { ArrowUpDown, Wallet, Search, ChevronDown } from "lucide-react";
+import { useAccount } from "wagmi";
+import { parseUnits, formatUnits } from "viem";
+import { useToast } from "@/components/ui/use-toast";
+import { PUBLIC_CONFIG } from "@/config/public";
+import { useTokenBalance, toDecimalStringFloor, type TokenMeta } from "@/hooks/useTokenBalance";
 import glieseLogo from "@/assets/gliese-logo.png";
 
+const NATIVE_SYMBOL = PUBLIC_CONFIG.NATIVE_SYMBOL;
+const NATIVE_DECIMALS = PUBLIC_CONFIG.NATIVE_DECIMALS;
+
+// ~ buffer to keep when selling native so user can still pay gas
+const NATIVE_GAS_BUFFER = parseUnits("0.03", NATIVE_DECIMALS);
+
+// Mock crypto prices in USD (placeholder)
+const cryptoPrices = {
+  MON: 0.00215,
+  USDC: 1.0,
+  USDT: 1.0,
+  DAI: 1.0,
+  ETH: 2650.0,
+  BTC: 43500.0
+};
+
+// Your token list (sell modal uses this)
+const TOKENS: TokenMeta[] = [
+  { symbol: NATIVE_SYMBOL }, // native coin — no address
+  { symbol: "USDC", address: "0xf817257fed379853cDe0fa4F97AB987181B1E5Ea" as `0x${string}` },
+  { symbol: "USDT", address: "0x88b8E2161DEDC77EF4ab7585569D2415a1C1055D" as `0x${string}` },
+  { symbol: "CHOG", address: "0xE0590015A873bF326bd645c3E1266d4db41C4E6B" as `0x${string}` },
+  { symbol: "aprMON", address: "0xb2f82D0f38dc453D596Ad40A37799446Cc89274A" as `0x${string}` },
+  { symbol: "WMON", address: "0x760AfE86e5de5fa0Ee542fc7B7B713e1c5425701" as `0x${string}` },
+  { symbol: "DAK", address: "0x0F0BDEbF0F83cD1EE3974779Bcb7315f9808c714" as `0x${string}` },
+];
+
 const SwapInterface = () => {
+  // ===== STATE =====
   const [sellAmount, setSellAmount] = useState("");
   const [buyAmount, setBuyAmount] = useState("0");
-  const [sellToken, setSellToken] = useState("MON");
-  const [buyToken, setBuyToken] = useState("USDC");
-  const [priceRate, setPriceRate] = useState("1 MON = 0.00215 USDC");
+  const [sellTokenSym, setSellTokenSym] = useState<string>(NATIVE_SYMBOL);
+  const [buyTokenSym, setBuyTokenSym] = useState<string>("USDC");
+  const [priceRate, setPriceRate] = useState(`1 ${NATIVE_SYMBOL} = 0.00215 USDC`);
   const [showTokenModal, setShowTokenModal] = useState(false);
   const [tokenSelectionType, setTokenSelectionType] = useState<'sell' | 'buy'>('sell');
   const [searchTerm, setSearchTerm] = useState("");
-  
-  // Mock crypto prices in USD
-  const cryptoPrices = {
-    MON: 0.00215,
-    USDC: 1.0,
-    USDT: 1.0,
-    DAI: 1.0,
-    ETH: 2650.0,
-    BTC: 43500.0
-  };
 
-  const tokens = [
-    { symbol: "MON", name: "MON Token", price: cryptoPrices.MON, address: "0xc12d74832bF295fD25793410D5c5495EeeD9EF09" },
-    { symbol: "USDC", name: "USD Coin", price: cryptoPrices.USDC, address: "0xA0b86a33E6441395bf3C6e8f1c7e9C9bB7B7b3b3" },
-    { symbol: "USDT", name: "Tether USD", price: cryptoPrices.USDT, address: "0xdAC17F958D2ee523a2206206994597C13D831ec7" },
-    { symbol: "DAI", name: "Dai Stablecoin", price: cryptoPrices.DAI, address: "0x6B175474E89094C44Da98b954EedeAC495271d0F" },
-    { symbol: "ETH", name: "Ethereum", price: cryptoPrices.ETH, address: "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2" },
-    { symbol: "BTC", name: "Bitcoin", price: cryptoPrices.BTC, address: "0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599" }
-  ];
+  const { isConnected } = useAccount();
+  const { toast } = useToast();
 
-  const filteredTokens = tokens.filter(token => 
-    token.symbol.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    token.name.toLowerCase().includes(searchTerm.toLowerCase())
+  // Map selected symbols to token meta
+  const sellToken = useMemo<TokenMeta | undefined>(() => TOKENS.find(t => t.symbol === sellTokenSym), [sellTokenSym]);
+  const buyToken = useMemo<TokenMeta | undefined>(() => TOKENS.find(t => t.symbol === buyTokenSym), [buyTokenSym]);
+
+  // Live balance for selected sell token
+  const sellBal = useTokenBalance(sellToken);
+
+  // Derived: available to use (if native keep buffer)
+  const isNativeSell = !!sellToken && !sellToken.address;
+  const availableRaw: bigint = useMemo(() => {
+    if (!sellToken) return 0n;
+    if (isNativeSell) {
+      const diff = sellBal.raw - NATIVE_GAS_BUFFER;
+      return diff > 0n ? diff : 0n;
+    }
+    return sellBal.raw;
+  }, [sellToken, isNativeSell, sellBal.raw]);
+
+  const availableFmt = useMemo(
+    () => toDecimalStringFloor(availableRaw, sellBal.decimals),
+    [availableRaw, sellBal.decimals]
   );
 
-  const calculateUSDValue = (amount: string, token: string): string => {
+  // Clamp input on change
+  function onSellChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const v = sanitizeNumeric(e.target.value);
+    setSellAmount(clampToBalance(v, sellBal.decimals, availableRaw));
+  }
+
+  // HALF/MAX
+  function onHalf() {
+    if (!isConnected) return toast({ title: "Connect your wallet", description: "You need to connect before using HALF.", variant: "destructive" });
+    if (!sellToken) return toast({ title: "Select a token", variant: "destructive" });
+    const half = availableRaw / 2n;
+    const val = toDecimalStringFloor(half, sellBal.decimals);
+    setSellAmount(val);
+    toast({ title: "Filled HALF", description: `${val} ${sellToken.symbol}` });
+  }
+  function onMax() {
+    if (!isConnected) return toast({ title: "Connect your wallet", description: "You need to connect before using MAX.", variant: "destructive" });
+    if (!sellToken) return toast({ title: "Select a token", variant: "destructive" });
+    const val = toDecimalStringFloor(availableRaw, sellBal.decimals);
+    setSellAmount(val);
+    toast({ title: "Filled MAX", description: `${val} ${sellToken.symbol}` });
+  }
+
+  // Reset input when token changes
+  useEffect(() => {
+    setSellAmount("");
+  }, [sellTokenSym]);
+
+  // ===== EXISTING LOGIC: prices / USD display / modal =====
+  const calculateUSDValue = (amount: string, symbol: string): string => {
     const numAmount = parseFloat(amount) || 0;
-    const price = cryptoPrices[token as keyof typeof cryptoPrices] || 0;
+    const price = cryptoPrices[symbol as keyof typeof cryptoPrices] || 0;
     const usdValue = numAmount * price;
     return usdValue < 0.01 && usdValue > 0 ? `$${usdValue.toFixed(6)}` : `$${usdValue.toFixed(2)}`;
   };
 
-  const formatAddress = (address: string): string => {
-    return `${address.slice(0, 6)}...${address.slice(-6)}`;
-  };
+  const formatAddress = (address: string): string => `${address.slice(0, 6)}...${address.slice(-6)}`;
 
   const handleSwapTokens = () => {
-    // Swap tokens
-    const tempToken = sellToken;
-    setSellToken(buyToken);
-    setBuyToken(tempToken);
-    
-    // Swap amounts
+    const tempToken = sellTokenSym;
+    setSellTokenSym(buyTokenSym);
+    setBuyTokenSym(tempToken);
     const tempAmount = sellAmount;
     setSellAmount(buyAmount);
     setBuyAmount(tempAmount);
@@ -71,35 +131,29 @@ const SwapInterface = () => {
     setSearchTerm("");
   };
 
-  const selectToken = (token: string) => {
-    if (tokenSelectionType === 'sell') {
-      setSellToken(token);
-    } else {
-      setBuyToken(token);
-    }
+  const selectToken = (symbol: string) => {
+    if (tokenSelectionType === 'sell') setSellTokenSym(symbol);
+    else setBuyTokenSym(symbol);
     setShowTokenModal(false);
   };
 
   useEffect(() => {
     const updatePriceRate = () => {
-      const sellPrice = cryptoPrices[sellToken as keyof typeof cryptoPrices] || 0;
-      const buyPrice = cryptoPrices[buyToken as keyof typeof cryptoPrices] || 0;
-      
-      if (sellPrice > 0 && buyPrice > 0) {
-        const exchangeRate = sellPrice / buyPrice;
-        // Add small random variation
-        const variation = (Math.random() - 0.5) * (exchangeRate * 0.001);
-        const newRate = (exchangeRate + variation).toFixed(5);
-        setPriceRate(`1 ${sellToken} = ${newRate} ${buyToken}`);
-      }
+      const sellPrice = cryptoPrices[sellTokenSym as keyof typeof cryptoPrices] || 0;
+      const buyPrice = cryptoPrices[buyTokenSym as keyof typeof cryptoPrices] || 0;
+      const rate = sellPrice > 0 && buyPrice > 0 ? (1 * sellPrice) / buyPrice : 0;
+      setPriceRate(`1 ${sellTokenSym} = ${rate.toFixed(6)} ${buyTokenSym}`);
     };
-
-    updatePriceRate(); // Update immediately
-    const interval = setInterval(updatePriceRate, 20000); // Update every 20 seconds
-    
+    updatePriceRate();
+    const interval = setInterval(updatePriceRate, 20000);
     return () => clearInterval(interval);
-  }, [sellToken, buyToken]);
+  }, [sellTokenSym, buyTokenSym]);
 
+  const filteredTokens = TOKENS.filter(t =>
+    t.symbol.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  // ===== RENDER =====
   return (
     <Card className="w-full max-w-md mx-auto bg-muted/40 backdrop-blur-md border border-muted/60 shadow-2xl">
       <div className="p-4 space-y-4">
@@ -107,62 +161,59 @@ const SwapInterface = () => {
         <Tabs defaultValue="instant" className="w-full">
           <TabsList className="grid w-full grid-cols-3 bg-muted/40 h-10">
             <TabsTrigger value="instant" className="text-sm flex items-center gap-2 h-8 data-[state=active]:text-primary data-[state=inactive]:text-muted-foreground">
-              <span className="data-[state=active]:text-primary data-[state=inactive]:text-muted-foreground">⚡</span> Instant
+              <span>⚡</span> Instant
             </TabsTrigger>
             <TabsTrigger value="trigger" className="text-sm flex items-center gap-2 h-8 data-[state=active]:text-primary data-[state=inactive]:text-muted-foreground">
-              <span className="data-[state=active]:text-primary data-[state=inactive]:text-muted-foreground">🔫</span> Trigger
+              <span>🔫</span> Trigger
             </TabsTrigger>
             <TabsTrigger value="recurring" className="text-sm flex items-center gap-2 h-8 data-[state=active]:text-primary data-[state=inactive]:text-muted-foreground">
-              <span className="data-[state=active]:text-primary data-[state=inactive]:text-muted-foreground">🔄</span> Recurring
+              <span>🔁</span> Recurring
             </TabsTrigger>
           </TabsList>
-          
-          <TabsContent value="instant" className="mt-4 space-y-3">
-            {/* Selling Section */}
-            <div className="space-y-3">
-              <div className="flex items-center justify-between">
-                <label className="text-sm text-muted-foreground">Selling</label>
-                <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                  <span className="flex items-center gap-1">
-                    <Wallet className="h-3 w-3" />
-                    0.00 {sellToken}
+          <TabsContent value="instant" className="mt-2">
+            {/* Sell Card */}
+            <div className="bg-background/60 border border-muted/50 rounded-2xl p-4 space-y-3">
+              {/* Balance + HALF/MAX row */}
+              <div className="flex items-center justify-between text-xs text-muted-foreground">
+                <div className="flex items-center gap-1">
+                  <Wallet className="h-3 w-3" />
+                  <span>
+                    Balance: {sellBal.isLoading ? "…" : `${sellBal.formatted} ${sellToken?.symbol ?? ""}`}
                   </span>
-                  <Button 
-                    variant="ghost" 
-                    size="sm" 
-                    className="h-5 px-2 text-xs text-muted-foreground bg-muted border border-muted-foreground/40 rounded hover:text-primary hover:border-primary hover:bg-muted transition-all duration-200"
-                  >
-                    HALF
-                  </Button>
-                  <Button 
-                    variant="ghost" 
-                    size="sm" 
-                    className="h-5 px-2 text-xs text-muted-foreground bg-muted border border-muted-foreground/40 rounded hover:text-primary hover:border-primary hover:bg-muted transition-all duration-200"
-                  >
-                    MAX
-                  </Button>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Button size="xs" variant="secondary" onClick={onHalf} disabled={!isConnected || sellBal.isLoading}>HALF</Button>
+                  <Button size="xs" variant="secondary" onClick={onMax} disabled={!isConnected || sellBal.isLoading}>MAX</Button>
                 </div>
               </div>
-              <div className="relative bg-background/60 rounded-xl border border-border/60 p-4 focus-within:border-white transition-colors duration-200">
-                <div className="flex items-center justify-between mb-2">
+
+              {/* Sell input row */}
+              <div className="space-y-1">
+                <div className="flex items-center justify-between">
                   <Button
                     variant="ghost"
                     onClick={() => openTokenModal('sell')}
-                    className="w-36 h-9 bg-muted/60 rounded-full border-none p-2 hover:bg-muted/80 flex items-center justify-between"
+                    className="w-36 h-9 bg-muted/60 rounded-full border border-white/10 hover:bg-muted/80 flex items-center justify-between"
                   >
-                    <span>{sellToken}</span>
+                    <span>{sellTokenSym}</span>
                     <ChevronDown className="h-3 w-3" />
                   </Button>
                   <Input 
                     value={sellAmount}
-                    onChange={(e) => setSellAmount(e.target.value)}
-                    className="!border-none !bg-transparent text-right !text-[30px] font-semibold !focus-visible:ring-0 !focus:ring-0 !outline-none pr-2 h-auto text-foreground !shadow-none !ring-0 !ring-offset-0"
+                    onChange={onSellChange}
+                    className="!border-none !bg-transparent text-right flex-1 text-3xl font-medium tracking-tight pr-2 h-auto text-foreground !shadow-none !ring-0 !ring-offset-0"
                     placeholder="0.00"
+                    inputMode="decimal"
                   />
                 </div>
                 <div className="text-right text-sm text-muted-foreground">
-                  {calculateUSDValue(sellAmount, sellToken)}
+                  {calculateUSDValue(sellAmount, sellTokenSym)}
                 </div>
+                {isNativeSell && (
+                  <div className="text-right text-[11px] text-muted-foreground">
+                    MAX keeps ~{formatUnits(NATIVE_GAS_BUFFER, NATIVE_DECIMALS)} {NATIVE_SYMBOL} for gas
+                  </div>
+                )}
               </div>
             </div>
 
@@ -172,147 +223,134 @@ const SwapInterface = () => {
                 variant="ghost"
                 size="sm"
                 onClick={handleSwapTokens}
-                className="h-8 w-8 p-0 bg-background/60 hover:bg-white rounded-md border border-border/40 transition-colors duration-200"
+                className="h-8 w-8 p-0 rounded-full border border-white/10 bg-background/80 hover:bg-background"
+                aria-label="Swap tokens"
+                title="Swap tokens"
               >
-                <ArrowUpDown className="h-4 w-4 text-blue-600" />
+                <ArrowUpDown className="h-4 w-4" />
               </Button>
             </div>
 
-            {/* Buying Section */}
-            <div className="space-y-3">
+            {/* Buy Card */}
+            <div className="bg-background/60 border border-muted/50 rounded-2xl p-4 space-y-1">
               <div className="flex items-center justify-between">
-                <label className="text-sm text-muted-foreground">Buying</label>
+                <Button
+                  variant="ghost"
+                  onClick={() => openTokenModal('buy')}
+                  className="w-36 h-9 bg-muted/60 rounded-full border border-white/10 hover:bg-muted/80 flex items-center justify-between"
+                >
+                  <span>{buyTokenSym}</span>
+                  <ChevronDown className="h-3 w-3" />
+                </Button>
+                <Input 
+                  value={(() => {
+                    const sellPrice = cryptoPrices[sellTokenSym as keyof typeof cryptoPrices] || 0;
+                    const buyPrice = cryptoPrices[buyTokenSym as keyof typeof cryptoPrices] || 0;
+                    const sellAmountNum = parseFloat(sellAmount) || 0;
+                    if (sellPrice > 0 && buyPrice > 0 && sellAmountNum > 0) {
+                      const calculatedAmount = (sellAmountNum * sellPrice) / buyPrice;
+                      return calculatedAmount.toFixed(6);
+                    }
+                    return buyAmount;
+                  })()}
+                  onChange={(e) => setBuyAmount(e.target.value)}
+                  className="!border-none !bg-transparent text-right flex-1 text-3xl font-medium tracking-tight pr-2 h-auto text-foreground !shadow-none !ring-0 !ring-offset-0"
+                  placeholder="0.00"
+                  readOnly
+                />
               </div>
-              <div className="relative bg-background/60 rounded-xl border border-border/60 p-4">
-                <div className="flex items-center justify-between mb-2">
-                  <Button
-                    variant="ghost"
-                    onClick={() => openTokenModal('buy')}
-                    className="w-36 h-9 bg-muted/60 rounded-full border-none p-2 hover:bg-muted/80 flex items-center justify-between"
-                  >
-                    <span>{buyToken}</span>
-                    <ChevronDown className="h-3 w-3" />
-                  </Button>
-                  <Input 
-                    value={(() => {
-                      const sellPrice = cryptoPrices[sellToken as keyof typeof cryptoPrices] || 0;
-                      const buyPrice = cryptoPrices[buyToken as keyof typeof cryptoPrices] || 0;
-                      const sellAmountNum = parseFloat(sellAmount) || 0;
-                      
-                      if (sellPrice > 0 && buyPrice > 0 && sellAmountNum > 0) {
-                        const calculatedAmount = (sellAmountNum * sellPrice) / buyPrice;
-                        return calculatedAmount.toFixed(4);
-                      }
-                      return "0.00";
-                    })()}
-                    readOnly
-                    className="!border-none !bg-transparent text-right !text-[30px] font-semibold !focus-visible:ring-0 !focus:ring-0 !outline-none pr-2 h-auto text-foreground !shadow-none !ring-0 !ring-offset-0"
-                  />
-                </div>
-                <div className="text-right text-sm text-muted-foreground">
-                  {calculateUSDValue(buyAmount, buyToken)}
-                </div>
+              <div className="text-right text-sm text-muted-foreground">
+                {calculateUSDValue(buyAmount, buyTokenSym)}
               </div>
             </div>
 
-            {/* Swap Button */}
-            <Button 
-              className="w-full h-12 mt-6 bg-primary hover:bg-primary/90 text-primary-foreground font-medium"
-              disabled={!sellAmount || sellAmount === "0" || sellAmount === "0.0"}
-            >
-              {!sellAmount || sellAmount === "0" || sellAmount === "0.0" ? "Enter an amount" : "Swap"}
-            </Button>
-
-            {/* Footer Info */}
-            <div className="flex items-center justify-between px-4 mt-32 text-xs text-muted-foreground">
-              <span>{priceRate}</span>
-              <div className="flex items-center gap-2">
-                <div className="flex items-center gap-1 border-2 border-border px-2 py-1 rounded-lg">
-                  <img src={glieseLogo} alt="Gliese" className="w-4 h-4 rounded-lg" />
-                  <span>Wrapdrive v1.1</span>
-                </div>
-                <span>0.02% FEE</span>
-              </div>
-            </div>
-          </TabsContent>
-          
-          <TabsContent value="trigger">
-            <div className="text-center text-muted-foreground py-8">
-              Trigger orders coming soon
-            </div>
-          </TabsContent>
-          
-          <TabsContent value="recurring">
-            <div className="text-center text-muted-foreground py-8">
-              Recurring orders coming soon
+            {/* Rate */}
+            <div className="text-xs text-muted-foreground text-right mt-2">
+              {priceRate}
             </div>
           </TabsContent>
         </Tabs>
-      </div>
-      
-      {/* Token Selection Modal */}
-      <Dialog open={showTokenModal} onOpenChange={setShowTokenModal}>
-        <DialogOverlay className="fixed inset-0 z-50 bg-black/50 backdrop-blur-[2px]" />
-        <DialogContent className="max-w-md mx-auto backdrop-blur-xl border border-white/10 shadow-2xl" style={{ backgroundColor: '#000' }}>
-          <DialogHeader className="pb-4">
-            <DialogTitle className="text-lg font-semibold text-white">Select Token</DialogTitle>
-          </DialogHeader>
-          
-          <div className="space-y-4">
-            {/* Search Bar */}
+
+        {/* Token Modal */}
+        <Dialog open={showTokenModal} onOpenChange={setShowTokenModal}>
+          <DialogContent className="sm:max-w-[480px] bg-[#0b0f17]/95 border border-white/10 text-white">
+            <DialogHeader>
+              <DialogTitle className="text-white">
+                Select a token to {tokenSelectionType === 'sell' ? 'sell' : 'buy'}
+              </DialogTitle>
+            </DialogHeader>
+
+            {/* Search */}
             <div className="relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-white/60" />
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-white/50" />
               <Input
                 placeholder="Search any token. Include '0x' for exact match."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10 bg-white/5 border border-white/20 text-white placeholder:text-white/40 focus:border-white/40 focus:bg-white/10"
+                className="pl-10 bg-white/5 border border-white/10 text-white placeholder:text-white/40 focus:border-white/40 focus:bg-white/10"
               />
             </div>
-            
+
             {/* Token List */}
             <ScrollArea className="h-[30rem] w-full pr-4">
-              <div className="space-y-1">
-                {filteredTokens.map((token, index) => (
+              <div className="space-y-2">
+                {filteredTokens.map((t) => (
                   <Button
-                    key={token.symbol}
+                    key={t.symbol}
                     variant="ghost"
-                    onClick={() => selectToken(token.symbol)}
-                    className="w-full justify-start pl-0 pr-4 py-4 h-auto hover:bg-white/5 rounded-lg group"
+                    className="w-full justify-between py-3 px-3 rounded-xl border border-white/10 hover:bg-white/5"
+                    onClick={() => selectToken(t.symbol)}
                   >
-                    <div className="flex items-center w-full">
-                      {/* Token Icon */}
-                      <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-400 to-purple-600 flex items-center justify-center text-white font-semibold text-sm flex-shrink-0">
-                        {token.symbol.charAt(0)}
+                    <div className="flex items-center">
+                      <div className="w-9 h-9 rounded-full bg-white/10 flex items-center justify-center">
+                        <img src={glieseLogo} alt={t.symbol} className="w-6 h-6" />
                       </div>
-                      
-                      {/* Token Info - aligned to search input text position */}
-                      <div className="flex-1 text-left ml-2">
-                        <div className="flex items-center space-x-2">
-                          <span className="font-medium text-white">{token.symbol}</span>
-                        </div>
-                        <div className="text-xs text-white/60">{token.name.toLowerCase()}</div>
-                        <div className="text-xs text-white/40">
-                          {formatAddress(token.address)}
-                        </div>
+                      <div className="ml-3 text-left">
+                        <div className="font-medium text-white">{t.symbol}</div>
+                        <div className="text-xs text-white/60">{t.name ?? `${t.symbol} token`}</div>
                       </div>
-                      
-                      {/* Right side info */}
-                      <div className="text-right">
-                        <div className="text-xs text-white/60">
-                          ${(Math.random() * 1000000).toFixed(0)}
-                        </div>
-                      </div>
+                    </div>
+                    <div className="text-right text-xs text-white/60">
+                      {t.address ? formatAddress(t.address) : "Native coin"}
                     </div>
                   </Button>
                 ))}
               </div>
             </ScrollArea>
-          </div>
-        </DialogContent>
-      </Dialog>
+          </DialogContent>
+        </Dialog>
+      </div>
     </Card>
   );
 };
 
 export default SwapInterface;
+
+// ===== Helpers =====
+function sanitizeNumeric(v: string): string {
+  let out = v.replace(/[^0-9.]/g, "");
+  const firstDot = out.indexOf(".");
+  if (firstDot !== -1) out = out.slice(0, firstDot + 1) + out.slice(firstDot + 1).replace(/\./g, "");
+  if (out.startsWith("00")) out = out.replace(/^0+/, "0");
+  return out;
+}
+
+function clampToBalance(input: string, decimals: number, maxRaw: bigint): string {
+  if (!input) return "";
+  try {
+    const asRaw = parseUnits(input, decimals);
+    if (asRaw > maxRaw) return toDecimalStringFloor(maxRaw, decimals);
+    const [w, f = ""] = input.split(".");
+    if (f.length > decimals) return `${w}.${f.slice(0, decimals)}`;
+    return input;
+  } catch {
+    return input;
+  }
+}
+
+function formatAddress(addr: string) {
+  return `${addr.slice(0, 6)}...${addr.slice(-6)}`;
+}
+
+
+
