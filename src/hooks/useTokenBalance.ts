@@ -10,9 +10,6 @@ export const useTokenBalance = ({ address, token }: UseTokenBalanceProps) => {
   const { data, isError, isLoading, refetch } = useBalance({
     address,
     token,
-    query: {
-      enabled: !!address, // Only run query when address is available
-    },
   });
 
   return {

@@ -8,11 +8,10 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { ArrowUpDown, Wallet, Search, ChevronDown } from "lucide-react";
 import { useAccount } from "wagmi";
 import { useConnectModal } from "@rainbow-me/rainbowkit";
-import { useTokenBalance } from "@/hooks/useTokenBalance";
 import glieseLogo from "@/assets/gliese-logo.png";
 
 const SwapInterface = () => {
-  const { isConnected, address } = useAccount();
+  const { isConnected } = useAccount();
   const { openConnectModal } = useConnectModal();
   
   const [sellAmount, setSellAmount] = useState("");
@@ -36,22 +35,12 @@ const SwapInterface = () => {
 
   const tokens = [
     { symbol: "MON", name: "MON Token", price: cryptoPrices.MON, address: "0xc12d74832bF295fD25793410D5c5495EeeD9EF09" },
-    { symbol: "USDC", name: "USD Coin", price: cryptoPrices.USDC, address: "0xf817257fed379853cDe0fa4F97AB987181B1E5Ea" },
+    { symbol: "USDC", name: "USD Coin", price: cryptoPrices.USDC, address: "0xA0b86a33E6441395bf3C6e8f1c7e9C9bB7B7b3b3" },
     { symbol: "USDT", name: "Tether USD", price: cryptoPrices.USDT, address: "0xdAC17F958D2ee523a2206206994597C13D831ec7" },
     { symbol: "DAI", name: "Dai Stablecoin", price: cryptoPrices.DAI, address: "0x6B175474E89094C44Da98b954EedeAC495271d0F" },
     { symbol: "ETH", name: "Ethereum", price: cryptoPrices.ETH, address: "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2" },
     { symbol: "BTC", name: "Bitcoin", price: cryptoPrices.BTC, address: "0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599" }
   ];
-
-  // Get current selling token address
-  const currentSellToken = tokens.find(token => token.symbol === sellToken);
-  const sellTokenAddress = sellToken === "ETH" ? undefined : currentSellToken?.address as `0x${string}` | undefined;
-  
-  // Get token balance for connected wallet
-  const { formatted: tokenBalance, isLoading: isBalanceLoading } = useTokenBalance({
-    address: isConnected ? address as `0x${string}` : undefined,
-    token: sellTokenAddress
-  });
 
   const filteredTokens = tokens.filter(token => 
     token.symbol.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -141,11 +130,7 @@ const SwapInterface = () => {
                 <div className="flex items-center gap-2 text-xs text-muted-foreground">
                   <span className="flex items-center gap-1">
                     <Wallet className="h-3 w-3" />
-                    {isConnected && !isBalanceLoading ? (
-                      `${parseFloat(tokenBalance || "0").toFixed(4)} ${sellToken}`
-                    ) : (
-                      `0.00 ${sellToken}`
-                    )}
+                    0.00 {sellToken}
                   </span>
                   <Button 
                     variant="ghost" 
