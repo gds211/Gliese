@@ -174,7 +174,7 @@ const SwapInterface = () => {
                   <Button 
                     variant="ghost" 
                     size="sm" 
-                    className="h-5 px-2 text-xs text-muted-foreground border border-border hover:border-primary hover:bg-muted transition-all duration-200"
+                    className="h-5 px-2 text-xs hover:bg-primary/20"
                     onClick={() => {
                       if (!sellBal) return;
                       const halfRaw = sellBal.value / 2n;
@@ -187,7 +187,7 @@ const SwapInterface = () => {
                   <Button 
                     variant="ghost" 
                     size="sm" 
-                    className="h-5 px-2 text-xs text-muted-foreground border border-border hover:border-primary hover:bg-muted transition-all duration-200"
+                    className="h-5 px-2 text-xs hover:bg-primary/20"
                     onClick={() => {
                       if (!sellBal) return;
                       // keep small MON buffer when selling native to leave gas
@@ -239,49 +239,46 @@ const SwapInterface = () => {
 
             {/* Buying Section */}
             <div className="space-y-3">
-              <label className="text-sm text-muted-foreground">Buying</label>
-              <div className="space-y-3">
-                <div className="relative bg-background/60 rounded-2xl border border-white/10 focus-within:border-primary/60 transition-colors duration-200">
-                  <div className="flex items-center justify-between p-3">
-                    <Button
-                      variant="ghost"
-                      onClick={() => openTokenModal('buy')}
-                      className="w-36 h-9 bg-muted/60 rounded-full text-foreground border border-white/10 hover:border-primary/60 hover:bg-muted/80 flex items-center justify-between"
-                    >
-                      <span>{buyToken}</span>
-                      <ChevronDown className="h-3 w-3" />
-                    </Button>
-                    <Input 
-                      value={(() => {
-                        const sellPrice = cryptoPrices[sellToken as keyof typeof cryptoPrices] || 0;
-                        const buyPrice = cryptoPrices[buyToken as keyof typeof cryptoPrices] || 0;
-                        const sellAmountNum = parseFloat(sellAmount) || 0;
-                        if (sellPrice > 0 && buyPrice > 0 && sellAmountNum > 0) {
-                          const calculatedAmount = (sellAmountNum * sellPrice) / buyPrice;
-                          return calculatedAmount.toFixed(6);
-                        }
-                        return buyAmount;
-                      })()}
-                      onChange={(e) => setBuyAmount(e.target.value)}
-                      className="!border-none !bg-transparent text-right flex-1 text-3xl font-medium tracking-tight pr-2 h-auto text-foreground !shadow-none !ring-0 !ring-offset-0"
-                      placeholder="0.00"
-                      readOnly
-                    />
-                  </div>
-                  <div className="text-right text-sm text-muted-foreground pr-3 pb-3">
-                    {calculateUSDValue(buyAmount, buyToken)}
-                  </div>
+              <div className="relative bg-background/60 rounded-2xl border border-white/10 focus-within:border-primary/60 transition-colors duration-200">
+                <div className="flex items-center justify-between p-3">
+                  <Button
+                    variant="ghost"
+                    onClick={() => openTokenModal('buy')}
+                    className="w-36 h-9 bg-muted/60 rounded-full text-foreground border border-white/10 hover:border-primary/60 hover:bg-muted/80 flex items-center justify-between"
+                  >
+                    <span>{buyToken}</span>
+                    <ChevronDown className="h-3 w-3" />
+                  </Button>
+                  <Input 
+                    value={(() => {
+                      const sellPrice = cryptoPrices[sellToken as keyof typeof cryptoPrices] || 0;
+                      const buyPrice = cryptoPrices[buyToken as keyof typeof cryptoPrices] || 0;
+                      const sellAmountNum = parseFloat(sellAmount) || 0;
+                      if (sellPrice > 0 && buyPrice > 0 && sellAmountNum > 0) {
+                        const calculatedAmount = (sellAmountNum * sellPrice) / buyPrice;
+                        return calculatedAmount.toFixed(6);
+                      }
+                      return buyAmount;
+                    })()}
+                    onChange={(e) => setBuyAmount(e.target.value)}
+                    className="!border-none !bg-transparent text-right flex-1 text-3xl font-medium tracking-tight pr-2 h-auto text-foreground !shadow-none !ring-0 !ring-offset-0"
+                    placeholder="0.00"
+                    readOnly
+                  />
                 </div>
+                <div className="text-right text-sm text-muted-foreground pr-3 pb-3">
+                  {calculateUSDValue(buyAmount, buyToken)}
+                </div>
+              </div>
 
-                <div className="flex items-center justify-between text-xs text-muted-foreground">
-                  <div>Rate: {priceRate}</div>
-                  <div className="flex items-center gap-2">
-                    <div className="flex items-center gap-1 border-2 border-border px-2 py-1 rounded-lg">
-                      <img src={glieseLogo} alt="Gliese" className="w-4 h-4 rounded-lg" />
-                      <span>Wrapdrive v1.1</span>
-                    </div>
-                    <span>0.02% FEE</span>
+              <div className="flex items-center justify-between text-xs text-muted-foreground">
+                <div>Rate: {priceRate}</div>
+                <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-1 border-2 border-border px-2 py-1 rounded-lg">
+                    <img src={glieseLogo} alt="Gliese" className="w-4 h-4 rounded-lg" />
+                    <span>Wrapdrive v1.1</span>
                   </div>
+                  <span>0.02% FEE</span>
                 </div>
               </div>
             </div>
