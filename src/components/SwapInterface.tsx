@@ -6,9 +6,14 @@ import { Card } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogOverlay } from "@/components/ui/dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { ArrowUpDown, Wallet, Search, ChevronDown } from "lucide-react";
+import { useAccount } from "wagmi";
+import { useConnectModal } from "@rainbow-me/rainbowkit";
 import glieseLogo from "@/assets/gliese-logo.png";
 
 const SwapInterface = () => {
+  const { isConnected } = useAccount();
+  const { openConnectModal } = useConnectModal();
+  
   const [sellAmount, setSellAmount] = useState("");
   const [buyAmount, setBuyAmount] = useState("0");
   const [sellToken, setSellToken] = useState("MON");
@@ -218,9 +223,17 @@ const SwapInterface = () => {
             {/* Swap Button */}
             <Button 
               className="w-full h-12 mt-6 bg-primary hover:bg-primary/90 text-primary-foreground font-medium"
-              disabled={!sellAmount || sellAmount === "0" || sellAmount === "0.0"}
+              disabled={!isConnected && (!sellAmount || sellAmount === "0" || sellAmount === "0.0")}
+              onClick={() => {
+                if (!isConnected) {
+                  openConnectModal?.();
+                }
+              }}
             >
-              {!sellAmount || sellAmount === "0" || sellAmount === "0.0" ? "Enter an amount" : "Swap"}
+              {!isConnected 
+                ? "Connect Wallet" 
+                : (!sellAmount || sellAmount === "0" || sellAmount === "0.0" ? "Enter an amount" : "Swap")
+              }
             </Button>
 
             {/* Footer Info */}
