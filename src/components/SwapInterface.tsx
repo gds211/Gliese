@@ -45,11 +45,11 @@ const SwapInterface = () => {
 
   // Get current selling token address
   const currentSellToken = tokens.find(token => token.symbol === sellToken);
-  const sellTokenAddress = currentSellToken?.address as `0x${string}` | undefined;
+  const sellTokenAddress = sellToken === "ETH" ? undefined : currentSellToken?.address as `0x${string}` | undefined;
   
   // Get token balance for connected wallet
   const { formatted: tokenBalance, isLoading: isBalanceLoading } = useTokenBalance({
-    address: address as `0x${string}` | undefined,
+    address: isConnected ? address as `0x${string}` : undefined,
     token: sellTokenAddress
   });
 
