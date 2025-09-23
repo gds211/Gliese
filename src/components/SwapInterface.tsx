@@ -256,7 +256,7 @@ const SwapInterface = () => {
                       const sellAmountNum = parseFloat(sellAmount) || 0;
                       if (sellPrice > 0 && buyPrice > 0 && sellAmountNum > 0) {
                         const calculatedAmount = (sellAmountNum * sellPrice) / buyPrice;
-                        return calculatedAmount.toFixed(6);
+                        return parseFloat(calculatedAmount.toFixed(6)).toString();
                       }
                       return "0.00";
                     })()}
