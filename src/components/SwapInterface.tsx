@@ -258,7 +258,7 @@ const SwapInterface = () => {
                         const calculatedAmount = (sellAmountNum * sellPrice) / buyPrice;
                         return calculatedAmount.toFixed(6);
                       }
-                      return buyAmount;
+                      return "0.00";
                     })()}
                     onChange={(e) => setBuyAmount(e.target.value)}
                     className="!border-none !bg-transparent text-right flex-1 !text-24 font-medium tracking-tight pr-2 h-auto text-foreground !shadow-none !ring-0 !ring-offset-0"
