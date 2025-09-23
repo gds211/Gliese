@@ -223,7 +223,7 @@ const SwapInterface = () => {
             {/* Swap Button */}
             <Button 
               className="w-full h-12 mt-6 bg-primary hover:bg-primary/90 text-primary-foreground font-medium"
-              disabled={!isConnected && (!sellAmount || sellAmount === "0" || sellAmount === "0.0")}
+              disabled={!isConnected || !sellAmount || sellAmount === "0" || sellAmount === "0.0"}
               onClick={() => {
                 if (!isConnected) {
                   openConnectModal?.();
