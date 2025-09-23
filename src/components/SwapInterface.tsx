@@ -174,7 +174,7 @@ const SwapInterface = () => {
                   <Button 
                     variant="ghost" 
                     size="sm" 
-                    className="h-5 px-2 text-xs text-muted-foreground border border-border hover:border-primary hover:bg-muted transition-all duration-200"
+                    className="h-5 px-2 text-xs hover:bg-primary/20"
                     onClick={() => {
                       if (!sellBal) return;
                       const halfRaw = sellBal.value / 2n;
@@ -187,7 +187,7 @@ const SwapInterface = () => {
                   <Button 
                     variant="ghost" 
                     size="sm" 
-                    className="h-5 px-2 text-xs text-muted-foreground border border-border hover:border-primary hover:bg-muted transition-all duration-200"
+                    className="h-5 px-2 text-xs hover:bg-primary/20"
                     onClick={() => {
                       if (!sellBal) return;
                       // keep small MON buffer when selling native to leave gas
