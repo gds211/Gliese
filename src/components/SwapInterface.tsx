@@ -9,7 +9,7 @@ import { ArrowUpDown, Wallet, Search, ChevronDown } from "lucide-react";
 import glieseLogo from "@/assets/gliese-logo.png";
 
 const SwapInterface = () => {
-  const [sellAmount, setSellAmount] = useState("0");
+  const [sellAmount, setSellAmount] = useState("");
   const [buyAmount, setBuyAmount] = useState("0");
   const [sellToken, setSellToken] = useState("MON");
   const [buyToken, setBuyToken] = useState("USDC");
