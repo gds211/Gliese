@@ -1,19 +1,22 @@
-import { getDefaultConfig } from '@rainbow-me/rainbowkit';
-import { http } from 'wagmi';
-import { monadChain } from '../lib/monadChain';
-import { PUBLIC_CONFIG, WALLETCONNECT_PROJECT_ID } from './public';
+// src/config/wagmi.ts
+import { getDefaultConfig } from "@rainbow-me/rainbowkit";
+import { http } from "wagmi";
+import { PUBLIC_CONFIG, WALLETCONNECT_PROJECT_ID } from "@/config/public";
 
-// Hard-fail early if the Project ID is missing/obviously wrong.
-if (!WALLETCONNECT_PROJECT_ID || WALLETCONNECT_PROJECT_ID.length < 20) {
-  throw new Error('WALLETCONNECT_PROJECT_ID missing/invalid in src/config/public.ts');
-}
+export const monadTestnet = {
+  id: PUBLIC_CONFIG.CHAIN_ID,
+  name: "Monad Testnet",
+  nativeCurrency: { name: "Monad", symbol: PUBLIC_CONFIG.NATIVE_SYMBOL, decimals: PUBLIC_CONFIG.NATIVE_DECIMALS },
+  rpcUrls: { default: { http: [PUBLIC_CONFIG.RPC_URL] } },
+  blockExplorers: { default: { name: PUBLIC_CONFIG.EXPLORER_NAME, url: PUBLIC_CONFIG.EXPLORER_URL } },
+  testnet: true,
+} as const;
 
-export const wagmiConfig = getDefaultConfig({
+export const config = getDefaultConfig({
   appName: PUBLIC_CONFIG.APP_NAME,
   projectId: WALLETCONNECT_PROJECT_ID,
-  chains: [monadChain],
+  chains: [monadTestnet],
   transports: {
-    [monadChain.id]: http(PUBLIC_CONFIG.RPC_URL),
+    [monadTestnet.id]: http(PUBLIC_CONFIG.RPC_URL),
   },
-  ssr: false,
 });
