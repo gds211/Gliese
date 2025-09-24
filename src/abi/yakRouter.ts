@@ -1,76 +1,47 @@
-// src/abi/yakRouter.ts
-// Keep all variants we might need, depending on your exact Router build.
 export const YAK_ROUTER_ABI = [
   {
-    type: "function",
-    name: "findBestPathWithGas",
-    stateMutability: "view",
-    inputs: [
-      { name: "_amountIn",  type: "uint256" },
-      { name: "_tokenIn",   type: "address" },
-      { name: "_tokenOut",  type: "address" },
-      { name: "_maxSteps",  type: "uint256" },
-      { name: "_gasPrice",  type: "uint256" },
+    "inputs": [
+      {
+        "components": [
+          { "internalType": "uint256", "name": "amountIn", "type": "uint256" },
+          { "internalType": "uint256", "name": "amountOut", "type": "uint256" },
+          { "internalType": "address[]", "name": "path", "type": "address[]" },
+          { "internalType": "address[]", "name": "adapters", "type": "address[]" }
+        ],
+        "internalType": "struct YakRouter.Trade",
+        "name": "_trade",
+        "type": "tuple"
+      },
+      { "internalType": "address", "name": "_to", "type": "address" },
+      { "internalType": "uint256", "name": "_fee", "type": "uint256" }
     ],
-    outputs: [
-      { name: "amounts",   type: "uint256[]" },
-      { name: "adapters",  type: "address[]" },
-      { name: "path",      type: "address[]" },
-      { name: "gasUsed",   type: "uint256"   },
-    ],
-  },
-
-  // ERC20 -> ERC20
-  {
-    type: "function",
-    name: "swapNoSplit",
-    stateMutability: "nonpayable",
-    inputs: [
-      { name:"amountIn",       type:"uint256" },
-      { name:"amountOutMin",   type:"uint256" },
-      { name:"path",           type:"address[]" },
-      { name:"adapters",       type:"address[]" },
-    ],
-    outputs: []
-  },
-
-  // Native -> Token (some repos name it FromAVAX or FromAvax)
-  {
-    type: "function",
-    name: "swapNoSplitFromAVAX",
-    stateMutability: "payable",
-    inputs: [
-      { name:"amountIn",       type:"uint256" },    // Many Yak forks include this param; if yours omits it, we’ll handle below.
-      { name:"amountOutMin",   type:"uint256" },
-      { name:"path",           type:"address[]" },
-      { name:"adapters",       type:"address[]" },
-    ],
-    outputs: []
+    "name": "swapNoSplit",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
   },
   {
-    type: "function",
-    name: "swapNoSplitFromAvax",
-    stateMutability: "payable",
-    inputs: [
-      { name:"amountIn",       type:"uint256" },
-      { name:"amountOutMin",   type:"uint256" },
-      { name:"path",           type:"address[]" },
-      { name:"adapters",       type:"address[]" },
+    "inputs": [
+      { "internalType": "uint256", "name": "_amountIn", "type": "uint256" },
+      { "internalType": "address", "name": "_tokenIn", "type": "address" },
+      { "internalType": "address", "name": "_tokenOut", "type": "address" },
+      { "internalType": "uint256", "name": "_steps", "type": "uint256" }
     ],
-    outputs: []
-  },
-
-  // Token -> Native
-  {
-    type: "function",
-    name: "swapNoSplitToAVAX",
-    stateMutability: "nonpayable",
-    inputs: [
-      { name:"amountIn",       type:"uint256" },
-      { name:"amountOutMin",   type:"uint256" },
-      { name:"path",           type:"address[]" },
-      { name:"adapters",       type:"address[]" },
+    "name": "findBestPath",
+    "outputs": [
+      {
+        "components": [
+          { "internalType": "uint256", "name": "amountIn", "type": "uint256" },
+          { "internalType": "uint256", "name": "amountOut", "type": "uint256" },
+          { "internalType": "address[]", "name": "path", "type": "address[]" },
+          { "internalType": "address[]", "name": "adapters", "type": "address[]" }
+        ],
+        "internalType": "struct YakRouter.Trade",
+        "name": "",
+        "type": "tuple"
+      }
     ],
-    outputs: []
-  },
+    "stateMutability": "view",
+    "type": "function"
+  }
 ] as const;
