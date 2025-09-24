@@ -1,4 +1,4 @@
-export const ERC20_ABI = [
+/* export const ERC20_ABI = [
   {
     "inputs": [
       { "internalType": "address", "name": "spender", "type": "address" },
@@ -75,4 +75,12 @@ export const ERC20_ABI = [
     "stateMutability": "view",
     "type": "function"
   }
+] as const;*/
+
+
+// src/abi/erc20.ts
+export const ERC20_ABI = [
+  { type: "function", name: "decimals", stateMutability: "view", inputs: [], outputs: [{ type: "uint8" }] },
+  { type: "function", name: "allowance", stateMutability: "view", inputs: [{type:"address",name:"owner"},{type:"address",name:"spender"}], outputs: [{ type:"uint256"}] },
+  { type: "function", name: "approve", stateMutability: "nonpayable", inputs: [{type:"address",name:"spender"},{type:"uint256",name:"value"}], outputs: [{ type:"bool"}] },
 ] as const;
