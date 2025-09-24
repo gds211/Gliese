@@ -1,6 +1,7 @@
 // src/lib/swap.ts
 import { Address, Hash, PublicClient } from "viem";
 import { getAccount, getPublicClient, writeContract, waitForTransactionReceipt } from "wagmi/actions";
+import { wagmiConfig } from "@/config/wagmi";
 import { ERC20_ABI } from "@/abi/erc20";
 import { YAK_ROUTER_ABI } from "@/abi/yakRouter";
 import { PUBLIC_CONFIG } from "@/config/public";
@@ -32,21 +33,21 @@ async function ensureAllowance(
 
   if (current >= needed) return;
 
-  const hash = await writeContract({
+  const hash = await writeContract(wagmiConfig, {
     abi: ERC20_ABI,
     address: token,
     functionName: "approve",
     args: [spender, needed],
   }) as Hash;
 
-  await waitForTransactionReceipt({ hash });
+  await waitForTransactionReceipt(wagmiConfig, { hash });
 }
 
 export async function performSwap(args: SwapArgs) {
-  const { address } = getAccount();
+  const { address } = getAccount(wagmiConfig);
   if (!address) throw new Error("Connect wallet first");
 
-  const client = getPublicClient() as PublicClient;
+  const client = getPublicClient(wagmiConfig);
   const router = args.router;
 
   const inIsNative  = isNative(args.tokenIn);
@@ -72,7 +73,7 @@ export async function performSwap(args: SwapArgs) {
   try {
     if (inIsNative && !outIsNative) {
       // Try the common name first
-      txHash = await writeContract({
+      txHash = await writeContract(wagmiConfig, {
         address: router,
         abi: YAK_ROUTER_ABI,
         functionName: "swapNoSplitFromAVAX",
@@ -80,14 +81,14 @@ export async function performSwap(args: SwapArgs) {
         value: args.amountIn,
       }) as Hash;
     } else if (!inIsNative && outIsNative) {
-      txHash = await writeContract({
+      txHash = await writeContract(wagmiConfig, {
         address: router,
         abi: YAK_ROUTER_ABI,
         functionName: "swapNoSplitToAVAX",
         args: baseArgs,
       }) as Hash;
     } else {
-      txHash = await writeContract({
+      txHash = await writeContract(wagmiConfig, {
         address: router,
         abi: YAK_ROUTER_ABI,
         functionName: "swapNoSplit",
@@ -97,7 +98,7 @@ export async function performSwap(args: SwapArgs) {
   } catch (e1) {
     // Some Yak forks use "swapNoSplitFromAvax" (lowercase v)
     if (inIsNative && !outIsNative) {
-      txHash = await writeContract({
+      txHash = await writeContract(wagmiConfig, {
         address: router,
         abi: YAK_ROUTER_ABI,
         functionName: "swapNoSplitFromAvax",
@@ -111,6 +112,6 @@ export async function performSwap(args: SwapArgs) {
 
   if (!txHash) throw new Error("No transaction hash");
 
-  const receipt = await waitForTransactionReceipt({ hash: txHash });
+  const receipt = await waitForTransactionReceipt(wagmiConfig, { hash: txHash });
   return receipt;
 }
