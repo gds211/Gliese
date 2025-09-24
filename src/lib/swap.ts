@@ -6,20 +6,27 @@ import {
   writeContract,
   waitForTransactionReceipt,
 } from "wagmi/actions";
-import { config } from "@/config/wagmi"; // <- IMPORTANT: your app's wagmi config
+import { config } from "@/config/wagmi";
 import { ERC20_ABI } from "@/abi/erc20";
 import { YAK_ROUTER_ABI } from "@/abi/yakRouter";
-import { isNative, toQuoteAddress } from "@/lib/tokens";
+import { PUBLIC_CONFIG } from "@/config/public";
 
 export type SwapArgs = {
   router: Address;
-  tokenIn?: string;   // symbol or address ("MON" for native)
+  tokenIn?: string;   // "MON" or address
   tokenOut?: string;  // symbol or address
   amountIn: bigint;
   amountOutMin: bigint;
   path: Address[];
   adapters: Address[];
 };
+
+// local helpers
+const ZERO = "0x0000000000000000000000000000000000000000" as Address;
+const isNative = (v?: string) =>
+  !v || v.toUpperCase() === PUBLIC_CONFIG.NATIVE_SYMBOL || v === ZERO;
+const toQuoteAddr = (v?: string) =>
+  (isNative(v) ? (PUBLIC_CONFIG.WRAPPED_NATIVE as Address) : (v as Address));
 
 async function ensureAllowance(
   client: any,
@@ -55,65 +62,75 @@ export async function performSwap(args: SwapArgs) {
   const client = getPublicClient(config) as any;
   const router = args.router;
 
-  const inIsNative = isNative(args.tokenIn);
+  const inIsNative  = isNative(args.tokenIn);
   const outIsNative = isNative(args.tokenOut);
 
-  const tokenInAddr = toQuoteAddress(args.tokenIn) as Address;
-  // const tokenOutAddr = toQuoteAddress(args.tokenOut) as Address; // not used directly here
+  const tokenInAddr  = toQuoteAddr(args.tokenIn) as Address;
 
-  // Sanity checks: adapters and path lengths
   if (!args.path?.length || args.adapters?.length !== args.path.length - 1) {
     throw new Error("Invalid route (path/adapters mismatch).");
   }
 
-  // ERC20 approvals if necessary
   if (!inIsNative) {
     await ensureAllowance(client, tokenInAddr, address, router, args.amountIn);
   }
 
-  // Helper to write with shared options
-  const write = (fn: string, fnArgs: readonly unknown[], value?: bigint) =>
-    writeContract(config, {
-      account: address,
-      address: router,
-      abi: YAK_ROUTER_ABI,
-      functionName: fn as any,
-      args: fnArgs as any,
-      ...(value != null ? { value } : {}),
-    }) as Promise<Hash>;
+  // Build Trade struct
+  const trade = {
+    amountIn:  args.amountIn,
+    amountOut: args.amountOutMin, // minOut (slippage already applied)
+    path:      args.path,
+    adapters:  args.adapters,
+  } as const;
 
-  let txHash: Hash | undefined;
+  // Fee in bps (1e4 denominator). Your UI shows 0.02% → 2 bps.
+  // If your router MIN_FEE is higher, raise this number.
+  const FEE_BPS = 2n;
 
-  try {
-    if (inIsNative && !outIsNative) {
-      // First try 4-arg signature (some forks have it):
-      // swapNoSplitFromAVAX(amountIn, amountOutMin, path, adapters) payable
-      try {
-        txHash = await write("swapNoSplitFromAVAX", [args.amountIn, args.amountOutMin, args.path, args.adapters], args.amountIn);
-      } catch (eA) {
-        // Fallback #1: same name, 3-arg signature (amountIn from msg.value)
-        try {
-          txHash = await write("swapNoSplitFromAVAX", [args.amountOutMin, args.path, args.adapters], args.amountIn);
-        } catch (eB) {
-          // Fallback #2: lowercase-v variant with 3-arg signature
-          txHash = await write("swapNoSplitFromAvax", [args.amountOutMin, args.path, args.adapters], args.amountIn);
-        }
-      }
-    } else if (!inIsNative && outIsNative) {
-      // token -> native (usually 4-arg signature with amountIn)
-      txHash = await write("swapNoSplitToAVAX", [args.amountIn, args.amountOutMin, args.path, args.adapters]);
-    } else {
-      // token -> token
-      txHash = await write("swapNoSplit", [args.amountIn, args.amountOutMin, args.path, args.adapters]);
+  const base = {
+    account: address,
+    address: router,
+    abi: YAK_ROUTER_ABI,
+  } as const;
+
+  let txHash: Hash;
+
+  if (inIsNative && !outIsNative) {
+    // Native -> Token
+    try {
+      txHash = await writeContract(config, {
+        ...base,
+        functionName: "swapNoSplitFromAVAX",
+        args: [trade, address, FEE_BPS],
+        value: args.amountIn,
+      });
+    } catch {
+      // fallback to lowercase variant
+      txHash = await writeContract(config, {
+        ...base,
+        functionName: "swapNoSplitFromAvax",
+        args: [trade, address, FEE_BPS],
+        value: args.amountIn,
+      });
     }
-  } catch (e) {
-    // Bubble up the most relevant error
-    throw e;
+  } else if (!inIsNative && outIsNative) {
+    // Token -> Native
+    txHash = await writeContract(config, {
+      ...base,
+      functionName: "swapNoSplitToAVAX",
+      args: [trade, address, FEE_BPS],
+    });
+  } else {
+    // Token -> Token
+    txHash = await writeContract(config, {
+      ...base,
+      functionName: "swapNoSplit",
+      args: [trade, address, FEE_BPS],
+    });
   }
-
-  if (!txHash) throw new Error("No transaction hash");
 
   const receipt = await waitForTransactionReceipt(config, { hash: txHash });
   return receipt;
 }
+
 
