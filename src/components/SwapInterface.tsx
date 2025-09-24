@@ -1,148 +1,221 @@
-import { useState, useEffect, useMemo } from "react";
+// src/components/SwapInterface.tsx
+import { useState, useMemo, useEffect } from "react";
+import { Address, parseUnits } from "viem";
+import { useAccount, useBalance } from "wagmi";
+import { useConnectModal } from "@rainbow-me/rainbowkit";
+
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogOverlay } from "@/components/ui/dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { ArrowUpDown, Wallet, Search, ChevronDown } from "lucide-react";
-import { useAccount, useBalance } from "wagmi";
-import { useConnectModal } from "@rainbow-me/rainbowkit";
-import glieseLogo from "@/assets/gliese-logo.png";
-import { formatUnits, parseUnits } from "viem";
+import { useToast } from "@/components/ui/use-toast";
 
+import { ArrowUpDown, Wallet, Search, ChevronDown } from "lucide-react";
+import glieseLogo from "@/assets/gliese-logo.png";
+
+import { PUBLIC_CONFIG } from "@/config/public";
+import { useYakQuote } from "@/hooks/useYakQuote";
+import { performSwap } from "@/lib/swap";
+
+// -------------------- Local helpers --------------------
+function formatAmount(raw: bigint, decimals: number, maxFrac: number = 6): string {
+  // viem's formatUnits is fine, but we keep a tiny custom wrapper to trim zeros
+  const full = (Number(raw) / 10 ** decimals).toString(); // only used for HALF/MAX visual; OK
+  const [w, f = ""] = full.split(".");
+  if (maxFrac <= 0 || f.length === 0) return w;
+  const clamped = f.slice(0, maxFrac).replace(/0+$/, "");
+  return clamped ? `${w}.${clamped}` : w;
+}
+
+function formatAddress(addr: string): string {
+  return `${addr.slice(0, 6)}...${addr.slice(-6)}`;
+}
+
+// -------------------- Component --------------------
 const SwapInterface = () => {
   const { address, isConnected } = useAccount();
   const { openConnectModal } = useConnectModal();
-  
-  const [sellAmount, setSellAmount] = useState("");
-  const [buyAmount, setBuyAmount] = useState("0");
-  const [sellToken, setSellToken] = useState("MON");
-  const [buyToken, setBuyToken] = useState("USDC");
-  const [priceRate, setPriceRate] = useState("1 MON = 0.00215 USDC");
-  
-  const [showTokenModal, setShowTokenModal] = useState(false);
-  const [tokenSelectionType, setTokenSelectionType] = useState<'sell' | 'buy'>('sell');
-  const [searchTerm, setSearchTerm] = useState("");
+  const { toast } = useToast();
 
+  // --- Token list (your current list) ---
   const cryptoPrices = {
     MON: 0.00215,
     USDC: 1.0,
     USDT: 1.0,
     CHOG: 16.0,
     DAK: 2650.0,
-    aprMON: 0.00214
+    aprMON: 0.00214,
   };
 
   const tokens = [
-    { symbol: "MON", name: "monad", price: cryptoPrices.MON },
-    { symbol: "USDC", name: "USD Coin", price: cryptoPrices.USDC, address: "0xf817257fed379853cDe0fa4F97AB987181B1E5Ea" as `0x${string}`},
-    { symbol: "USDT", name: "Tether USD", price: cryptoPrices.USDT, address: "0x88b8E2161DEDC77EF4ab7585569D2415a1C1055D" as `0x${string}`},
-    { symbol: "CHOG", name: "chog", price: cryptoPrices.CHOG, address: "0xE0590015A873bF326bd645c3E1266d4db41C4E6B" as `0x${string}`},
-    { symbol: "DAK", name: "Mollandak", price: cryptoPrices.DAK, address: "0x0F0BDEbF0F83cD1EE3974779Bcb7315f9808c714" as `0x${string}`},
-    { symbol: "aprMON", name: "apriori MON", price: cryptoPrices.aprMON, address: "0xb2f82D0f38dc453D596Ad40A37799446Cc89274A" as `0x${string}`}
+    { symbol: "MON", name: "monad" }, // native (no address)
+    { symbol: "USDC", name: "USD Coin", address: "0xf817257fed379853cDe0fa4F97AB987181B1E5Ea" as `0x${string}` },
+    { symbol: "USDT", name: "Tether USD", address: "0x88b8E2161DEDC77EF4ab7585569D2415a1C1055D" as `0x${string}` },
+    { symbol: "CHOG", name: "chog", address: "0xE0590015A873bF326bd645c3E1266d4db41C4E6B" as `0x${string}` },
+    { symbol: "DAK", name: "Mollandak", address: "0x0F0BDEbF0F83cD1EE3974779Bcb7315f9808c714" as `0x${string}` },
+    { symbol: "aprMON", name: "apriori MON", address: "0xb2f82D0f38dc453D596Ad40A37799446Cc89274A" as `0x${string}` },
   ];
 
-  // === Live Balance for selected SELL token (native MON vs ERC-20) ===
-  const selectedSellToken = useMemo(() => tokens.find(t => t.symbol === sellToken), [sellToken]);
-  // Treat MON (native) as native even if tokens[] has an address string
+  // --- UI State ---
+  const [sellAmount, setSellAmount] = useState("");
+  const [sellToken, setSellToken] = useState("MON");
+  const [buyToken, setBuyToken] = useState("USDC");
+  const [priceRate, setPriceRate] = useState("1 MON = 0.00215 USDC");
+
+  const [showTokenModal, setShowTokenModal] = useState(false);
+  const [tokenSelectionType, setTokenSelectionType] = useState<"sell" | "buy">("sell");
+  const [searchTerm, setSearchTerm] = useState("");
+
+  const selectedSellToken = useMemo(() => tokens.find((t) => t.symbol === sellToken), [tokens, sellToken]);
+  const selectedBuyToken = useMemo(() => tokens.find((t) => t.symbol === buyToken), [tokens, buyToken]);
+
+  // Treat MON as native when it has no address
   const isNativeSell = useMemo(
-    () => selectedSellToken ? (selectedSellToken.symbol === "MON" || !selectedSellToken.address) : false,
+    () => !!selectedSellToken && (selectedSellToken.symbol === "MON" || !selectedSellToken.address),
     [selectedSellToken]
   );
 
+  // === Live wallet balance for SELL token ===
   const { data: sellBal, isLoading: sellBalLoading } = useBalance({
-  address,
-  token: isNativeSell ? undefined : (selectedSellToken?.address as `0x${string}` | undefined),
-  query: {
-    enabled: Boolean(isConnected && address && selectedSellToken),
-    refetchOnWindowFocus: false,
-  },
-});
+    address,
+    token: isNativeSell ? undefined : (selectedSellToken?.address as `0x${string}` | undefined),
+    query: { enabled: Boolean(isConnected && address && selectedSellToken), refetchOnWindowFocus: false },
+  });
 
-
-  // Helper: format bigint to a trimmed decimal string (max 6 fractional digits)
-  function formatAmount(raw: bigint, decimals: number, maxFrac: number = 6): string {
-    const full = formatUnits(raw, decimals);
-    const [w, f = ""] = full.split(".");
-    if (maxFrac <= 0 || f.length === 0) return w;
-    const clamped = f.slice(0, maxFrac).replace(/0+$/, "");
-    return clamped ? `${w}.${clamped}` : w;
-  }
-
-  // Flag: user-entered amount exceeds available balance (compares using token decimals)
+  // Balance exceed flag (based on decimals of the current token)
   const isExceeding = useMemo(() => {
     if (!isConnected || !sellBal || !sellAmount) return false;
     try {
       const wantRaw = parseUnits(sellAmount, sellBal.decimals);
       return wantRaw > sellBal.value;
     } catch {
-      // while typing invalid formats (e.g., "."), don't flash red
-      return false;
+      return false; // while typing invalid formats
     }
   }, [isConnected, sellBal?.value, sellBal?.decimals, sellAmount]);
 
-  const filteredTokens = tokens.filter(token => 
-    token.symbol.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    token.name.toLowerCase().includes(searchTerm.toLowerCase())
+  // --- Filter for token modal ---
+  const filteredTokens = tokens.filter(
+    (t) =>
+      t.symbol.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      t.name.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
+  // --- Quote from Yak (every 2s, 5% slippage, threshold ≥ 0.1%) ---
+  const router = PUBLIC_CONFIG.YAK_ROUTER as Address;
+  const tokenInArg = selectedSellToken?.address ?? sellToken; // pass address if exists; otherwise symbol "MON"
+  const tokenOutArg = selectedBuyToken?.address ?? buyToken;
+
+  const quote = useYakQuote({
+    router,
+    tokenIn: tokenInArg,
+    tokenOut: tokenOutArg,
+    amountInHuman: sellAmount || "0",
+    enabled: Boolean(sellAmount && selectedSellToken && selectedBuyToken),
+  });
+
+  // Derived buy amount shown to the user (minOut, already 5% slippage)
+  const buyAmountDerived = quote?.minOutFormatted ?? "0.00";
+
+  // Rate display: prefer on-chain quote if available; else fallback to your mock priceRate
+  const rateDisplay = useMemo(() => {
+    const amt = Number(sellAmount);
+    if (quote && amt > 0) {
+      const r = Number(buyAmountDerived) / amt;
+      if (isFinite(r) && r > 0) return `1 ${sellToken} = ${r.toFixed(6)} ${buyToken}`;
+    }
+    return priceRate;
+  }, [quote, buyAmountDerived, sellAmount, sellToken, buyToken, priceRate]);
+
+  // Keep your existing mock updater as a fallback when no quote yet
+  useEffect(() => {
+    const updatePriceRate = () => {
+      const sellPrice = (cryptoPrices as any)[sellToken] || 0;
+      const buyPrice = (cryptoPrices as any)[buyToken] || 0;
+      if (sellPrice > 0 && buyPrice > 0) {
+        const exchangeRate = sellPrice / buyPrice;
+        const variation = (Math.random() - 0.5) * (exchangeRate * 0.001);
+        const newRate = (exchangeRate + variation).toFixed(5);
+        setPriceRate(`1 ${sellToken} = ${newRate} ${buyToken}`);
+      }
+    };
+    updatePriceRate();
+    const interval = setInterval(updatePriceRate, 20000);
+    return () => clearInterval(interval);
+  }, [sellToken, buyToken]);
+
+  // USD helpers (for your current UI)
   const calculateUSDValue = (amount: string, token: string): string => {
     const numAmount = parseFloat(amount) || 0;
-    const price = cryptoPrices[token as keyof typeof cryptoPrices] || 0;
+    const price = (cryptoPrices as any)[token] || 0;
     const usdValue = numAmount * price;
     return usdValue < 0.01 && usdValue > 0 ? `$${usdValue.toFixed(6)}` : `$${usdValue.toFixed(2)}`;
   };
 
-  const formatAddress = (address: string): string => `${address.slice(0, 6)}...${address.slice(-6)}`;
-
+  // Handlers
   const handleSwapTokens = () => {
     // Swap tokens
-    const tempToken = sellToken;
+    const t = sellToken;
     setSellToken(buyToken);
-    setBuyToken(tempToken);
-    
-    // Swap amounts
-    const tempAmount = sellAmount;
-    setSellAmount(buyAmount);
-    setBuyAmount(tempAmount);
+    setBuyToken(t);
+    // Swap amounts (use derived buy amount to back-fill)
+    setSellAmount(buyAmountDerived);
   };
 
-  const openTokenModal = (type: 'sell' | 'buy') => {
+  const openTokenModal = (type: "sell" | "buy") => {
     setTokenSelectionType(type);
     setShowTokenModal(true);
     setSearchTerm("");
   };
 
   const selectToken = (token: string) => {
-    if (tokenSelectionType === 'sell') {
+    if (tokenSelectionType === "sell") {
       setSellToken(token);
-      setSellAmount(""); // reset typed amount when switching sell token to avoid wrong decimals
+      setSellAmount(""); // reset to avoid wrong decimals context
     } else {
       setBuyToken(token);
     }
     setShowTokenModal(false);
   };
 
-  useEffect(() => {
-    const updatePriceRate = () => {
-      const sellPrice = cryptoPrices[sellToken as keyof typeof cryptoPrices] || 0;
-      const buyPrice = cryptoPrices[buyToken as keyof typeof cryptoPrices] || 0;
-      
-      if (sellPrice > 0 && buyPrice > 0) {
-        const exchangeRate = sellPrice / buyPrice;
-        // Add small random variation
-        const variation = (Math.random() - 0.5) * (exchangeRate * 0.001);
-        const newRate = (exchangeRate + variation).toFixed(5);
-        setPriceRate(`1 ${sellToken} = ${newRate} ${buyToken}`);
+  // === SWAP click ===
+  const onClickSwap = async () => {
+    try {
+      if (!isConnected) {
+        openConnectModal?.();
+        return;
       }
-    };
+      if (!sellAmount || Number(sellAmount) <= 0) throw new Error("Enter an amount.");
+      if (!quote || quote.minOutRaw === 0n || !quote.path?.length) throw new Error("No route found.");
+      if (!selectedSellToken || !selectedBuyToken) throw new Error("Select tokens.");
 
-    updatePriceRate(); // Update immediately
-    const interval = setInterval(updatePriceRate, 20000); // Update every 20 seconds
-    
-    return () => clearInterval(interval);
-  }, [sellToken, buyToken]);
+      // Get decimals from balance hook (reliable for the selected SELL token)
+      const inDec = sellBal?.decimals ?? 18;
+      const amountIn = parseUnits(sellAmount, inDec);
+
+      toast({ title: "Preparing swap...", description: "Checking allowance & building txn" });
+
+      const receipt = await performSwap({
+        router,
+        tokenIn: selectedSellToken.address ?? selectedSellToken.symbol, // "MON" is fine here for native detection
+        tokenOut: selectedBuyToken.address ?? selectedBuyToken.symbol,
+        amountIn,
+        amountOutMin: quote.minOutRaw, // 5% slippage already applied by the hook
+        path: quote.path,
+        adapters: quote.adapters,
+      });
+
+      toast({
+        title: "Swap confirmed ✅",
+        description: `Tx: ${receipt.transactionHash.slice(0, 10)}…`,
+      });
+      // optional: clear amount or refresh balances
+    } catch (err: any) {
+      const msg = err?.shortMessage || err?.message || String(err);
+      toast({ title: "Swap failed", description: msg });
+    }
+  };
 
   return (
     <Card className="w-full max-w-md mx-auto bg-muted/40 backdrop-blur-md border border-muted/60 shadow-2xl">
@@ -151,16 +224,16 @@ const SwapInterface = () => {
         <Tabs defaultValue="instant" className="w-full">
           <TabsList className="grid w-full grid-cols-3 bg-muted/40 h-10">
             <TabsTrigger value="instant" className="text-sm flex items-center gap-2 h-8 data-[state=active]:text-primary data-[state=inactive]:text-muted-foreground">
-              <span className="data-[state=active]:text-primary data-[state=inactive]:text-muted-foreground">⚡</span> Instant
+              <span>⚡</span> Instant
             </TabsTrigger>
             <TabsTrigger value="trigger" className="text-sm flex items-center gap-2 h-8 data-[state=active]:text-primary data-[state=inactive]:text-muted-foreground">
-              <span className="data-[state=active]:text-primary data-[state=inactive]:text-muted-foreground">🔫</span> Trigger
+              <span>🔫</span> Trigger
             </TabsTrigger>
             <TabsTrigger value="recurring" className="text-sm flex items-center gap-2 h-8 data-[state=active]:text-primary data-[state=inactive]:text-muted-foreground">
-              <span className="data-[state=active]:text-primary data-[state=inactive]:text-muted-foreground">🔄</span> Recurring
+              <span>🔄</span> Recurring
             </TabsTrigger>
           </TabsList>
-          
+
           <TabsContent value="instant" className="mt-4 space-y-3">
             {/* Selling Section */}
             <div className="space-y-3">
@@ -169,11 +242,11 @@ const SwapInterface = () => {
                 <div className="flex items-center gap-2 text-xs text-muted-foreground">
                   <span className="flex items-center gap-1">
                     <Wallet className="h-3 w-3" />
-                    {sellBalLoading ? "…" : sellBal ? `${Number(sellBal.formatted).toFixed(4)} ${sellToken}` : `0.00 ${sellToken}` }
+                    {sellBalLoading ? "…" : sellBal ? `${Number(sellBal.formatted).toFixed(4)} ${sellToken}` : `0.00 ${sellToken}`}
                   </span>
-                  <Button 
-                    variant="ghost" 
-                    size="sm" 
+                  <Button
+                    variant="ghost"
+                    size="sm"
                     className="h-5 px-2 text-xs text-muted-foreground border border-border hover:border-primary hover:bg-muted transition-all duration-200"
                     onClick={() => {
                       if (!sellBal) return;
@@ -184,15 +257,15 @@ const SwapInterface = () => {
                   >
                     HALF
                   </Button>
-                  <Button 
-                    variant="ghost" 
-                    size="sm" 
+                  <Button
+                    variant="ghost"
+                    size="sm"
                     className="h-5 px-2 text-xs text-muted-foreground border border-border hover:border-primary hover:bg-muted transition-all duration-200"
                     onClick={() => {
                       if (!sellBal) return;
-                      // keep small MON buffer when selling native to leave gas
-                      const gasBufferRaw = (isNativeSell && sellBal.decimals != null) ? parseUnits("0.003", sellBal.decimals) : 0n;
-                      const available = sellBal.value > gasBufferRaw ? (sellBal.value - gasBufferRaw) : 0n;
+                      // keep small MON buffer for gas when selling native
+                      const gasBufferRaw = isNativeSell ? parseUnits("0.003", sellBal.decimals) : 0n;
+                      const available = sellBal.value > gasBufferRaw ? sellBal.value - gasBufferRaw : 0n;
                       const val = formatAmount(available, sellBal.decimals, 6);
                       setSellAmount(val);
                     }}
@@ -201,17 +274,18 @@ const SwapInterface = () => {
                   </Button>
                 </div>
               </div>
+
               <div className="relative bg-background/60 rounded-2xl border border-white/10 focus-within:border-primary/60 transition-colors duration-200">
                 <div className="flex items-center justify-between p-3">
                   <Button
                     variant="ghost"
-                    onClick={() => openTokenModal('sell')}
+                    onClick={() => openTokenModal("sell")}
                     className="w-36 h-9 bg-muted/60 rounded-full text-foreground border border-white/10 hover:border-primary/60 hover:bg-muted/80 flex items-center justify-between"
                   >
                     <span>{sellToken}</span>
                     <ChevronDown className="h-3 w-3" />
                   </Button>
-                  <Input 
+                  <Input
                     value={sellAmount}
                     onChange={(e) => setSellAmount(e.target.value)}
                     className="!border-none !bg-transparent text-right flex-1 !text-24 font-medium tracking-tight pr-2 h-auto text-foreground !shadow-none !ring-0 !ring-offset-0"
@@ -220,7 +294,11 @@ const SwapInterface = () => {
                   />
                 </div>
                 <div className="text-right text-sm text-muted-foreground pr-3 pb-3">
-                  {calculateUSDValue(sellAmount, sellToken)}
+                  {(() => {
+                    // USD estimate for SELL
+                    const num = sellAmount || "0";
+                    return calculateUSDValue(num, sellToken);
+                  })()}
                 </div>
               </div>
             </div>
@@ -243,36 +321,27 @@ const SwapInterface = () => {
                 <div className="flex items-center justify-between p-3">
                   <Button
                     variant="ghost"
-                    onClick={() => openTokenModal('buy')}
+                    onClick={() => openTokenModal("buy")}
                     className="w-36 h-9 bg-muted/60 rounded-full text-foreground border border-white/10 hover:border-primary/60 hover:bg-muted/80 flex items-center justify-between"
                   >
                     <span>{buyToken}</span>
                     <ChevronDown className="h-3 w-3" />
                   </Button>
-                  <Input 
-                    value={(() => {
-                      const sellPrice = cryptoPrices[sellToken as keyof typeof cryptoPrices] || 0;
-                      const buyPrice = cryptoPrices[buyToken as keyof typeof cryptoPrices] || 0;
-                      const sellAmountNum = parseFloat(sellAmount) || 0;
-                      if (sellPrice > 0 && buyPrice > 0 && sellAmountNum > 0) {
-                        const calculatedAmount = (sellAmountNum * sellPrice) / buyPrice;
-                        return parseFloat(calculatedAmount.toFixed(6)).toString();
-                      }
-                      return "0.00";
-                    })()}
-                    onChange={(e) => setBuyAmount(e.target.value)}
+                  <Input
+                    value={buyAmountDerived}
+                    readOnly
                     className="!border-none !bg-transparent text-right flex-1 !text-24 font-medium tracking-tight pr-2 h-auto text-foreground !shadow-none !ring-0 !ring-offset-0"
                     placeholder="0.00"
-                    readOnly
                   />
                 </div>
                 <div className="text-right text-sm text-muted-foreground pr-3 pb-3">
-                  {calculateUSDValue(buyAmount, buyToken)}
+                  {/* USD estimate for BUY */}
+                  {calculateUSDValue(buyAmountDerived, buyToken)}
                 </div>
               </div>
 
               <div className="flex items-center justify-between text-xs text-muted-foreground">
-                <div>Rate: {priceRate}</div>
+                <div>Rate: {rateDisplay}</div>
                 <div className="flex items-center gap-2">
                   <div className="flex items-center gap-1 border-2 border-border px-2 py-1 rounded-lg">
                     <img src={glieseLogo} alt="Gliese" className="w-4 h-4 rounded-lg" />
@@ -283,39 +352,44 @@ const SwapInterface = () => {
               </div>
             </div>
           </TabsContent>
-          
+
           <TabsContent value="trigger">
-            <div className="text-center text-muted-foreground py-8">
-              Trigger orders coming soon
-            </div>
+            <div className="text-center text-muted-foreground py-8">Trigger orders coming soon</div>
           </TabsContent>
 
           <TabsContent value="recurring">
-            <div className="text-center text-muted-foreground py-8">
-              Recurring orders coming soon
-            </div>
+            <div className="text-center text-muted-foreground py-8">Recurring orders coming soon</div>
           </TabsContent>
         </Tabs>
 
         {/* Connect/Swap Button */}
         <div className="w-full mt-4">
-          {!isConnected ? (
-            <Button 
-              className="w-full"
-              onClick={() => openConnectModal?.()}
-            >
-              Connect Wallet
-            </Button>
-          ) : (
-            <Button 
-              className="w-full"
-              disabled={!sellAmount || sellAmount === "0" || sellAmount === "0.0" || isExceeding}
-            >
-              {isExceeding
-                ? "Amount exceeds balance"
-                : (!sellAmount || sellAmount === "0" || sellAmount === "0.0" ? "Enter an amount" : "Swap")}
-            </Button>
-          )}
+          <Button
+            className="w-full"
+            disabled={
+              (!isConnected && !openConnectModal) ||
+              !sellAmount ||
+              sellAmount === "0" ||
+              sellAmount === "0.0" ||
+              isExceeding ||
+              !quote ||
+              quote.minOutRaw === 0n
+            }
+            onClick={() => {
+              if (!isConnected) return openConnectModal?.();
+              onClickSwap();
+            }}
+          >
+            {!isConnected
+              ? "Connect Wallet"
+              : isExceeding
+              ? "Amount exceeds balance"
+              : !sellAmount || sellAmount === "0" || sellAmount === "0.0"
+              ? "Enter an amount"
+              : !quote || quote.minOutRaw === 0n
+              ? "No route"
+              : "Swap"}
+          </Button>
         </div>
       </div>
 
@@ -325,7 +399,7 @@ const SwapInterface = () => {
         <DialogContent className="sm:max-w-[420px] bg-[#0b0f17]/95 border border-white/10 text-white">
           <DialogHeader>
             <DialogTitle className="text-white">
-              Select a token to {tokenSelectionType === 'sell' ? 'sell' : 'buy'}
+              Select a token to {tokenSelectionType === "sell" ? "sell" : "buy"}
             </DialogTitle>
           </DialogHeader>
 
@@ -373,3 +447,4 @@ const SwapInterface = () => {
 };
 
 export default SwapInterface;
+
