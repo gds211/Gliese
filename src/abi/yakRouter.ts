@@ -1,6 +1,10 @@
 // src/abi/yakRouter.ts
-// Keep all variants we might need, depending on your exact Router build.
+
+// NOTE: Your Yak fork returns a single struct (tuple) for quotes
+// and uses a Trade struct for swaps.
+
 export const YAK_ROUTER_ABI = [
+  // --- Views (quotes) ---
   {
     type: "function",
     name: "findBestPathWithGas",
@@ -13,64 +17,131 @@ export const YAK_ROUTER_ABI = [
       { name: "_gasPrice",  type: "uint256" },
     ],
     outputs: [
-      { name: "amounts",   type: "uint256[]" },
-      { name: "adapters",  type: "address[]" },
-      { name: "path",      type: "address[]" },
-      { name: "gasUsed",   type: "uint256"   },
+      {
+        name: "", type: "tuple",
+        components: [
+          { name: "amounts",     type: "uint256[]" },
+          { name: "adapters",    type: "address[]" },
+          { name: "path",        type: "address[]" },
+          { name: "gasEstimate", type: "uint256"   },
+        ],
+      },
     ],
   },
-
-  // ERC20 -> ERC20
   {
     type: "function",
-    name: "swapNoSplit",
-    stateMutability: "nonpayable",
+    name: "findBestPath",
+    stateMutability: "view",
     inputs: [
-      { name:"amountIn",       type:"uint256" },
-      { name:"amountOutMin",   type:"uint256" },
-      { name:"path",           type:"address[]" },
-      { name:"adapters",       type:"address[]" },
+      { name: "_amountIn",  type: "uint256" },
+      { name: "_tokenIn",   type: "address" },
+      { name: "_tokenOut",  type: "address" },
+      { name: "_maxSteps",  type: "uint256" },
     ],
-    outputs: []
+    outputs: [
+      {
+        name: "", type: "tuple",
+        components: [
+          { name: "amounts",     type: "uint256[]" },
+          { name: "adapters",    type: "address[]" },
+          { name: "path",        type: "address[]" },
+          { name: "gasEstimate", type: "uint256"   },
+        ],
+      },
+    ],
   },
 
-  // Native -> Token (some repos name it FromAVAX or FromAvax)
+  // --- Trade struct used by swaps ---
   {
     type: "function",
     name: "swapNoSplitFromAVAX",
     stateMutability: "payable",
     inputs: [
-      { name:"amountIn",       type:"uint256" },    // Many Yak forks include this param; if yours omits it, we’ll handle below.
-      { name:"amountOutMin",   type:"uint256" },
-      { name:"path",           type:"address[]" },
-      { name:"adapters",       type:"address[]" },
+      {
+        name: "_trade", type: "tuple",
+        components: [
+          { name: "amountIn",  type: "uint256" },
+          { name: "amountOut", type: "uint256" }, // minOut
+          { name: "path",      type: "address[]" },
+          { name: "adapters",  type: "address[]" },
+        ],
+      },
+      { name: "_to",   type: "address" },
+      { name: "_fee",  type: "uint256" },       // in 1e4 denom (bps)
     ],
-    outputs: []
+    outputs: [],
   },
+  // Some forks use lowercase 'v' in Avax
   {
     type: "function",
     name: "swapNoSplitFromAvax",
     stateMutability: "payable",
     inputs: [
-      { name:"amountIn",       type:"uint256" },
-      { name:"amountOutMin",   type:"uint256" },
-      { name:"path",           type:"address[]" },
-      { name:"adapters",       type:"address[]" },
+      {
+        name: "_trade", type: "tuple",
+        components: [
+          { name: "amountIn",  type: "uint256" },
+          { name: "amountOut", type: "uint256" },
+          { name: "path",      type: "address[]" },
+          { name: "adapters",  type: "address[]" },
+        ],
+      },
+      { name: "_to",   type: "address" },
+      { name: "_fee",  type: "uint256" },
     ],
-    outputs: []
+    outputs: [],
   },
-
-  // Token -> Native
   {
     type: "function",
     name: "swapNoSplitToAVAX",
     stateMutability: "nonpayable",
     inputs: [
-      { name:"amountIn",       type:"uint256" },
-      { name:"amountOutMin",   type:"uint256" },
-      { name:"path",           type:"address[]" },
-      { name:"adapters",       type:"address[]" },
+      {
+        name: "_trade", type: "tuple",
+        components: [
+          { name: "amountIn",  type: "uint256" },
+          { name: "amountOut", type: "uint256" },
+          { name: "path",      type: "address[]" },
+          { name: "adapters",  type: "address[]" },
+        ],
+      },
+      { name: "_to",   type: "address" },
+      { name: "_fee",  type: "uint256" },
     ],
-    outputs: []
+    outputs: [],
   },
+  {
+    type: "function",
+    name: "swapNoSplit",
+    stateMutability: "nonpayable",
+    inputs: [
+      {
+        name: "_trade", type: "tuple",
+        components: [
+          { name: "amountIn",  type: "uint256" },
+          { name: "amountOut", type: "uint256" },
+          { name: "path",      type: "address[]" },
+          { name: "adapters",  type: "address[]" },
+        ],
+      },
+      { name: "_to",   type: "address" },
+      { name: "_fee",  type: "uint256" },
+    ],
+    outputs: [],
+  },
+
+  // Optional helper reads if you want:
+  { type: "function", name: "WNATIVE", stateMutability: "view", inputs: [], outputs: [{ type: "address" }] },
+  { type: "function", name: "MIN_FEE", stateMutability: "view", inputs: [], outputs: [{ type: "uint256" }] },
 ] as const;
+
+
+
+
+
+
+
+
+
+
+
