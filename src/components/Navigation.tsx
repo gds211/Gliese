@@ -27,7 +27,7 @@ const Navigation = () => {
       </div>
 
       {/* Navigation Links */}
-      <div className="flex items-center gap-1 bg-card/70 rounded-lg p-1 backdrop-blur-sm">
+      <div className="flex items-center gap-1 bg-black rounded-lg p-1 backdrop-blur-sm">
         {navItems.map((item) => (
           <Button
             key={item.name}
