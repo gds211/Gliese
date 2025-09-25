@@ -3,6 +3,7 @@ import { useState, useMemo, useEffect } from "react";
 import { Address, parseUnits } from "viem";
 import { useAccount, useBalance } from "wagmi";
 import { useConnectModal } from "@rainbow-me/rainbowkit";
+import { useQueryClient } from "@tanstack/react-query"; // <-- ADDED
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -21,8 +22,7 @@ import { performSwap } from "@/lib/swap";
 
 // -------------------- Local helpers --------------------
 function formatAmount(raw: bigint, decimals: number, maxFrac: number = 6): string {
-  // viem's formatUnits is fine, but we keep a tiny custom wrapper to trim zeros
-  const full = (Number(raw) / 10 ** decimals).toString(); // only used for HALF/MAX visual; OK
+  const full = (Number(raw) / 10 ** decimals).toString(); // UI-only
   const [w, f = ""] = full.split(".");
   if (maxFrac <= 0 || f.length === 0) return w;
   const clamped = f.slice(0, maxFrac).replace(/0+$/, "");
@@ -38,6 +38,7 @@ const SwapInterface = () => {
   const { address, isConnected } = useAccount();
   const { openConnectModal } = useConnectModal();
   const { toast } = useToast();
+  const queryClient = useQueryClient(); // <-- ADDED
 
   // --- Token list (your current list) ---
   const cryptoPrices = {
@@ -78,7 +79,11 @@ const SwapInterface = () => {
   );
 
   // === Live wallet balance for SELL token ===
-  const { data: sellBal, isLoading: sellBalLoading } = useBalance({
+  const {
+    data: sellBal,
+    isLoading: sellBalLoading,
+    refetch: refetchSellBalance, // <-- ADDED
+  } = useBalance({
     address,
     token: isNativeSell ? undefined : (selectedSellToken?.address as `0x${string}` | undefined),
     query: { enabled: Boolean(isConnected && address && selectedSellToken), refetchOnWindowFocus: false },
@@ -115,6 +120,25 @@ const SwapInterface = () => {
     enabled: Boolean(sellAmount && selectedSellToken && selectedBuyToken),
   });
 
+  // NEW: when user hasn't typed a positive amount, fetch a 1-unit quote for an accurate rate
+  const hasPositiveSell = useMemo(() => {
+    const n = Number(sellAmount);
+    return Number.isFinite(n) && n > 0;
+  }, [sellAmount]);
+
+  const unitQuote = useYakQuote({
+    router,
+    tokenIn: tokenInArg,
+    tokenOut: tokenOutArg,
+    amountInHuman: "1", // 1 whole unit of the SELL token
+    enabled: Boolean(
+      !hasPositiveSell &&
+      selectedSellToken &&
+      selectedBuyToken &&
+      selectedSellToken.symbol !== selectedBuyToken.symbol
+    ),
+  });
+
   // Derived buy amount shown to the user (minOut, already 5% slippage)
   const buyAmountDerived = quote?.minOutFormatted ?? "0.00";
   
@@ -126,15 +150,33 @@ const SwapInterface = () => {
     return num.toFixed(6).replace(/\.?0+$/, '');
   }, [buyAmountDerived]);
 
-  // Rate display: prefer on-chain quote if available; else fallback to your mock priceRate
+  // Rate display: accurate even before typing (uses a 1-unit on-chain quote)
   const rateDisplay = useMemo(() => {
-    const amt = Number(sellAmount);
-    if (quote && amt > 0) {
-      const r = Number(buyAmountDerived) / amt;
-      if (isFinite(r) && r > 0) return `1 ${sellToken} = ${r.toFixed(6)} ${buyToken}`;
+    if (selectedSellToken && selectedBuyToken && selectedSellToken.symbol === selectedBuyToken.symbol) {
+      return `1 ${sellToken} = 1 ${buyToken}`;
     }
+
+    const amt = Number(sellAmount);
+
+    // If user typed a positive amount, compute rate from active quote
+    if (quote && Number.isFinite(amt) && amt > 0) {
+      const r = Number(buyAmountDerived) / amt;
+      if (Number.isFinite(r) && r > 0) {
+        return `1 ${sellToken} = ${r.toFixed(6).replace(/\.?0+$/, "")} ${buyToken}`;
+      }
+    }
+
+    // Before typing: use the 1-unit quote
+    if (unitQuote && unitQuote.minOutRaw && unitQuote.minOutRaw > 0n) {
+      const u = Number(unitQuote.minOutFormatted);
+      if (Number.isFinite(u) && u > 0) {
+        return `1 ${sellToken} = ${u.toFixed(6).replace(/\.?0+$/, "")} ${buyToken}`;
+      }
+    }
+
+    // Fallback to your mock when no on-chain path yet
     return priceRate;
-  }, [quote, buyAmountDerived, sellAmount, sellToken, buyToken, priceRate]);
+  }, [quote, unitQuote, buyAmountDerived, sellAmount, sellToken, buyToken, selectedSellToken, selectedBuyToken, priceRate]);
 
   // Keep your existing mock updater as a fallback when no quote yet
   useEffect(() => {
@@ -161,13 +203,34 @@ const SwapInterface = () => {
     return usdValue < 0.01 && usdValue > 0 ? `$${usdValue.toFixed(6)}` : `$${usdValue.toFixed(2)}`;
   };
 
+  // ------------ ADDED: precise, safe post-swap refresh ------------
+  const refreshBalances = async () => {
+    // 1) Hard refresh the currently displayed SELL token balance (wallet icon near input)
+    await Promise.allSettled([refetchSellBalance()]);
+
+    // 2) Broadly invalidate any "balance" queries for this wallet
+    //    (covers your top-right wallet icon or other components using useBalance)
+    const ownerLc = (address ?? "").toLowerCase();
+    queryClient.invalidateQueries({
+      predicate: (q) => {
+        try {
+          const s = JSON.stringify(q.queryKey ?? "").toLowerCase();
+          const hasBalance = s.includes("balance");
+          const matchesOwner = ownerLc ? s.includes(ownerLc) : true;
+          return hasBalance && matchesOwner;
+        } catch {
+          return false;
+        }
+      },
+    });
+  };
+  // ---------------------------------------------------------------
+
   // Handlers
   const handleSwapTokens = () => {
-    // Swap tokens
     const t = sellToken;
     setSellToken(buyToken);
     setBuyToken(t);
-    // Swap amounts - only use derived buy amount if there was a meaningful sell amount
     const hasValue = sellAmount && sellAmount !== "0" && sellAmount !== "0.0" && sellAmount !== "0.00";
     setSellAmount(hasValue ? buyAmountDerived : "");
   };
@@ -199,7 +262,6 @@ const SwapInterface = () => {
       if (!quote || quote.minOutRaw === 0n || !quote.path?.length) throw new Error("No route found.");
       if (!selectedSellToken || !selectedBuyToken) throw new Error("Select tokens.");
 
-      // Get decimals from balance hook (reliable for the selected SELL token)
       const inDec = sellBal?.decimals ?? 18;
       const amountIn = parseUnits(sellAmount, inDec);
 
@@ -219,7 +281,12 @@ const SwapInterface = () => {
         title: "Swap confirmed ✅",
         description: `Tx: ${receipt.transactionHash.slice(0, 10)}…`,
       });
-      // optional: clear amount or refresh balances
+
+      // Instant balance refresh
+      const status = (receipt as any)?.status;
+      if (status === "success" || status === 1 || status === "0x1") {
+        await refreshBalances();
+      }
     } catch (err: any) {
       const msg = err?.shortMessage || err?.message || String(err);
       toast({ title: "Swap failed", description: msg });
@@ -304,7 +371,6 @@ const SwapInterface = () => {
                 </div>
                 <div className="text-right text-sm text-muted-foreground pr-3 pb-3">
                   {(() => {
-                    // USD estimate for SELL
                     const num = sellAmount || "0";
                     return calculateUSDValue(num, sellToken);
                   })()}
@@ -344,7 +410,6 @@ const SwapInterface = () => {
                   />
                 </div>
                 <div className="text-right text-sm text-muted-foreground pr-3 pb-3">
-                  {/* USD estimate for BUY */}
                   {calculateUSDValue(buyAmountDerived, buyToken)}
                 </div>
               </div>
@@ -456,4 +521,5 @@ const SwapInterface = () => {
 };
 
 export default SwapInterface;
+
 
