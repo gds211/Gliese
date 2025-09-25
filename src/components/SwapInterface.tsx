@@ -159,8 +159,9 @@ const SwapInterface = () => {
     const t = sellToken;
     setSellToken(buyToken);
     setBuyToken(t);
-    // Swap amounts (use derived buy amount to back-fill)
-    setSellAmount(buyAmountDerived);
+    // Swap amounts - only use derived buy amount if there was a meaningful sell amount
+    const hasValue = sellAmount && sellAmount !== "0" && sellAmount !== "0.0" && sellAmount !== "0.00";
+    setSellAmount(hasValue ? buyAmountDerived : "");
   };
 
   const openTokenModal = (type: "sell" | "buy") => {
