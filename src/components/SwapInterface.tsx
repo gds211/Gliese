@@ -121,7 +121,9 @@ const SwapInterface = () => {
   // Display version limited to 6 decimals for UI
   const buyAmountDisplay = useMemo(() => {
     const num = Number(buyAmountDerived);
-    return isNaN(num) ? "0.00" : num.toFixed(6).replace(/\.?0+$/, '');
+    if (isNaN(num)) return "0.00";
+    if (num === 0) return "0.00";
+    return num.toFixed(6).replace(/\.?0+$/, '');
   }, [buyAmountDerived]);
 
   // Rate display: prefer on-chain quote if available; else fallback to your mock priceRate
