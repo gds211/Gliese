@@ -18,6 +18,7 @@ import glieseLogo from "@/assets/gliese-logo.png";
 import { PUBLIC_CONFIG } from "@/config/public";
 import { useYakQuote } from "@/hooks/useYakQuote";
 import { performSwap } from "@/lib/swap";
+import { normalizeInput, formatLocalizedNumber } from "@/lib/numberFormat";
 
 // -------------------- Local helpers --------------------
 function formatAmount(raw: bigint, decimals: number, maxFrac: number = 6): string {
@@ -118,10 +119,9 @@ const SwapInterface = () => {
   // Derived buy amount shown to the user (minOut, already 5% slippage)
   const buyAmountDerived = quote?.minOutFormatted ?? "0.00";
   
-  // Display version limited to 6 decimals for UI
+  // Display version limited to 6 decimals for UI with localized formatting
   const buyAmountDisplay = useMemo(() => {
-    const num = Number(buyAmountDerived);
-    return isNaN(num) ? "0.00" : num.toFixed(6).replace(/\.?0+$/, '');
+    return formatLocalizedNumber(buyAmountDerived, 6);
   }, [buyAmountDerived]);
 
   // Rate display: prefer on-chain quote if available; else fallback to your mock priceRate
@@ -249,7 +249,7 @@ const SwapInterface = () => {
                 <div className="flex items-center gap-2 text-xs text-muted-foreground">
                   <span className="flex items-center gap-1">
                     <Wallet className="h-3 w-3" />
-                    {sellBalLoading ? "…" : sellBal ? `${Number(sellBal.formatted).toFixed(4)} ${sellToken}` : `0.00 ${sellToken}`}
+                    {sellBalLoading ? "…" : sellBal ? `${formatLocalizedNumber(sellBal.formatted, 4)} ${sellToken}` : `0 ${sellToken}`}
                   </span>
                   <Button
                     variant="ghost"
@@ -293,16 +293,19 @@ const SwapInterface = () => {
                     <ChevronDown className="h-3 w-3" />
                   </Button>
                   <Input
-                    value={sellAmount}
-                    onChange={(e) => setSellAmount(e.target.value)}
+                    value={sellAmount ? formatLocalizedNumber(sellAmount) : ''}
+                    onChange={(e) => {
+                      const normalized = normalizeInput(e.target.value);
+                      setSellAmount(normalized);
+                    }}
                     className="!border-none !bg-transparent text-right flex-1 !text-24 font-medium tracking-tight pr-2 h-auto text-foreground !shadow-none !ring-0 !ring-offset-0"
                     style={{ color: isExceeding ? "#ef4444" : undefined }}
-                    placeholder="0.00"
+                    placeholder="0,00"
                   />
                 </div>
                 <div className="text-right text-sm text-muted-foreground pr-3 pb-3">
                   {(() => {
-                    // USD estimate for SELL
+                    // USD estimate for SELL (using normalized value for calculation)
                     const num = sellAmount || "0";
                     return calculateUSDValue(num, sellToken);
                   })()}
@@ -338,7 +341,7 @@ const SwapInterface = () => {
                     value={buyAmountDisplay}
                     readOnly
                     className="!border-none !bg-transparent text-right flex-1 !text-24 font-medium tracking-tight pr-2 h-auto text-foreground !shadow-none !ring-0 !ring-offset-0"
-                    placeholder="0.00"
+                    placeholder="0,00"
                   />
                 </div>
                 <div className="text-right text-sm text-muted-foreground pr-3 pb-3">
