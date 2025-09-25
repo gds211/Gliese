@@ -117,6 +117,12 @@ const SwapInterface = () => {
 
   // Derived buy amount shown to the user (minOut, already 5% slippage)
   const buyAmountDerived = quote?.minOutFormatted ?? "0.00";
+  
+  // Display version limited to 6 decimals for UI
+  const buyAmountDisplay = useMemo(() => {
+    const num = Number(buyAmountDerived);
+    return isNaN(num) ? "0.00" : num.toFixed(6).replace(/\.?0+$/, '');
+  }, [buyAmountDerived]);
 
   // Rate display: prefer on-chain quote if available; else fallback to your mock priceRate
   const rateDisplay = useMemo(() => {
@@ -329,7 +335,7 @@ const SwapInterface = () => {
                     <ChevronDown className="h-3 w-3" />
                   </Button>
                   <Input
-                    value={buyAmountDerived}
+                    value={buyAmountDisplay}
                     readOnly
                     className="!border-none !bg-transparent text-right flex-1 !text-24 font-medium tracking-tight pr-2 h-auto text-foreground !shadow-none !ring-0 !ring-offset-0"
                     placeholder="0.00"
