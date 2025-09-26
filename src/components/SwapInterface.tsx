@@ -393,6 +393,9 @@ const SwapInterface = () => {
             {/* Buying Section */}
             <div className="space-y-3">
               <div className="relative bg-background/60 rounded-2xl border border-white/10 focus-within:border-primary/60 transition-colors duration-200">
+                <span className="absolute left-0 bottom-full mb-3 text-sm text-muted-foreground pointer-events-none select-none">
+                  Buying
+                </span>               
                 <div className="flex items-center justify-between p-3">
                   <Button
                     variant="ghost"
