@@ -142,3 +142,18 @@ All colors MUST be HSL.
     display: none !important;
   }
 }
+
+/* --- Latest Block pulse (white stays white) --- */
+@keyframes pulseWhite {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50%      { opacity: .25; transform: scale(0.9); }
+}
+/* Default pulse speed (edit 1.25s to 1.5s or 2s if you want) */
+.pulse-white {
+  animation: pulseWhite 1.25s ease-in-out infinite;
+}
+
+/* Respect reduced motion preferences */
+@media (prefers-reduced-motion: reduce) {
+  .pulse-white { animation-duration: 4s; } /* or: animation: none; */
+}
