@@ -42,7 +42,7 @@ All colors MUST be HSL.
     /* Custom cosmic gradients */
     --gradient-cosmic: linear-gradient(135deg, 15 100% 65%, 270 100% 70%);
     --gradient-space: linear-gradient(180deg, 220 30% 5%, 240 25% 8%);
-    --glow-cosmic: 0 0 50px hsl(15 100% 65% / 0.6), 0 0 100px hsl(15 100% 65% / 0.3);
+    --glow-cosmic: 0 0 20px hsl(15 100% 65% / 0.3);
     --glow-accent: 0 0 20px hsl(270 100% 70% / 0.3);
 
     --sidebar-background: 0 0% 98%;
