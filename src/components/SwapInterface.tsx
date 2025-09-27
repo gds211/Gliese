@@ -383,11 +383,7 @@ const SwapInterface = () => {
                   >
                     {sellToken}
                   </span>
-
-
-                  
-
-                    {/* Right chevron */}
+                   {/* Right chevron */}
                    <ChevronDown className="absolute right-2 h-3.5 w-3.5 pointer-events-none" />
                   </Button>
                   <Input
@@ -416,24 +412,28 @@ const SwapInterface = () => {
                 className="h-8 w-8 p-0 bg-background/60 hover:bg-background rounded-md border border-border/40 transition-colors duration-200"
               >
                 <ArrowUpDown className="h-4 w-4 text-blue-600" />
-              </Button>
-            </div>
+            <Button
+                variant="ghost"
+                onClick={() => openTokenModal("buy")}
+                className="relative w-32 h-10 bg-muted/60 rounded-full text-foreground border border-white/10 hover:border-white hover:bg-muted/80 hover:text-white flex items-center"
+                aria-label="Select buy token"
+              >
+              {/* Left logo (same position as SELL) */}
+              <span className="absolute left-3 flex items-center gap-2 pointer-events-none">
+                <TokenAvatar symbol={buyToken} />
+              </span>
 
-            {/* Buying Section */}
-            <div className="space-y-3">
-              <div className="relative bg-background/60 rounded-2xl border border-white/10 focus-within:border-primary/60 transition-colors duration-200">
-                <span className="absolute left-0 bottom-full mb-3 text-sm text-muted-foreground pointer-events-none select-none">
-                  Buying
-                </span>               
-                <div className="flex items-center justify-between p-3">
-                  <Button
-                    variant="ghost"
-                    onClick={() => openTokenModal("buy")}
-                    className="w-36 h-9 bg-muted/60 rounded-full text-foreground border border-white/10 hover:border-white hover:bg-muted/80 hover:text-white flex items-center justify-between"
-                  >
-                    <span>{buyToken}</span>
-                    <ChevronDown className="h-3 w-3" />
-                  </Button>
+              {/* Label centered in the space between logo and chevron */}
+              <span
+                className="absolute inset-y-0 left-[2.75rem] right-[2.5rem] flex items-center justify-center pointer-events-none truncate"
+              >
+                {buyToken}
+              </span>
+
+              {/* Right chevron (same position/size as SELL) */}
+              <ChevronDown className="absolute right-2 h-3.5 w-3.5 pointer-events-none" />
+          </Button>
+
                   <Input
                     value={buyAmountDisplay}
                     readOnly
