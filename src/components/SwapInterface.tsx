@@ -379,10 +379,11 @@ const SwapInterface = () => {
                   {/* Label zone spans between the logo and the chevron; text biased toward the chevron */}
                    {/* Label centered in the space between logo and chevron */}
                   <span
-                     className="absolute inset-y-0 left-[2.75rem] right-[1.875rem] flex items-center justify-center pointer-events-none truncate"
+                    className="absolute inset-y-0 left-[2.75rem] right-[2rem] flex items-center justify-center pointer-events-none truncate"
                   >
-                   {sellToken}
+                    {sellToken}
                   </span>
+
 
                   
 
