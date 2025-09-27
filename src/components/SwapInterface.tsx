@@ -409,12 +409,21 @@ const SwapInterface = () => {
                 </span>               
                 <div className="flex items-center justify-between p-3">
                   <Button
-                    variant="ghost"
-                    onClick={() => openTokenModal("buy")}
-                    className="w-36 h-9 bg-muted/60 rounded-full text-foreground border border-white/10 hover:border-white hover:bg-muted/80 hover:text-white flex items-center justify-between"
-                  >
-                    <span>{buyToken}</span>
-                    <ChevronDown className="h-3 w-3" />
+                     variant="ghost"
+                     onClick={() => openTokenModal("sell")}
+                     className="relative w-32 h-10 bg-muted/60 rounded-full text-foreground border border-white/10 hover:border-white hover:bg-muted/80 hover:text-white flex items-center"
+                     aria-label="Select sell token"
+                    >
+                     {/* Left logo */}
+                    <span className="absolute left-2 flex items-center gap-2 pointer-events-none">
+                          <TokenAvatar symbol={sellToken} />
+                    </span>
+
+                     {/* Centered text */}
+                    <span className="mx-auto pointer-events-none">{sellToken}</span>
+
+                     {/* Right chevron */}
+                    <ChevronDown className="absolute right-2 h-3 w-3 pointer-events-none" />
                   </Button>
                   <Input
                     value={buyAmountDisplay}
