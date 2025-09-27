@@ -11,24 +11,38 @@ import { useLatestBlock } from "@/hooks/useLatestBlock";
  * - Pointer-events disabled so it never blocks clicks.
  */
 function BlockIndicatorOverlay() {
-  const { blockNumber, error } = useLatestBlock(2000); // poll every 2s
-
-  const dotClass = [
-    "inline-block h-2.5 w-2.5 rounded-full",
-    error ? "bg-red-500 animate-pulse" : "bg-white animate-pulse",
-  ].join(" ");
+  // poll every 10s
+  const { blockNumber, error } = useLatestBlock(10_000);
 
   return (
-    <div className="fixed left-6 bottom-4 z-50 pointer-events-none select-none">
-      <div className="flex items-center gap-2 rounded-full border border-white/10 bg-black/30 px-2.5 py-1.5 backdrop-blur-sm">
-        <span className={dotClass} />
-        <span className="text-xs font-medium tabular-nums tracking-tight text-white/90">
-          {blockNumber ? blockNumber.toString() : error ? "RPC error" : "—"}
-        </span>
+    <>
+      {/* local blink (no new css files) */}
+      <style>{`
+        @keyframes gliese-blink { 0%,49% { opacity: 1 } 50%,100% { opacity: .2 } }
+        .gliese-blink { animation: gliese-blink 1s infinite steps(2, start); }
+      `}</style>
+
+      <div className="fixed left-6 bottom-4 z-50 pointer-events-none select-none">
+        {/* no surrounding frame/pill — just the icon and the number */}
+        <div className="flex items-center gap-2">
+          {/* black circle with blinking white dot inside; red if RPC error */}
+          <span className="relative inline-block h-4 w-4 rounded-full bg-black">
+            <span
+              className={`absolute left-1/2 top-1/2 h-2 w-2 -translate-x-1/2 -translate-y-1/2 rounded-full gliese-blink ${
+                error ? "bg-red-500" : "bg-white"
+              }`}
+            />
+          </span>
+
+          <span className="text-xs font-medium tabular-nums tracking-tight text-white/90">
+            {blockNumber ? blockNumber.toString() : error ? "RPC error" : "—"}
+          </span>
+        </div>
       </div>
-    </div>
+    </>
   );
 }
+
 
 const Index = () => {
   return (
