@@ -1,9 +1,9 @@
 import LatestBlockIndicator from "@/components/LatestBlockIndicator";
 
 /**
- * Fixed, minimal overlay at the very bottom.
- * Left padding matches Navigation (px-6) and common container width (max-w-6xl).
- * No logo/text rendered here — ONLY the indicator.
+ * Fixed, minimal overlay at the bottom of the viewport.
+ * Aligned with the same container as the header: max-w-6xl + px-6.
+ * Shows ONLY the block indicator (no logo/text).
  */
 export default function BlockIndicatorOverlay() {
   return (
