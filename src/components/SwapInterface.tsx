@@ -20,6 +20,17 @@ import { PUBLIC_CONFIG } from "@/config/public";
 import { useYakQuote } from "@/hooks/useYakQuote";
 import { performSwap } from "@/lib/swap";
 
+// Tiny local avatar used inside the token buttons (no assets required)
+const TokenAvatar: React.FC<{ symbol: string }> = ({ symbol }) => {
+  const letter = (symbol?.[0] ?? "?").toUpperCase();
+  return (
+    <span className="inline-grid place-items-center h-5 w-5 rounded-full bg-white/15 text-[10px] font-semibold uppercase">
+      {letter}
+    </span>
+  );
+};
+
+
 // -------------------- Local helpers --------------------
 function formatAmount(raw: bigint, decimals: number, maxFrac: number = 6): string {
   const full = (Number(raw) / 10 ** decimals).toString(); // UI-only
