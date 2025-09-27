@@ -19,7 +19,7 @@ function BlockIndicatorOverlay() {
       {/* local blink (no new css files) */}
       <style>{`
         @keyframes gliese-blink { 0%,49% { opacity: 1 } 50%,100% { opacity: .2 } }
-        .gliese-blink { animation: gliese-blink 1s infinite steps(2, start); }
+        .gliese-blink { animation: gliese-blink 2s infinite steps(2, start); }
       `}</style>
 
       <div className="fixed left-6 bottom-4 z-50 pointer-events-none select-none">
