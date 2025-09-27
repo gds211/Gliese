@@ -24,11 +24,12 @@ import { performSwap } from "@/lib/swap";
 const TokenAvatar: React.FC<{ symbol: string }> = ({ symbol }) => {
   const letter = (symbol?.[0] ?? "?").toUpperCase();
   return (
-    <span className="inline-grid place-items-center h-5 w-5 rounded-full bg-white/15 text-[10px] font-semibold uppercase">
+    <span className="inline-grid place-items-center h-6 w-6 rounded-full bg-white/15 text-[11px] font-semibold uppercase">
       {letter}
     </span>
   );
 };
+
 
 
 // -------------------- Local helpers --------------------
@@ -365,12 +366,23 @@ const SwapInterface = () => {
               <div className="relative bg-background/60 rounded-2xl border border-white/10 focus-within:border-primary/60 transition-colors duration-200">
                 <div className="flex items-center justify-between p-3">
                   <Button
-                    variant="ghost"
-                    onClick={() => openTokenModal("sell")}
-                    className="w-36 h-9 bg-muted/60 rounded-full text-foreground border border-white/10 hover:border-white hover:bg-muted/80 hover:text-white flex items-center justify-between"
+                      variant="ghost"
+                      onClick={() => openTokenModal("sell")}
+                      className="relative w-32 h-10 bg-muted/60 rounded-full text-foreground border border-white/10 hover:border-white hover:bg-muted/80 hover:text-white flex items-center"
+                      aria-label="Select sell token"
                   >
-                    <span>{sellToken}</span>
-                    <ChevronDown className="h-3 w-3" />
+                      {/* Left logo (shifted slightly right) */}
+                  <span className="absolute left-3 flex items-center gap-2 pointer-events-none">
+                    <TokenAvatar symbol={sellToken} />
+                  </span>
+
+                  {/* Label zone spans between the logo and the chevron; text biased toward the chevron */}
+                  <span className="absolute inset-y-0 left-12 right-6 flex items-center justify-end pointer-events-none">
+                      {sellToken}
+                  </span>
+
+                    {/* Right chevron */}
+                   <ChevronDown className="absolute right-2 h-3.5 w-3.5 pointer-events-none" />
                   </Button>
                   <Input
                     value={sellAmount}
@@ -409,21 +421,12 @@ const SwapInterface = () => {
                 </span>               
                 <div className="flex items-center justify-between p-3">
                   <Button
-                     variant="ghost"
-                     onClick={() => openTokenModal("sell")}
-                     className="relative w-32 h-10 bg-muted/60 rounded-full text-foreground border border-white/10 hover:border-white hover:bg-muted/80 hover:text-white flex items-center"
-                     aria-label="Select sell token"
-                    >
-                     {/* Left logo */}
-                    <span className="absolute left-2 flex items-center gap-2 pointer-events-none">
-                          <TokenAvatar symbol={sellToken} />
-                    </span>
-
-                     {/* Centered text */}
-                    <span className="mx-auto pointer-events-none">{sellToken}</span>
-
-                     {/* Right chevron */}
-                    <ChevronDown className="absolute right-2 h-3 w-3 pointer-events-none" />
+                    variant="ghost"
+                    onClick={() => openTokenModal("buy")}
+                    className="w-36 h-9 bg-muted/60 rounded-full text-foreground border border-white/10 hover:border-white hover:bg-muted/80 hover:text-white flex items-center justify-between"
+                  >
+                    <span>{buyToken}</span>
+                    <ChevronDown className="h-3 w-3" />
                   </Button>
                   <Input
                     value={buyAmountDisplay}
