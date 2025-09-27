@@ -368,22 +368,26 @@ const SwapInterface = () => {
                   <Button
                       variant="ghost"
                       onClick={() => openTokenModal("sell")}
-                      className="relative w-32 h-10 bg-muted/60 rounded-full text-foreground border border-white/10 hover:border-white hover:bg-muted/80 hover:text-white flex items-center"
+                      className="relative w-32 h-10 bg-muted/60 rounded-full text-foreground border border-white/10 hover:border-white hover:bg-muted/80 hover:text-white"
                       aria-label="Select sell token"
-                  >
-                      {/* Left logo (shifted slightly right) */}
-                  <span className="absolute left-3 flex items-center gap-2 pointer-events-none">
-                    <TokenAvatar symbol={sellToken} />
-                  </span>
+                   >
+                   {/* 3-column layout: [logo][label zone 1fr][chevron] */}
+                    <div className="pointer-events-none grid grid-cols-[auto_1fr_auto] items-center w-full h-full px-3 gap-2">
+                   {/* Logo (slightly bigger; sits a bit to the right via px-3 on container) */}
+                   <div className="flex items-center">
+                      <TokenAvatar symbol={sellToken} /> {/* size h-6 w-6 in your TokenAvatar */}
+                   </div>
 
-                  {/* Label zone spans between the logo and the chevron; text biased toward the chevron */}
-                  <span className="absolute inset-y-0 left-12 right-6 flex items-center justify-end pointer-events-none">
-                      {sellToken}
-                  </span>
+                    {/* Label centered in the space between logo and chevron */}
+                   <span className="justify-self-center min-w-0 truncate">
+                       {sellToken}
+                   </span>
 
-                    {/* Right chevron */}
-                   <ChevronDown className="absolute right-2 h-3.5 w-3.5 pointer-events-none" />
+                    {/* Chevron on the right */}
+                    <ChevronDown className="h-3.5 w-3.5 justify-self-end" />
+                     </div>
                   </Button>
+
                   <Input
                     value={sellAmount}
                     onChange={(e) => setSellAmount(e.target.value)}
