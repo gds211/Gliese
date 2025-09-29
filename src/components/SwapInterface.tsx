@@ -20,15 +20,8 @@ import { PUBLIC_CONFIG } from "@/config/public";
 import { useYakQuote } from "@/hooks/useYakQuote";
 import { performSwap } from "@/lib/swap";
 
-// Tiny local avatar used inside the token buttons (no assets required)
-const TokenAvatar: React.FC<{ symbol: string }> = ({ symbol }) => {
-  const letter = (symbol?.[0] ?? "?").toUpperCase();
-  return (
-    <span className="inline-grid place-items-center h-6 w-6 rounded-full bg-white/15 text-[11px] font-semibold uppercase">
-      {letter}
-    </span>
-  );
-};
+import TokenAvatar from "@/components/TokenAvatar";
+
 
 
 
@@ -64,10 +57,10 @@ const SwapInterface = () => {
 
   const tokens = [
     { symbol: "MON", name: "monad" }, // native (no address)
-    { symbol: "USDC", name: "USD Coin", address: "0xf817257fed379853cDe0fa4F97AB987181B1E5Ea" as `0x${string}` },
+    { symbol: "USDC", name: "Circle USD", address: "0xf817257fed379853cDe0fa4F97AB987181B1E5Ea" as `0x${string}` },
     { symbol: "USDT", name: "Tether USD", address: "0x88b8E2161DEDC77EF4ab7585569D2415a1C1055D" as `0x${string}` },
     { symbol: "CHOG", name: "chog", address: "0xE0590015A873bF326bd645c3E1266d4db41C4E6B" as `0x${string}` },
-    { symbol: "DAK", name: "Mollandak", address: "0x0F0BDEbF0F83cD1EE3974779Bcb7315f9808c714" as `0x${string}` },
+    { symbol: "DAK", name: "Molandak", address: "0x0F0BDEbF0F83cD1EE3974779Bcb7315f9808c714" as `0x${string}` },
     { symbol: "aprMON", name: "apriori MON", address: "0xb2f82D0f38dc453D596Ad40A37799446Cc89274A" as `0x${string}` },
   ];
 
@@ -373,7 +366,12 @@ const SwapInterface = () => {
                   >
                       {/* Left logo (shifted slightly right) */}
                   <span className="absolute left-3 flex items-center gap-2 pointer-events-none">
-                    <TokenAvatar symbol={sellToken} />
+                    <TokenAvatar
+                      symbol={sellToken}
+                      address={selectedSellToken?.address as `0x${string}` | undefined}
+                      size={16}
+                      title={selectedSellToken?.name || sellToken}
+                    />
                   </span>
 
                   {/* Label zone spans between the logo and the chevron; text biased toward the chevron */}
@@ -434,7 +432,12 @@ const SwapInterface = () => {
                 >
                 {/* Left logo (same as SELL) */}
                 <span className="absolute left-3 flex items-center gap-2 pointer-events-none">
-                  <TokenAvatar symbol={buyToken} />
+                  <TokenAvatar
+                    symbol={buyToken}
+                    address={selectedBuyToken?.address as `0x${string}` | undefined}
+                    size={16}
+                    title={selectedBuyToken?.name || buyToken}
+                  />
                 </span>
 
                 {/* Label centered exactly between logo and chevron (same as SELL) */}
