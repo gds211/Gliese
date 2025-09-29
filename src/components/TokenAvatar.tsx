@@ -1,22 +1,21 @@
 import React from "react";
 
 // Eagerly import *local* token logos once at build time.
-// Put files in: src/assets/tokens/  (examples below)
+// Put files in: src/assets/tokens/  (e.g., mon.svg, usdc.svg, 0xabc....png)
 const modules = import.meta.glob("../assets/tokens/*.{svg,png,webp}", {
   eager: true,
 }) as Record<string, { default: string }>;
 
-// Build a lookup keyed by the filename base (e.g. "usdc", "0xabc...").
 const byBase: Record<string, string> = {};
 for (const [path, mod] of Object.entries(modules)) {
-  const file = path.split("/").pop()!.toLowerCase();        // usdc.svg
-  const base = file.replace(/\.(svg|png|webp)$/i, "");       // usdc
+  const file = path.split("/").pop()!;                           // e.g. usdc.svg
+  const base = file.replace(/\.(svg|png|webp)$/i, "").toLowerCase();
   byBase[base] = mod.default;
 }
 
 type Props = {
   symbol?: string;
-  address?: `0x${string}`;
+  address?: `0x${string}` | string;
   size?: number;        // px
   className?: string;
   rounded?: boolean;    // default circle
@@ -32,8 +31,8 @@ export default function TokenAvatar({
   title,
 }: Props) {
   const candidates: string[] = [];
-  if (symbol) candidates.push(symbol.toLowerCase());
-  if (address) candidates.push(address.toLowerCase());
+  if (symbol) candidates.push(String(symbol).toLowerCase());
+  if (address) candidates.push(String(address).toLowerCase());
 
   let src: string | undefined;
   for (const key of candidates) {
@@ -47,7 +46,7 @@ export default function TokenAvatar({
     return (
       <img
         src={src}
-        alt={symbol || address || "token"}
+        alt={symbol || (address as string) || "token"}
         width={size}
         height={size}
         title={title}
@@ -57,8 +56,8 @@ export default function TokenAvatar({
     );
   }
 
-  // Fallback: small letter badge (no logo available yet)
-  const letter = (symbol || (address ? address.slice(2, 3) : "?"))
+  // Fallback: letter badge
+  const letter = (symbol || (address ? String(address).slice(2, 3) : "?"))
     .slice(0, 1)
     .toUpperCase();
 
