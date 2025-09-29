@@ -1,55 +1,75 @@
-import React from 'react';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { cn } from '@/lib/utils';
+import React from "react";
 
-interface TokenAvatarProps {
-  symbol?: string;
-  address?: string;
-  size?: 'sm' | 'md' | 'lg';
-  className?: string;
+// Eagerly import *local* token logos once at build time.
+// Put files in: src/assets/tokens/  (examples below)
+const modules = import.meta.glob("../assets/tokens/*.{svg,png,webp}", {
+  eager: true,
+}) as Record<string, { default: string }>;
+
+// Build a lookup keyed by the filename base (e.g. "usdc", "0xabc...").
+const byBase: Record<string, string> = {};
+for (const [path, mod] of Object.entries(modules)) {
+  const file = path.split("/").pop()!.toLowerCase();        // usdc.svg
+  const base = file.replace(/\.(svg|png|webp)$/i, "");       // usdc
+  byBase[base] = mod.default;
 }
 
-const sizeClasses = {
-  sm: 'h-6 w-6',
-  md: 'h-8 w-8',
-  lg: 'h-10 w-10',
+type Props = {
+  symbol?: string;
+  address?: `0x${string}`;
+  size?: number;        // px
+  className?: string;
+  rounded?: boolean;    // default circle
+  title?: string;       // optional tooltip text
 };
 
-export const TokenAvatar: React.FC<TokenAvatarProps> = ({
-  symbol = '',
+export default function TokenAvatar({
+  symbol,
   address,
-  size = 'md',
-  className,
-}) => {
-  // Generate token image URL from assets/tokens directory
-  const getTokenImageUrl = (tokenSymbol: string) => {
-    if (!tokenSymbol) return null;
-    return `/src/assets/tokens/${tokenSymbol.toLowerCase()}.png`;
-  };
+  size = 18,
+  className = "",
+  rounded = true,
+  title,
+}: Props) {
+  const candidates: string[] = [];
+  if (symbol) candidates.push(symbol.toLowerCase());
+  if (address) candidates.push(address.toLowerCase());
 
-  // Generate fallback text from symbol
-  const getFallbackText = (tokenSymbol: string) => {
-    if (!tokenSymbol) return '?';
-    return tokenSymbol.slice(0, 2).toUpperCase();
-  };
+  let src: string | undefined;
+  for (const key of candidates) {
+    if (byBase[key]) {
+      src = byBase[key];
+      break;
+    }
+  }
 
-  const imageUrl = getTokenImageUrl(symbol);
+  if (src) {
+    return (
+      <img
+        src={src}
+        alt={symbol || address || "token"}
+        width={size}
+        height={size}
+        title={title}
+        className={`${rounded ? "rounded-full" : ""} ${className}`}
+        draggable={false}
+      />
+    );
+  }
+
+  // Fallback: small letter badge (no logo available yet)
+  const letter = (symbol || (address ? address.slice(2, 3) : "?"))
+    .slice(0, 1)
+    .toUpperCase();
 
   return (
-    <Avatar className={cn(sizeClasses[size], className)}>
-      {imageUrl && (
-        <AvatarImage 
-          src={imageUrl} 
-          alt={`${symbol} token`}
-          onError={(e) => {
-            // Hide broken image on error
-            e.currentTarget.style.display = 'none';
-          }}
-        />
-      )}
-      <AvatarFallback className="text-xs font-medium bg-muted text-muted-foreground">
-        {getFallbackText(symbol)}
-      </AvatarFallback>
-    </Avatar>
+    <div
+      style={{ width: size, height: size }}
+      className={`grid place-items-center ${rounded ? "rounded-full" : ""} bg-white/15 text-[10px] font-semibold uppercase ${className}`}
+      title={`${title || symbol || address || "token"} (no icon)`}
+      aria-label={`${symbol || address || "token"} (no icon)`}
+    >
+      {letter}
+    </div>
   );
-};
+}
