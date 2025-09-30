@@ -359,6 +359,8 @@ const SwapInterface = () => {
               <div className="relative bg-background/60 rounded-2xl border border-white/10 focus-within:border-primary/60 transition-colors duration-200">
                 <div className="flex items-center justify-between p-3">
                   <Button
+                      variant={undefined}
+                      size={undefined}
                       onClick={() => openTokenModal("sell")}
                       className="relative !w-36 min-w-36 !h-10 !px-0 flex-shrink-0 bg-muted/60 rounded-full text-foreground border border-white/10 hover:border-white hover:bg-muted/80 hover:text-white flex items-center justify-start"
                       aria-label="Select sell token"
@@ -424,6 +426,8 @@ const SwapInterface = () => {
                 </span>               
                 <div className="flex items-center justify-between p-3">
                   <Button
+                    variant={undefined}
+                    size={undefined}
                     onClick={() => openTokenModal("buy")}
                     className="relative !w-36 min-w-36 !h-10 !px-0 flex-shrink-0 bg-muted/60 rounded-full text-foreground border border-white/10 hover:border-white hover:bg-muted/80 hover:text-white flex items-center justify-start"
                     aria-label="Select buy token"
