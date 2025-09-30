@@ -38,6 +38,12 @@ function formatAddress(addr: string): string {
   return `${addr.slice(0, 6)}...${addr.slice(-6)}`;
 }
 
+type UiToken = { symbol: string; address?: `0x${string}` };
+
+const addrEq = (a?: string, b?: string) =>
+  !!a && !!b && a.toLowerCase() === b.toLowerCase();
+
+
 // -------------------- Component --------------------
 const SwapInterface = () => {
   const { address, isConnected } = useAccount();
@@ -246,15 +252,31 @@ const SwapInterface = () => {
     setSearchTerm("");
   };
 
-  const selectToken = (token: string) => {
-    if (tokenSelectionType === "sell") {
-      setSellToken(token);
-      setSellAmount(""); // reset to avoid wrong decimals context
-    } else {
-      setBuyToken(token);
-    }
+  // Address-only rule: only compare when BOTH sides have an address.
+// Native (no address) never equals any ERC-20, including wMON.
+const selectToken = (pick: UiToken) => {
+  const oppositeAddr =
+    tokenSelectionType === "sell"
+      ? (selectedBuyToken?.address as `0x${string}` | undefined)
+      : (selectedSellToken?.address as `0x${string}` | undefined);
+
+  // If same ERC-20 address as the opposite side → behave like pressing the arrow
+  if (addrEq(pick.address, oppositeAddr)) {
     setShowTokenModal(false);
-  };
+    handleSwapTokens();
+    return;
+  }
+
+  // Otherwise set normally
+  if (tokenSelectionType === "sell") {
+    setSellToken(pick.symbol);
+    setSellAmount(""); // avoid stale decimals/allowances
+  } else {
+    setBuyToken(pick.symbol);
+  }
+  setShowTokenModal(false);
+};
+
 
   // === SWAP click ===
   const onClickSwap = async () => {
@@ -345,7 +367,7 @@ const SwapInterface = () => {
                     onClick={() => {
                       if (!sellBal) return;
                       // keep small MON buffer for gas when selling native
-                      const gasBufferRaw = isNativeSell ? parseUnits("0.003", sellBal.decimals) : 0n;
+                      const gasBufferRaw = isNativeSell ? parseUnits("0.03", sellBal.decimals) : 0n;
                       const available = sellBal.value > gasBufferRaw ? sellBal.value - gasBufferRaw : 0n;
                       const val = formatAmount(available, sellBal.decimals, 6);
                       setSellAmount(val);
@@ -542,10 +564,16 @@ const SwapInterface = () => {
             <div className="space-y-2">
               {filteredTokens.map((token) => (
                 <Button
-                  key={token.symbol}
+                  key={`${token.symbol}-${token.address ?? "native"}`}
                   variant="ghost"
                   className="w-full justify-between py-3 px-3 rounded-xl border border-white/10 hover:bg-white/5"
-                  onClick={() => selectToken(token.symbol)}
+                  onClick={() => 
+                    selectToken({
+                      symbol: token.symbol,
+                      address: token.address as `0x${string}` | undefined, // undefined for native MON
+                    })
+                  
+                  }
                 >
                   <div className="flex items-center">
                     <div className="w-9 h-9 rounded-full bg-white/10 flex items-center justify-center">
