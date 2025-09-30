@@ -561,36 +561,37 @@ const selectToken = (pick: UiToken) => {
 
           {/* Token List */}
           <ScrollArea className="h-[26rem] w-full pr-4">
-            <div className="space-y-2">
-              {filteredTokens.map((token) => (
-                <Button
-                  key={`${token.symbol}-${token.address?.toLowerCase() ?? "native"}`
-                  variant="ghost"
-                  className="w-full justify-between py-3 px-3 rounded-xl border border-white/10 hover:bg-white/5"
-                  onClick={() => 
-                    selectToken({
-                      symbol: token.symbol,
-                      address: token.address as `0x${string}` | undefined, // undefined for native MON
-                    })
-                  
-                  }
-                >
-                  <div className="flex items-center">
-                    <div className="w-9 h-9 rounded-full bg-white/10 flex items-center justify-center">
-                      <img src={glieseLogo} alt={token.symbol} className="w-6 h-6" />
-                    </div>
-                    <div className="ml-3 text-left">
-                      <div className="font-medium text-white">{token.symbol}</div>
-                      <div className="text-xs text-white/60">{token.name}</div>
-                    </div>
-                  </div>
-                  <div className="text-right text-xs text-white/60">
-                    {token.address ? formatAddress(token.address) : "Native coin"}
-                  </div>
-                </Button>
-              ))}
-            </div>
-          </ScrollArea>
+  <div className="space-y-2">
+    {filteredTokens.map((t) => (
+      <Button
+        // Robust key: address if present, else "native-SYMBOL"
+        key={t.address ? t.address.toLowerCase() : `native-${t.symbol}`}
+        variant="ghost"
+        className="w-full justify-between py-3 px-3 rounded-xl border border-white/10 hover:bg-white/5"
+        onClick={() =>
+          selectToken({
+            symbol: t.symbol,
+            address: t.address as `0x${string}` | undefined, // undefined for native MON
+          })
+        }
+      >
+        <div className="flex items-center">
+          <div className="w-9 h-9 rounded-full bg-white/10 flex items-center justify-center">
+            <img src={glieseLogo} alt={t.symbol} className="w-6 h-6" />
+          </div>
+          <div className="ml-3 text-left">
+            <div className="font-medium text-white">{t.symbol}</div>
+            <div className="text-xs text-white/60">{t.name}</div>
+          </div>
+        </div>
+        <div className="text-right text-xs text-white/60">
+          {t.address ? formatAddress(t.address) : "Native coin"}
+        </div>
+      </Button>
+    ))}
+  </div>
+</ScrollArea>
+
         </DialogContent>
       </Dialog>
     </Card>
