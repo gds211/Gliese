@@ -369,7 +369,7 @@ const SwapInterface = () => {
                     <TokenAvatar
                       symbol={sellToken}
                       address={selectedSellToken?.address as `0x${string}` | undefined}
-                      size={26}
+                      size={24}
                       title={selectedSellToken?.name || sellToken}
                     />
                   </span>
@@ -435,7 +435,7 @@ const SwapInterface = () => {
                   <TokenAvatar
                     symbol={buyToken}
                     address={selectedBuyToken?.address as `0x${string}` | undefined}
-                    size={26}
+                    size={24}
                     title={selectedBuyToken?.name || buyToken}
                   />
                 </span>
