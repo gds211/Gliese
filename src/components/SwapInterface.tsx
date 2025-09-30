@@ -564,7 +564,7 @@ const selectToken = (pick: UiToken) => {
             <div className="space-y-2">
               {filteredTokens.map((token) => (
                 <Button
-                  key={`${token.symbol}-${token.address ?? "native"}`}
+                  key={`${token.symbol}-${token.address?.toLowerCase() ?? "native"}`
                   variant="ghost"
                   className="w-full justify-between py-3 px-3 rounded-xl border border-white/10 hover:bg-white/5"
                   onClick={() => 
