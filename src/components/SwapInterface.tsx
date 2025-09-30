@@ -419,49 +419,53 @@ const SwapInterface = () => {
 
             {/* Buying Section */}
             <div className="space-y-3">
-              <div className="relative bg-background/60 rounded-2xl border border-white/10 focus-within:border-primary/60 transition-colors duration-200">
-                <span className="absolute left-0 bottom-full mb-3 text-sm text-muted-foreground pointer-events-none select-none">
-                  Buying
-                </span>               
-                <div className="flex items-center justify-between p-3">
-                  <Button
-                    variant="ghost"
-                    onClick={() => openTokenModal("buy")}
-                    className="relative w-36 h-10 bg-muted/60 rounded-full text-foreground border border-white/10 hover:border-white hover:bg-muted/80 hover:text-white flex items-center"
-                    aria-label="Select buy token"
-                >
-                {/* Left logo (same as SELL) */}
-                <span className="absolute left-3 flex items-center gap-2 pointer-events-none">
-                  <TokenAvatar
-                    symbol={buyToken}
-                    address={selectedBuyToken?.address as `0x${string}` | undefined}
-                    size={16}
-                    title={selectedBuyToken?.name || buyToken}
-                  />
-                </span>
+  <div className="relative bg-background/60 rounded-2xl border border-white/10 focus-within:border-primary/60 transition-colors duration-200">
+    <span className="absolute left-0 bottom-full mb-3 text-sm text-muted-foreground pointer-events-none select-none">
+      Buying
+    </span>
 
-                {/* Label centered exactly between logo and chevron (same as SELL) */}
-                <span
-                  className="absolute inset-y-0 left-[2.75rem] right-[2.5rem] flex items-center justify-center pointer-events-none truncate"
-                >
-                 {buyToken}
-                </span>
+    <div className="flex items-center justify-between p-3">
+      <Button
+        type="button"
+        variant="ghost"
+        onClick={() => openTokenModal("buy")}
+        className="relative flex-none !w-36 h-10 bg-muted/60 rounded-full text-foreground border border-white/10 hover:border-white hover:bg-muted/80 hover:text-white flex items-center"
+        aria-label="Select buy token"
+      >
+        {/* Left logo (same as SELL) */}
+        <span className="absolute left-3 flex items-center gap-2 pointer-events-none">
+          <TokenAvatar
+            symbol={buyToken}
+            address={selectedBuyToken?.address as `0x${string}` | undefined}
+            size={16}
+            title={selectedBuyToken?.name || buyToken}
+          />
+        </span>
 
-                {/* Right chevron (same as SELL) */}
-                     <ChevronDown className="absolute right-2 h-3.5 w-3.5 pointer-events-none" />
-                  </Button>
+        {/* Label centered exactly between logo and chevron (same as SELL) */}
+        <span className="absolute inset-y-0 left-[2.75rem] right-[2.5rem] flex items-center justify-center pointer-events-none truncate">
+          {buyToken}
+        </span>
 
-                  <Input
-                    value={buyAmountDisplay}
-                    readOnly
-                    className="!border-none !bg-transparent text-right flex-1 !text-24 font-medium tracking-tight pr-2 h-auto text-foreground !shadow-none !ring-0 !ring-offset-0"
-                    placeholder="0.00"
-                  />
-                </div>
-                <div className="text-right text-sm text-muted-foreground pr-3 pb-3">
-                  {calculateUSDValue(buyAmountDerived, buyToken)}
-                </div>
-              </div>
+        {/* Right chevron (same as SELL) */}
+        <ChevronDown className="absolute right-2 h-3.5 w-3.5 pointer-events-none" />
+      </Button>
+
+      <Input
+        value={buyAmountDisplay}
+        readOnly
+        className="flex-1 min-w-0 overflow-hidden text-ellipsis whitespace-nowrap
+                   !border-none !bg-transparent text-right !text-24 font-medium tracking-tight pr-2 h-auto text-foreground
+                   !shadow-none !ring-0 !ring-offset-0"
+        placeholder="0.00"
+      />
+    </div>
+
+    <div className="text-right text-sm text-muted-foreground pr-3 pb-3">
+      {calculateUSDValue(buyAmountDerived, buyToken)}
+    </div>
+  </div>
+</div>
 
               <div className="flex items-center justify-between text-xs text-muted-foreground">
                 <div>Rate: {rateDisplay}</div>
