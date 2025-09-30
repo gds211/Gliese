@@ -361,7 +361,7 @@ const SwapInterface = () => {
                   <Button
                       variant="ghost"
                       onClick={() => openTokenModal("sell")}
-                      className="relative w-36 h-10 flex-shrink-0 bg-muted/60 rounded-full text-foreground border border-white/10 hover:border-white hover:bg-muted/80 hover:text-white flex items-center"
+                      className="relative !w-36 min-w-36 h-10 px-0 flex-shrink-0 bg-muted/60 rounded-full text-foreground border border-white/10 hover:border-white hover:bg-muted/80 hover:text-white flex items-center"
                       aria-label="Select sell token"
                   >
                       {/* Left logo (shifted slightly right) */}
@@ -427,7 +427,7 @@ const SwapInterface = () => {
                   <Button
                     variant="ghost"
                     onClick={() => openTokenModal("buy")}
-                    className="relative w-36 h-10 flex-shrink-0 bg-muted/60 rounded-full text-foreground border border-white/10 hover:border-white hover:bg-muted/80 hover:text-white flex items-center"
+                    className="relative !w-36 min-w-36 h-10 px-0 flex-shrink-0 bg-muted/60 rounded-full text-foreground border border-white/10 hover:border-white hover:bg-muted/80 hover:text-white flex items-center"
                     aria-label="Select buy token"
                 >
                 {/* Left logo (same as SELL) */}
