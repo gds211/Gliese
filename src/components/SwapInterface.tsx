@@ -358,9 +358,10 @@ const SwapInterface = () => {
 
               <div className="relative bg-background/60 rounded-2xl border border-white/10 focus-within:border-primary/60 transition-colors duration-200">
                 <div className="flex items-center justify-between p-3">
-                  <button
+                  <Button
+                      variant="ghost"
                       onClick={() => openTokenModal("sell")}
-                      className="relative w-36 min-w-36 h-10 px-0 flex-shrink-0 bg-muted/60 rounded-full text-foreground border border-white/10 hover:border-white hover:bg-muted/80 hover:text-white flex items-center justify-start transition-colors cursor-pointer"
+                      className="relative w-32 h-10 bg-muted/60 rounded-full text-foreground border border-white/10 hover:border-white hover:bg-muted/80 hover:text-white flex items-center"
                       aria-label="Select sell token"
                   >
                       {/* Left logo (shifted slightly right) */}
@@ -385,8 +386,8 @@ const SwapInterface = () => {
                   
 
                     {/* Right chevron */}
-                     <ChevronDown className="absolute right-2 h-3.5 w-3.5 pointer-events-none" />
-                  </button>
+                   <ChevronDown className="absolute right-2 h-3.5 w-3.5 pointer-events-none" />
+                  </Button>
                   <Input
                     value={sellAmount}
                     onChange={(e) => setSellAmount(e.target.value)}
@@ -423,9 +424,10 @@ const SwapInterface = () => {
                   Buying
                 </span>               
                 <div className="flex items-center justify-between p-3">
-                  <button
+                  <Button
+                    variant="ghost"
                     onClick={() => openTokenModal("buy")}
-                    className="relative w-36 min-w-36 h-10 px-0 flex-shrink-0 bg-muted/60 rounded-full text-foreground border border-white/10 hover:border-white hover:bg-muted/80 hover:text-white flex items-center justify-start transition-colors cursor-pointer"
+                    className="relative w-32 h-10 bg-muted/60 rounded-full text-foreground border border-white/10 hover:border-white hover:bg-muted/80 hover:text-white flex items-center"
                     aria-label="Select buy token"
                 >
                 {/* Left logo (same as SELL) */}
@@ -447,7 +449,7 @@ const SwapInterface = () => {
 
                 {/* Right chevron (same as SELL) */}
                      <ChevronDown className="absolute right-2 h-3.5 w-3.5 pointer-events-none" />
-                  </button>
+                  </Button>
 
                   <Input
                     value={buyAmountDisplay}
