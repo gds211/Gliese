@@ -22,7 +22,7 @@ export const PUBLIC_CONFIG = {
   WRAPPED_NATIVE: "0x760AfE86e5de5fa0Ee542fc7B7B713e1c5425701",
 
   // --- Quote behaviour (UI polling, slippage, thresholds) ---
-  MAX_STEPS: 4,
+  MAX_STEPS: 3,
   GAS_PRICE_WEI_FALLBACK: 60_000_000_000n, // used ONLY if RPC fee query fails
   FEE_REFRESH_MS: 1500,                    // refresh on-chain fee estimates every 1.5s
   QUOTE_POLL_MS: 2000,                     // poll quotes every 2s
