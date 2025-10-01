@@ -299,7 +299,6 @@ const SwapInterface = () => {
         return;
       }
       if (!sellAmount || Number(sellAmount) <= 0) throw new Error("Enter an amount.");
-      if (tokensEqual(selectedSellToken, selectedBuyToken)) throw new Error("Select two different tokens.");
       if (!quote || quote.minOutRaw === 0n || !quote.path?.length) throw new Error("No route found.");
       if (!selectedSellToken || !selectedBuyToken) throw new Error("Select tokens.");
 
