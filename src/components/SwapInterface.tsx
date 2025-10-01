@@ -38,6 +38,20 @@ function formatAddress(addr: string): string {
   return `${addr.slice(0, 6)}...${addr.slice(-6)}`;
 }
 
+type TokenPick = { symbol?: string; address?: `0x${string}` };
+
+const tokensEqual = (a?: TokenPick | null, b?: TokenPick | null) => {
+  if (!a || !b) return false;
+  const aAddr = a.address?.toLowerCase();
+  const bAddr = b.address?.toLowerCase();
+  if (aAddr && bAddr) return aAddr === bAddr; // same smart-contract address
+  const aSym = (a.symbol ?? "").toUpperCase();
+  const bSym = (b.symbol ?? "").toUpperCase();
+  return aSym !== "" && aSym === bSym;        // fallback for native/no-address
+};
+
+
+
 // -------------------- Component --------------------
 const SwapInterface = () => {
   const { address, isConnected } = useAccount();
@@ -246,15 +260,29 @@ const SwapInterface = () => {
     setSearchTerm("");
   };
 
-  const selectToken = (token: string) => {
-    if (tokenSelectionType === "sell") {
-      setSellToken(token);
-      setSellAmount(""); // reset to avoid wrong decimals context
-    } else {
-      setBuyToken(token);
-    }
+  const selectToken = (tokenSymbol: string) => {
+  // Resolve the full token object the user clicked
+  const picked = tokens.find((t) => t.symbol === tokenSymbol);
+  const other = tokenSelectionType === "sell" ? selectedBuyToken : selectedSellToken;
+
+  // If the picked token equals the OTHER side by address (or symbol fallback),
+  // reuse your existing arrow flip handler and close the modal.
+  if (picked && tokensEqual(picked, other)) {
+    handleSwapTokens();       // <-- reuse your existing arrow handler
     setShowTokenModal(false);
-  };
+    return;
+  }
+
+  // Normal assignment
+  if (tokenSelectionType === "sell") {
+    setSellToken(tokenSymbol);
+    setSellAmount("");        // keep your current behavior
+  } else {
+    setBuyToken(tokenSymbol);
+  }
+  setShowTokenModal(false);
+};
+
 
   // === SWAP click ===
   const onClickSwap = async () => {
