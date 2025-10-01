@@ -260,25 +260,41 @@ const SwapInterface = () => {
     setSearchTerm("");
   };
 
-  const selectToken = (picked: { symbol: string; address?: `0x${string}`; name?: string; decimals?: number }) => {
+ // Keep TokenPick/tokensEqual as you already have above.
+
+type TokenObj = { symbol: string; address?: `0x${string}`; name?: string; decimals?: number };
+
+const selectToken = (picked: string | TokenObj) => {
+  // Normalize to a full token object regardless of how it's called
+  const tokenObj: TokenObj | undefined =
+    typeof picked === "string" ? tokens.find((t) => t.symbol === picked) : picked;
+
+  // If not found (bad symbol or empty search), just close the modal safely
+  if (!tokenObj) {
+    setShowTokenModal(false);
+    return;
+  }
+
   const other = tokenSelectionType === "sell" ? selectedBuyToken : selectedSellToken;
 
-  // If user picked the same token as the other side, reuse the existing arrow handler
-  if (picked && tokensEqual(picked, other)) {
-    handleSwapTokens();          // <-- your existing arrow function
+  // If user picked the same token as the other side, reuse your existing arrow handler
+  if (tokensEqual(tokenObj, other)) {
+    handleSwapTokens();       // <-- your arrow button handler
     setShowTokenModal(false);
     return;
   }
 
   // Normal assignment
   if (tokenSelectionType === "sell") {
-    setSellToken(picked.symbol);
-    setSellAmount("");           // keep your reset behavior
+    setSellToken(tokenObj.symbol);
+    setSellAmount("");        // keep your reset
   } else {
-    setBuyToken(picked.symbol);
+    setBuyToken(tokenObj.symbol);
   }
+
   setShowTokenModal(false);
 };
+
 
 
 
