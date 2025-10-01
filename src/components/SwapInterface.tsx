@@ -261,34 +261,25 @@ const SwapInterface = () => {
   };
 
   const selectToken = (picked: { symbol: string; address?: `0x${string}`; name?: string; decimals?: number }) => {
-    const other = tokenSelectionType === "sell" ? selectedBuyToken : selectedSellToken;
+  const other = tokenSelectionType === "sell" ? selectedBuyToken : selectedSellToken;
 
-  // If user picked the same token as the other side, reuse the arrow handler
-    if (picked && tokensEqual(picked, other)) {
-      handleSwapTokens();        // <-- your existing arrow handler
-      setShowTokenModal(false);
+  // If user picked the same token as the other side, reuse the existing arrow handler
+  if (picked && tokensEqual(picked, other)) {
+    handleSwapTokens();          // <-- your existing arrow function
+    setShowTokenModal(false);
     return;
-    }
-
-    // Normal assignment
-    if (tokenSelectionType === "sell") {
-      setSellToken(picked.symbol);
-      setSellAmount("");         // keep your current behavior
-    } else {
-       setBuyToken(picked.symbol);
-    }
-      setShowTokenModal(false);
-    };
+  }
 
   // Normal assignment
   if (tokenSelectionType === "sell") {
-    setSellToken(tokenSymbol);
-    setSellAmount("");        // keep your current behavior
+    setSellToken(picked.symbol);
+    setSellAmount("");           // keep your reset behavior
   } else {
-    setBuyToken(tokenSymbol);
+    setBuyToken(picked.symbol);
   }
   setShowTokenModal(false);
 };
+
 
 
   // === SWAP click ===
@@ -577,7 +568,7 @@ const SwapInterface = () => {
             <div className="space-y-2">
               {filteredTokens.map((token) => (
                 <Button
-                  key={token.symbol}
+                  key={token.address ? token.address.toLowerCase() : `symbol:${token.symbol}`}
                   variant="ghost"
                   className="w-full justify-between py-3 px-3 rounded-xl border border-white/10 hover:bg-white/5"
                   onClick={() => selectToken(token)}
