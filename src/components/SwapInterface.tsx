@@ -38,6 +38,20 @@ function formatAddress(addr: string): string {
   return `${addr.slice(0, 6)}...${addr.slice(-6)}`;
 }
 
+type TokenPick = { symbol?: string; address?: `0x${string}` };
+
+const tokensEqual = (a?: TokenPick | null, b?: TokenPick | null) => {
+  if (!a || !b) return false;
+  const aAddr = a.address?.toLowerCase();
+  const bAddr = b.address?.toLowerCase();
+  if (aAddr && bAddr) return aAddr === bAddr; // same smart-contract address
+  const aSym = (a.symbol ?? "").toUpperCase();
+  const bSym = (b.symbol ?? "").toUpperCase();
+  return aSym !== "" && aSym === bSym;        // fallback for native/no-address
+};
+
+
+
 // -------------------- Component --------------------
 const SwapInterface = () => {
   const { address, isConnected } = useAccount();
@@ -246,15 +260,43 @@ const SwapInterface = () => {
     setSearchTerm("");
   };
 
-  const selectToken = (token: string) => {
-    if (tokenSelectionType === "sell") {
-      setSellToken(token);
-      setSellAmount(""); // reset to avoid wrong decimals context
-    } else {
-      setBuyToken(token);
-    }
+ // Keep TokenPick/tokensEqual as you already have above.
+
+type TokenObj = { symbol: string; address?: `0x${string}`; name?: string; decimals?: number };
+
+const selectToken = (picked: string | TokenObj) => {
+  // Normalize to a full token object regardless of how it's called
+  const tokenObj: TokenObj | undefined =
+    typeof picked === "string" ? tokens.find((t) => t.symbol === picked) : picked;
+
+  // If not found (bad symbol or empty search), just close the modal safely
+  if (!tokenObj) {
     setShowTokenModal(false);
-  };
+    return;
+  }
+
+  const other = tokenSelectionType === "sell" ? selectedBuyToken : selectedSellToken;
+
+  // If user picked the same token as the other side, reuse your existing arrow handler
+  if (tokensEqual(tokenObj, other)) {
+    handleSwapTokens();       // <-- your arrow button handler
+    setShowTokenModal(false);
+    return;
+  }
+
+  // Normal assignment
+  if (tokenSelectionType === "sell") {
+    setSellToken(tokenObj.symbol);
+    setSellAmount("");        // keep your reset
+  } else {
+    setBuyToken(tokenObj.symbol);
+  }
+
+  setShowTokenModal(false);
+};
+
+
+
 
   // === SWAP click ===
   const onClickSwap = async () => {
@@ -542,10 +584,11 @@ const SwapInterface = () => {
             <div className="space-y-2">
               {filteredTokens.map((token) => (
                 <Button
-                  key={token.symbol}
+                  key={token.address ? token.address.toLowerCase() : `symbol:${token.symbol}`}
                   variant="ghost"
                   className="w-full justify-between py-3 px-3 rounded-xl border border-white/10 hover:bg-white/5"
-                  onClick={() => selectToken(token.symbol)}
+                  onClick={() => selectToken(token)}
+
                 >
                   <div className="flex items-center">
                     <div className="w-9 h-9 rounded-full bg-white/10 flex items-center justify-center">
