@@ -7,6 +7,8 @@ import { YAK_ROUTER_ABI } from "@/abi/yakRouter";
 import { PUBLIC_CONFIG } from "@/config/public";
 import { getDecimals } from "@/lib/decimals";
 import { changedByAtLeastBps } from "@/lib/math";
+import { useNetworkFees } from "@/hooks/useNetworkFees";
+
 
 // local helpers (keep types shallow)
 const ZERO = "0x0000000000000000000000000000000000000000";
@@ -35,6 +37,9 @@ type Params = {
 
 export function useYakQuote({ router, tokenIn, tokenOut, amountInHuman, enabled = true }: Params) {
   const client = usePublicClient();
+  const { effectiveGasPriceWei } = useNetworkFees(PUBLIC_CONFIG.FEE_REFRESH_MS);
+  const gasPriceWei = effectiveGasPriceWei ?? PUBLIC_CONFIG.GAS_PRICE_WEI_FALLBACK;
+
   const [quote, setQuote] = useState<QuoteState | null>(null);
   const lastMinOutRef = useRef<bigint | null>(null);
   const reqCounter = useRef(0);
@@ -73,7 +78,7 @@ export function useYakQuote({ router, tokenIn, tokenOut, amountInHuman, enabled 
           address: router,
           abi: YAK_ROUTER_ABI,
           functionName: "findBestPathWithGas",
-          args: [ amountIn, tokenInAddr, tokenOutAddr, BigInt(PUBLIC_CONFIG.MAX_STEPS), PUBLIC_CONFIG.GAS_PRICE_WEI ],
+          args: [ amountIn, tokenInAddr, tokenOutAddr, BigInt(PUBLIC_CONFIG.MAX_STEPS), gasPriceWei ],
         });
 
         // robust destructure (works whether viem returns object or array)
