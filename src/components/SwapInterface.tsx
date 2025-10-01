@@ -260,18 +260,25 @@ const SwapInterface = () => {
     setSearchTerm("");
   };
 
-  const selectToken = (tokenSymbol: string) => {
-  // Resolve the full token object the user clicked
-  const picked = tokens.find((t) => t.symbol === tokenSymbol);
-  const other = tokenSelectionType === "sell" ? selectedBuyToken : selectedSellToken;
+  const selectToken = (picked: { symbol: string; address?: `0x${string}`; name?: string; decimals?: number }) => {
+    const other = tokenSelectionType === "sell" ? selectedBuyToken : selectedSellToken;
 
-  // If the picked token equals the OTHER side by address (or symbol fallback),
-  // reuse your existing arrow flip handler and close the modal.
-  if (picked && tokensEqual(picked, other)) {
-    handleSwapTokens();       // <-- reuse your existing arrow handler
-    setShowTokenModal(false);
+  // If user picked the same token as the other side, reuse the arrow handler
+    if (picked && tokensEqual(picked, other)) {
+      handleSwapTokens();        // <-- your existing arrow handler
+      setShowTokenModal(false);
     return;
-  }
+    }
+
+    // Normal assignment
+    if (tokenSelectionType === "sell") {
+      setSellToken(picked.symbol);
+      setSellAmount("");         // keep your current behavior
+    } else {
+       setBuyToken(picked.symbol);
+    }
+      setShowTokenModal(false);
+    };
 
   // Normal assignment
   if (tokenSelectionType === "sell") {
@@ -292,6 +299,7 @@ const SwapInterface = () => {
         return;
       }
       if (!sellAmount || Number(sellAmount) <= 0) throw new Error("Enter an amount.");
+      if (tokensEqual(selectedSellToken, selectedBuyToken)) throw new Error("Select two different tokens.");
       if (!quote || quote.minOutRaw === 0n || !quote.path?.length) throw new Error("No route found.");
       if (!selectedSellToken || !selectedBuyToken) throw new Error("Select tokens.");
 
@@ -573,7 +581,8 @@ const SwapInterface = () => {
                   key={token.symbol}
                   variant="ghost"
                   className="w-full justify-between py-3 px-3 rounded-xl border border-white/10 hover:bg-white/5"
-                  onClick={() => selectToken(token.symbol)}
+                  onClick={() => selectToken(token)}
+
                 >
                   <div className="flex items-center">
                     <div className="w-9 h-9 rounded-full bg-white/10 flex items-center justify-center">
