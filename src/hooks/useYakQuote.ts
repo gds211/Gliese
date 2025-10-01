@@ -40,6 +40,41 @@ export function useYakQuote({ router, tokenIn, tokenOut, amountInHuman, enabled 
   const { effectiveGasPriceWei } = useNetworkFees(PUBLIC_CONFIG.FEE_REFRESH_MS);
   const FALLBACK = PUBLIC_CONFIG.GAS_PRICE_WEI_FALLBACK;
   const gasRef = useRef<bigint>(effectiveGasPriceWei ?? FALLBACK);
+  // === Decimals cache ===
+// Stores either a resolved value or an in-flight promise to dedupe concurrent loads.
+type DecCacheEntry = { value?: number; promise?: Promise<number> };
+const decCacheRef = useRef<Map<string, DecCacheEntry>>(new Map());
+
+// Include chainId in the key so switching networks never mixes decimals.
+const chainId = (client as any)?.chain?.id ?? PUBLIC_CONFIG.CHAIN_ID ?? 0;
+const cacheKey = (addr: Address, native: boolean) =>
+  `${chainId}:${native ? ZERO : (addr as string).toLowerCase()}`;
+
+async function getDecimalsCached(addr: Address, native: boolean): Promise<number> {
+  const key = cacheKey(addr, native);
+  const cache = decCacheRef.current;
+  const hit = cache.get(key);
+
+  // Fast paths
+  if (hit?.value !== undefined) return hit.value;
+  if (hit?.promise) return hit.promise!;
+
+  // Load once, dedupe others
+  const promise = getDecimals(client as any, native ? ZERO : addr)
+    .then((dec: number) => {
+      cache.set(key, { value: dec });
+      return dec;
+    })
+    .catch((err) => {
+      // On failure, clear so a later attempt can retry
+      cache.delete(key);
+      throw err;
+    });
+
+  cache.set(key, { promise });
+  return promise;
+}
+
  useEffect(() => {
     gasRef.current = effectiveGasPriceWei ?? FALLBACK;
   }, [effectiveGasPriceWei]);
@@ -53,6 +88,20 @@ export function useYakQuote({ router, tokenIn, tokenOut, amountInHuman, enabled 
   const tokenInAddr  = toQuoteAddr(tokenIn);
   const tokenOutAddr = toQuoteAddr(tokenOut);
 
+  // Warm the decimals cache whenever tokens or chain change
+  useEffect(() => {
+    (async () => {
+      try {
+        await Promise.all([
+          getDecimalsCached(tokenInAddr,  isNative(tokenIn)),
+          getDecimalsCached(tokenOutAddr, isNative(tokenOut)),
+        ]);
+      } catch {
+        // ignore; tick() will retry if needed
+      }
+    })();
+  }, [tokenInAddr, tokenOutAddr, tokenIn, tokenOut, chainId]);
+
   useEffect(() => {
     if (!polling) { setQuote(null); lastMinOutRef.current = null; return; }
 
@@ -64,10 +113,10 @@ export function useYakQuote({ router, tokenIn, tokenOut, amountInHuman, enabled 
 
       try {
         const [inDec, outDec] = await Promise.all([
-          getDecimals(client as any, isNative(tokenIn) ? ZERO : tokenInAddr),
-          getDecimals(client as any, isNative(tokenOut) ? ZERO : tokenOutAddr),
+           getDecimalsCached(tokenInAddr, isNative(tokenIn)),
+           getDecimalsCached(tokenOutAddr, isNative(tokenOut)),
         ]);
-
+        
         const amountIn = parseUnits(amountInHuman, inDec);
         if (amountIn === 0n) {
           if (myReq === reqCounter.current && !cancelled) {
