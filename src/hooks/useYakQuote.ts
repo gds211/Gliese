@@ -126,14 +126,21 @@ async function getDecimalsCached(addr: Address, native: boolean): Promise<number
           return;
         }
 
-        const gasWei = gasRef.current;
+        // Convert WEI → integer GWEI (rounded)
+       const GWEI = 1_000_000_000n;
+       let gasGwei = (gasRef.current + GWEI / 2n) / GWEI;
+       if (gasGwei < 1n) gasGwei = 1n; // guard
+
+       // Clamp to Yak’s cap (<4) even if config drifts
+       const steps = BigInt(Math.min(PUBLIC_CONFIG.MAX_STEPS ?? 3, 3));
+
 
         // ⚠️ Returns a single tuple struct
         const formatted = await (client as any).readContract({
           address: router,
           abi: YAK_ROUTER_ABI,
           functionName: "findBestPathWithGas",
-          args: [ amountIn, tokenInAddr, tokenOutAddr, BigInt(PUBLIC_CONFIG.MAX_STEPS), gasWei ],
+          args: [ amountIn, tokenInAddr, tokenOutAddr, steps, gasGwei ],
         });
 
         // robust destructure (works whether viem returns object or array)
