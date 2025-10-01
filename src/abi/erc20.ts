@@ -1,86 +1,32 @@
-/* export const ERC20_ABI = [
-  {
-    "inputs": [
-      { "internalType": "address", "name": "spender", "type": "address" },
-      { "internalType": "uint256", "name": "amount", "type": "uint256" }
-    ],
-    "name": "approve",
-    "outputs": [{ "internalType": "bool", "name": "", "type": "bool" }],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [{ "internalType": "address", "name": "account", "type": "address" }],
-    "name": "balanceOf",
-    "outputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "decimals",
-    "outputs": [{ "internalType": "uint8", "name": "", "type": "uint8" }],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "name",
-    "outputs": [{ "internalType": "string", "name": "", "type": "string" }],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "symbol",
-    "outputs": [{ "internalType": "string", "name": "", "type": "string" }],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "totalSupply",
-    "outputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      { "internalType": "address", "name": "to", "type": "address" },
-      { "internalType": "uint256", "name": "amount", "type": "uint256" }
-    ],
-    "name": "transfer",
-    "outputs": [{ "internalType": "bool", "name": "", "type": "bool" }],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      { "internalType": "address", "name": "from", "type": "address" },
-      { "internalType": "address", "name": "to", "type": "address" },
-      { "internalType": "uint256", "name": "amount", "type": "uint256" }
-    ],
-    "name": "transferFrom",
-    "outputs": [{ "internalType": "bool", "name": "", "type": "bool" }],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      { "internalType": "address", "name": "owner", "type": "address" },
-      { "internalType": "address", "name": "spender", "type": "address" }
-    ],
-    "name": "allowance",
-    "outputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }],
-    "stateMutability": "view",
-    "type": "function"
-  }
-] as const;*/
-
-
 // src/abi/erc20.ts
+import type { Abi } from "viem";
+
 export const ERC20_ABI = [
-  { type: "function", name: "decimals", stateMutability: "view", inputs: [], outputs: [{ type: "uint8" }] },
-  { type: "function", name: "allowance", stateMutability: "view", inputs: [{type:"address",name:"owner"},{type:"address",name:"spender"}], outputs: [{ type:"uint256"}] },
-  { type: "function", name: "approve", stateMutability: "nonpayable", inputs: [{type:"address",name:"spender"},{type:"uint256",name:"value"}], outputs: [{ type:"bool"}] },
-] as const;
+  // Views
+  { type: "function", name: "name",       stateMutability: "view", inputs: [], outputs: [{ name: "", type: "string" }] },
+  { type: "function", name: "symbol",     stateMutability: "view", inputs: [], outputs: [{ name: "", type: "string" }] },
+  { type: "function", name: "decimals",   stateMutability: "view", inputs: [], outputs: [{ name: "", type: "uint8"  }] },
+  { type: "function", name: "totalSupply",stateMutability: "view", inputs: [], outputs: [{ name: "", type: "uint256"}] },
+  { type: "function", name: "balanceOf",  stateMutability: "view", inputs: [{ name: "account", type: "address" }],
+    outputs: [{ name: "", type: "uint256" }] },
+  { type: "function", name: "allowance",  stateMutability: "view", inputs: [
+      { name: "owner",   type: "address" },
+      { name: "spender", type: "address" },
+    ],
+    outputs: [{ name: "", type: "uint256" }] },
+
+  // Writes
+  { type: "function", name: "approve",       stateMutability: "nonpayable", inputs: [
+      { name: "spender", type: "address" },
+      { name: "amount",  type: "uint256" },
+    ], outputs: [{ name: "", type: "bool" }] },
+  { type: "function", name: "transfer",      stateMutability: "nonpayable", inputs: [
+      { name: "to",     type: "address" },
+      { name: "amount", type: "uint256" },
+    ], outputs: [{ name: "", type: "bool" }] },
+  { type: "function", name: "transferFrom",  stateMutability: "nonpayable", inputs: [
+      { name: "from",   type: "address" },
+      { name: "to",     type: "address" },
+      { name: "amount", type: "uint256" },
+    ], outputs: [{ name: "", type: "bool" }] },
+] as const satisfies Abi;
