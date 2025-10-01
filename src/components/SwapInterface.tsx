@@ -38,12 +38,6 @@ function formatAddress(addr: string): string {
   return `${addr.slice(0, 6)}...${addr.slice(-6)}`;
 }
 
-type UiToken = { symbol: string; address?: `0x${string}` };
-
-const addrEq = (a?: string, b?: string) =>
-  !!a && !!b && a.toLowerCase() === b.toLowerCase();
-
-
 // -------------------- Component --------------------
 const SwapInterface = () => {
   const { address, isConnected } = useAccount();
@@ -252,31 +246,15 @@ const SwapInterface = () => {
     setSearchTerm("");
   };
 
-  // Address-only rule: only compare when BOTH sides have an address.
-// Native (no address) never equals any ERC-20, including wMON.
-const selectToken = (pick: UiToken) => {
-  const oppositeAddr =
-    tokenSelectionType === "sell"
-      ? (selectedBuyToken?.address as `0x${string}` | undefined)
-      : (selectedSellToken?.address as `0x${string}` | undefined);
-
-  // If same ERC-20 address as the opposite side → behave like pressing the arrow
-  if (addrEq(pick.address, oppositeAddr)) {
+  const selectToken = (token: string) => {
+    if (tokenSelectionType === "sell") {
+      setSellToken(token);
+      setSellAmount(""); // reset to avoid wrong decimals context
+    } else {
+      setBuyToken(token);
+    }
     setShowTokenModal(false);
-    handleSwapTokens();
-    return;
-  }
-
-  // Otherwise set normally
-  if (tokenSelectionType === "sell") {
-    setSellToken(pick.symbol);
-    setSellAmount(""); // avoid stale decimals/allowances
-  } else {
-    setBuyToken(pick.symbol);
-  }
-  setShowTokenModal(false);
-};
-
+  };
 
   // === SWAP click ===
   const onClickSwap = async () => {
@@ -367,7 +345,7 @@ const selectToken = (pick: UiToken) => {
                     onClick={() => {
                       if (!sellBal) return;
                       // keep small MON buffer for gas when selling native
-                      const gasBufferRaw = isNativeSell ? parseUnits("0.03", sellBal.decimals) : 0n;
+                      const gasBufferRaw = isNativeSell ? parseUnits("0.003", sellBal.decimals) : 0n;
                       const available = sellBal.value > gasBufferRaw ? sellBal.value - gasBufferRaw : 0n;
                       const val = formatAmount(available, sellBal.decimals, 6);
                       setSellAmount(val);
@@ -561,37 +539,30 @@ const selectToken = (pick: UiToken) => {
 
           {/* Token List */}
           <ScrollArea className="h-[26rem] w-full pr-4">
-  <div className="space-y-2">
-    {filteredTokens.map((t) => (
-      <Button
-        // Robust key: address if present, else "native-SYMBOL"
-        key={t.address ? t.address.toLowerCase() : `native-${t.symbol}`}
-        variant="ghost"
-        className="w-full justify-between py-3 px-3 rounded-xl border border-white/10 hover:bg-white/5"
-        onClick={() =>
-          selectToken({
-            symbol: t.symbol,
-            address: t.address as `0x${string}` | undefined, // undefined for native MON
-          })
-        }
-      >
-        <div className="flex items-center">
-          <div className="w-9 h-9 rounded-full bg-white/10 flex items-center justify-center">
-            <img src={glieseLogo} alt={t.symbol} className="w-6 h-6" />
-          </div>
-          <div className="ml-3 text-left">
-            <div className="font-medium text-white">{t.symbol}</div>
-            <div className="text-xs text-white/60">{t.name}</div>
-          </div>
-        </div>
-        <div className="text-right text-xs text-white/60">
-          {t.address ? formatAddress(t.address) : "Native coin"}
-        </div>
-      </Button>
-    ))}
-  </div>
-</ScrollArea>
-
+            <div className="space-y-2">
+              {filteredTokens.map((token) => (
+                <Button
+                  key={token.symbol}
+                  variant="ghost"
+                  className="w-full justify-between py-3 px-3 rounded-xl border border-white/10 hover:bg-white/5"
+                  onClick={() => selectToken(token.symbol)}
+                >
+                  <div className="flex items-center">
+                    <div className="w-9 h-9 rounded-full bg-white/10 flex items-center justify-center">
+                      <img src={glieseLogo} alt={token.symbol} className="w-6 h-6" />
+                    </div>
+                    <div className="ml-3 text-left">
+                      <div className="font-medium text-white">{token.symbol}</div>
+                      <div className="text-xs text-white/60">{token.name}</div>
+                    </div>
+                  </div>
+                  <div className="text-right text-xs text-white/60">
+                    {token.address ? formatAddress(token.address) : "Native coin"}
+                  </div>
+                </Button>
+              ))}
+            </div>
+          </ScrollArea>
         </DialogContent>
       </Dialog>
     </Card>
