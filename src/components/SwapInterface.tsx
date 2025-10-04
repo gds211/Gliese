@@ -11,7 +11,6 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogOverlay } from "@/components/ui/dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/components/ui/use-toast";
 
 import { ArrowUpDown, Wallet, Search, ChevronDown } from "lucide-react";
@@ -88,10 +87,6 @@ const SwapInterface = () => {
   const [showTokenModal, setShowTokenModal] = useState(false);
   const [tokenSelectionType, setTokenSelectionType] = useState<"sell" | "buy">("sell");
   const [searchTerm, setSearchTerm] = useState("");
-  
-  // Trigger order state
-  const [triggerPrice, setTriggerPrice] = useState("");
-  const [triggerExpiry, setTriggerExpiry] = useState("7days");
 
   const selectedSellToken = useMemo(() => tokens.find((t) => t.symbol === sellToken), [tokens, sellToken]);
   const selectedBuyToken = useMemo(() => tokens.find((t) => t.symbol === buyToken), [tokens, buyToken]);
@@ -523,181 +518,8 @@ const selectToken = (picked: string | TokenObj) => {
             </div>
           </TabsContent>
 
-          <TabsContent value="trigger" className="mt-4 space-y-3">
-            {/* Selling Section - Same as Instant */}
-            <div className="space-y-3">
-              <div className="flex items-center justify-between">
-                <label className="text-sm text-muted-foreground">Sell</label>
-                <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                  <span className="flex items-center gap-1">
-                    <Wallet className="h-3 w-3" />
-                    {sellBalLoading ? "…" : sellBal ? `${Number(sellBal.formatted).toFixed(4)} ${sellToken}` : `0.00 ${sellToken}`}
-                  </span>
-                </div>
-              </div>
-
-              <div className="relative bg-background/60 rounded-2xl border border-white/10 focus-within:border-primary/60 transition-colors duration-200">
-                <div className="flex items-center justify-between p-3">
-                  <Button
-                    variant="ghost"
-                    onClick={() => openTokenModal("sell")}
-                    className="relative w-32 h-10 bg-muted/60 rounded-full text-foreground border border-white/10 hover:border-white hover:bg-muted/80 hover:text-white flex items-center"
-                  >
-                    <span className="absolute left-3 flex items-center gap-2 pointer-events-none">
-                      <TokenAvatar
-                        symbol={sellToken}
-                        address={selectedSellToken?.address as `0x${string}` | undefined}
-                        size={24}
-                        title={selectedSellToken?.name || sellToken}
-                      />
-                    </span>
-                    <span className="absolute inset-y-0 left-[2.75rem] right-[2.5rem] flex items-center justify-center pointer-events-none truncate">
-                      {sellToken}
-                    </span>
-                    <ChevronDown className="absolute right-2 h-3.5 w-3.5 pointer-events-none" />
-                  </Button>
-                  <Input
-                    value={sellAmount}
-                    onChange={(e) => setSellAmount(e.target.value)}
-                    className="!border-none !bg-transparent text-right flex-1 !text-24 font-medium tracking-tight pr-2 h-auto text-foreground !shadow-none !ring-0 !ring-offset-0"
-                    placeholder="0.00"
-                  />
-                </div>
-                <div className="text-right text-sm text-muted-foreground pr-3 pb-3">
-                  {calculateUSDValue(sellAmount || "0", sellToken)}
-                </div>
-              </div>
-            </div>
-
-            {/* Arrow Separator */}
-            <div className="flex justify-center -my-2 relative z-10">
-              <Button
-                variant="ghost"
-                size="sm"
-                className="h-8 w-8 p-0 bg-background/60 rounded-md border border-border/40"
-              >
-                <ArrowUpDown className="h-4 w-4 text-blue-600" />
-              </Button>
-            </div>
-
-            {/* Receive at Least Section */}
-            <div className="space-y-3">
-              <div className="relative bg-background/60 rounded-2xl border border-white/10 focus-within:border-primary/60 transition-colors duration-200">
-                <span className="absolute left-0 bottom-full mb-3 text-sm text-muted-foreground pointer-events-none select-none">
-                  Receive at least
-                </span>
-                <div className="flex items-center justify-between p-3">
-                  <Button
-                    variant="ghost"
-                    onClick={() => openTokenModal("buy")}
-                    className="relative w-32 h-10 bg-muted/60 rounded-full text-foreground border border-white/10 hover:border-white hover:bg-muted/80 hover:text-white flex items-center"
-                  >
-                    <span className="absolute left-3 flex items-center gap-2 pointer-events-none">
-                      <TokenAvatar
-                        symbol={buyToken}
-                        address={selectedBuyToken?.address as `0x${string}` | undefined}
-                        size={24}
-                        title={selectedBuyToken?.name || buyToken}
-                      />
-                    </span>
-                    <span className="absolute inset-y-0 left-[2.75rem] right-[2.5rem] flex items-center justify-center pointer-events-none truncate">
-                      {buyToken}
-                    </span>
-                    <ChevronDown className="absolute right-2 h-3.5 w-3.5 pointer-events-none" />
-                  </Button>
-                  <Input
-                    value={buyAmountDisplay}
-                    readOnly
-                    className="!border-none !bg-transparent text-right flex-1 !text-24 font-medium tracking-tight pr-2 h-auto text-foreground !shadow-none !ring-0 !ring-offset-0"
-                    placeholder="0.00"
-                  />
-                </div>
-                <div className="text-right text-sm text-muted-foreground pr-3 pb-3">
-                  {calculateUSDValue(buyAmountDerived, buyToken)}
-                </div>
-              </div>
-            </div>
-
-            {/* Trigger Condition Bar */}
-            <div className="bg-background/40 rounded-lg border border-white/10 p-3 flex items-center justify-between">
-              <div className="flex items-center gap-2 text-sm">
-                <span className="text-muted-foreground">When 1</span>
-                <TokenAvatar
-                  symbol={buyToken}
-                  address={selectedBuyToken?.address as `0x${string}` | undefined}
-                  size={16}
-                  title={buyToken}
-                />
-                <span className="font-medium">{buyToken}</span>
-                <span className="text-muted-foreground">is worth</span>
-                <span className="text-red-400">(-0.2%)</span>
-              </div>
-              <div className="text-xs text-muted-foreground">
-                Market: <span className="text-foreground">0.280848</span>
-              </div>
-            </div>
-
-            {/* Large Price Display */}
-            <div className="bg-background/60 rounded-2xl border border-white/10 p-4">
-              <div className="flex items-center justify-between">
-                <Input
-                  value={triggerPrice}
-                  onChange={(e) => setTriggerPrice(e.target.value)}
-                  className="!border-none !bg-transparent text-left flex-1 !text-32 font-bold tracking-tight text-foreground !shadow-none !ring-0 !ring-offset-0"
-                  placeholder="0.281445"
-                />
-                <div className="flex items-center gap-2">
-                  <div className="flex items-center gap-1 px-3 py-1 bg-muted/60 rounded-full">
-                    <TokenAvatar
-                      symbol="USDC"
-                      address={tokens.find(t => t.symbol === "USDC")?.address}
-                      size={20}
-                      title="USDC"
-                    />
-                    <span className="text-sm font-medium">USDC</span>
-                  </div>
-                  <Button variant="ghost" size="sm" className="h-8 w-8 p-0 bg-muted/40 rounded-md">
-                    <span className="text-lg">$</span>
-                  </Button>
-                </div>
-              </div>
-              <div className="flex items-center justify-between mt-2 text-sm text-muted-foreground">
-                <span>≈ 0.276614 USDC</span>
-                <span>Est. partial fill price</span>
-              </div>
-            </div>
-
-            {/* Three Info Blocks Grid */}
-            <div className="grid grid-cols-3 gap-2">
-              <div className="bg-background/40 rounded-lg border border-white/10 p-3">
-                <div className="text-xs text-muted-foreground mb-1">Order expires in</div>
-                <Select value={triggerExpiry} onValueChange={setTriggerExpiry}>
-                  <SelectTrigger className="w-full h-8 text-sm bg-transparent border-none p-0 gap-1">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="1hour">1 Hour</SelectItem>
-                    <SelectItem value="1day">1 Day</SelectItem>
-                    <SelectItem value="7days">7 Days</SelectItem>
-                    <SelectItem value="30days">30 Days</SelectItem>
-                    <SelectItem value="never">Never</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className="bg-background/40 rounded-lg border border-white/10 p-3">
-                <div className="text-xs text-muted-foreground mb-1">Limit price</div>
-                <div className="text-xs font-medium">
-                  1 {buyToken} = {triggerPrice || "0.281445"} {sellToken}
-                </div>
-                <div className="text-xs text-muted-foreground">≈ $0,28</div>
-              </div>
-
-              <div className="bg-background/40 rounded-lg border border-white/10 p-3">
-                <div className="text-xs text-muted-foreground mb-1">Fee</div>
-                <div className="text-sm font-medium text-green-400">FREE</div>
-              </div>
-            </div>
+          <TabsContent value="trigger">
+            <div className="text-center text-muted-foreground py-8">Trigger orders coming soon</div>
           </TabsContent>
 
           <TabsContent value="recurring">
