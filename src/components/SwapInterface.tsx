@@ -706,30 +706,17 @@ const selectToken = (picked: string | TokenObj) => {
               </div>
             </div>
 
-            {/* Status Button */}
-            <Button
-              className="w-full mt-4 h-12 text-base font-medium"
-              disabled={!isConnected || isExceeding}
-              variant={isExceeding ? "destructive" : "default"}
-            >
-              {!isConnected
-                ? "Connect Wallet"
-                : isExceeding
-                ? `Insufficient ${sellToken}`
-                : "Create Trigger Order"}
-            </Button>
-
-            {/* Mode Explanation */}
-            <div className="text-xs text-muted-foreground mt-3 px-1">
+            {/* Status Line */}
+            <div className="bg-background/80 rounded-xl border border-white/10 p-3 mt-3 text-center text-sm text-muted-foreground">
               {triggerMode === "ultra" ? (
                 <>
                   <strong>Ultra Mode:</strong> You will receive at least {buyAmountDisplay} {buyToken}, minus platform fees.{" "}
-                  <a href="#" className="underline">Learn more</a>
+                  <a href="#" className="underline hover:text-foreground transition-colors">Learn more</a>
                 </>
               ) : (
                 <>
                   <strong>Exact Mode:</strong> Your order will execute only at the exact rate specified.{" "}
-                  <a href="#" className="underline">Learn more</a>
+                  <a href="#" className="underline hover:text-foreground transition-colors">Learn more</a>
                 </>
               )}
             </div>
@@ -740,33 +727,10 @@ const selectToken = (picked: string | TokenObj) => {
           </TabsContent>
         </Tabs>
 
-        {/* Connect/Swap Button */}
+        {/* Primary CTA - handles all tabs */}
         <div className="w-full mt-4">
-          <Button
-            className="w-full"
-            disabled={
-              (!isConnected && !openConnectModal) ||
-              !sellAmount ||
-              sellAmount === "0" ||
-              sellAmount === "0.0" ||
-              isExceeding ||
-              !quote ||
-              quote.minOutRaw === 0n
-            }
-            onClick={() => {
-              if (!isConnected) return openConnectModal?.();
-              onClickSwap();
-            }}
-          >
-            {!isConnected
-              ? "Connect Wallet"
-              : isExceeding
-              ? "Amount exceeds balance"
-              : !sellAmount || sellAmount === "0" || sellAmount === "0.0"
-              ? "Enter an amount"
-              : !quote || quote.minOutRaw === 0n
-              ? "No route"
-              : "Swap"}
+          <Button className="w-full" onClick={() => { if (!isConnected) return openConnectModal?.(); onClickSwap(); }}>
+            {!isConnected ? "Connect Wallet" : isExceeding ? `Insufficient ${sellToken}` : "Swap"}
           </Button>
         </div>
       </div>
