@@ -17,7 +17,8 @@ export type TriggerOrderFormState = {
   payload: {
     sellToken: string | `0x${string}`;
     buyToken: string | `0x${string}`;
-    amount: string;
+    sellAmount: string;
+    receiveAmount?: string;
     condition: "market" | "gte" | "lte" | "eq";
     targetPrice?: string;
     expiryLabel: string;
@@ -26,13 +27,18 @@ export type TriggerOrderFormState = {
 };
 
 export type TriggerOrderPanelProps = {
+  isConnected?: boolean;
+  onConnect?: () => void;
+
   sellToken: string;
   buyToken: string;
   selectedSellToken?: TokenObj;
   selectedBuyToken?: TokenObj;
   openTokenModal: (which: "sell" | "buy") => void;
+
   sellBalValue?: bigint;
   sellBalDecimals?: number;
+
   onStateChange?: (s: TriggerOrderFormState) => void;
 };
 
@@ -60,11 +66,13 @@ const clampDec = (v: string) =>
 
 export default function TriggerOrderPanel(props: TriggerOrderPanelProps) {
   const {
+    isConnected, onConnect,
     sellToken, buyToken, selectedSellToken, selectedBuyToken,
     openTokenModal, sellBalValue, sellBalDecimals = 18, onStateChange,
   } = props;
 
-  const [amount, setAmount] = useState("");
+  const [sellAmount, setSellAmount] = useState("");
+  const [receiveAmount, setReceiveAmount] = useState("");
   const [condition, setCondition] = useState<"market" | "gte" | "lte" | "eq">("market");
   const [targetPrice, setTargetPrice] = useState("");
   const [expiryLabel, setExpiryLabel] = useState("Never");
@@ -77,10 +85,12 @@ export default function TriggerOrderPanel(props: TriggerOrderPanelProps) {
     } catch { return 0; }
   }, [sellBalValue, sellBalDecimals]);
 
-  const half = () => balanceNum > 0 && setAmount(clampDec((balanceNum / 2).toString()));
-  const max  = () => balanceNum > 0 && setAmount(clampDec(balanceNum.toString()));
+  const half = () => balanceNum > 0 && setSellAmount(clampDec((balanceNum / 2).toString()));
+  const max  = () => balanceNum > 0 && setSellAmount(clampDec(balanceNum.toString()));
 
-  const canSubmit = !!amount && (condition === "market" || !!targetPrice);
+  const canSubmit =
+    !!sellAmount &&
+    (condition === "market" || !!targetPrice);
 
   // notify parent so it can control the single bottom CTA
   useEffect(() => {
@@ -89,7 +99,8 @@ export default function TriggerOrderPanel(props: TriggerOrderPanelProps) {
       payload: {
         sellToken: selectedSellToken?.address ?? sellToken,
         buyToken:  selectedBuyToken?.address  ?? buyToken,
-        amount,
+        sellAmount,
+        receiveAmount: receiveAmount || undefined,
         condition,
         targetPrice: condition === "market" ? undefined : targetPrice,
         expiryLabel,
@@ -97,12 +108,11 @@ export default function TriggerOrderPanel(props: TriggerOrderPanelProps) {
       },
     });
   }, [
-    canSubmit, amount, condition, targetPrice, expiryLabel, exactMode,
+    canSubmit, sellAmount, receiveAmount, condition, targetPrice, expiryLabel, exactMode,
     sellToken, buyToken, selectedSellToken?.address, selectedBuyToken?.address, onStateChange,
   ]);
 
   return (
-    // roomier spacing; we removed the meta row so it still fits Instant’s height
     <div className="space-y-3">
       {/* Row 0: HALF / MAX + Optimised/Exact */}
       <div className="flex items-center justify-between">
@@ -117,7 +127,7 @@ export default function TriggerOrderPanel(props: TriggerOrderPanelProps) {
         </div>
       </div>
 
-      {/* Row 1: SELL / RECEIVE — same button size as Instant; more breathing room */}
+      {/* Row 1: SELL / RECEIVE — match Instant tab dimensions */}
       <div className="grid grid-cols-2 gap-3">
         {/* SELL */}
         <Card className="relative bg-background/60 rounded-2xl border border-white/10">
@@ -126,7 +136,7 @@ export default function TriggerOrderPanel(props: TriggerOrderPanelProps) {
             <Button
               variant="ghost"
               onClick={() => openTokenModal("sell")}
-              className="relative w-36 h-10 bg-muted/60 rounded-full text-foreground border border-white/10 hover:border-white hover:bg-muted/80 hover:text-white flex items-center"
+              className="relative w-32 h-10 bg-muted/60 rounded-full text-foreground border border-white/10 hover:border-white hover:bg-muted/80 hover:text-white flex items-center"
               aria-label="Select sell token"
             >
               <span className="absolute left-3 flex items-center gap-2 pointer-events-none">
@@ -146,22 +156,22 @@ export default function TriggerOrderPanel(props: TriggerOrderPanelProps) {
                 inputMode="decimal"
                 pattern="[0-9]*[.,]?[0-9]*"
                 placeholder="0.00"
-                value={amount}
-                onChange={(e) => setAmount(clampDec(e.target.value))}
+                value={sellAmount}
+                onChange={(e) => setSellAmount(clampDec(e.target.value))}
                 className="text-right h-10 bg-transparent border-0 focus-visible:ring-0 focus-visible:ring-offset-0 text-lg"
               />
             </div>
           </div>
         </Card>
 
-        {/* RECEIVE */}
+        {/* RECEIVE (optional min amount) */}
         <Card className="relative bg-background/60 rounded-2xl border border-white/10">
-          <div className="absolute left-0 -top-3 text-xs text-muted-foreground select-none">receive</div>
+          <div className="absolute left-0 -top-3 text-xs text-muted-foreground select-none">receive (min)</div>
           <div className="flex items-center justify-between p-3">
             <Button
               variant="ghost"
               onClick={() => openTokenModal("buy")}
-              className="relative w-36 h-10 bg-muted/60 rounded-full text-foreground border border-white/10 hover:border-white hover:bg-muted/80 hover:text-white flex items-center"
+              className="relative w-32 h-10 bg-muted/60 rounded-full text-foreground border border-white/10 hover:border-white hover:bg-muted/80 hover:text-white flex items-center"
               aria-label="Select buy token"
             >
               <span className="absolute left-3 flex items-center gap-2 pointer-events-none">
@@ -177,13 +187,20 @@ export default function TriggerOrderPanel(props: TriggerOrderPanelProps) {
             </Button>
 
             <div className="relative flex-1 ml-3">
-              <Input disabled placeholder="0.00" className="text-right h-10 bg-transparent border-0 focus-visible:ring-0 focus-visible:ring-offset-0 text-lg" />
+              <Input
+                inputMode="decimal"
+                pattern="[0-9]*[.,]?[0-9]*"
+                placeholder="0.00"
+                value={receiveAmount}
+                onChange={(e) => setReceiveAmount(clampDec(e.target.value))}
+                className="text-right h-10 bg-transparent border-0 focus-visible:ring-0 focus-visible:ring-offset-0 text-lg"
+              />
             </div>
           </div>
         </Card>
       </div>
 
-      {/* Row 2: Condition + Expiry (standard paddings so it doesn't feel cramped) */}
+      {/* Row 2: Condition + Expiry */}
       <div className="grid grid-cols-2 gap-3">
         {/* Condition */}
         <Card className="bg-background/60 rounded-2xl border border-white/10">
@@ -246,8 +263,7 @@ export default function TriggerOrderPanel(props: TriggerOrderPanelProps) {
         </Card>
       </div>
 
-      {/* No meta row here (we reclaimed this space to avoid a jammed feel and keep total height equal) */}
-      {/* No CTA here — parent renders the single bottom CTA */}
+      {/* no CTA here — parent renders the single bottom CTA */}
     </div>
   );
 }
