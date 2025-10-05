@@ -524,53 +524,40 @@ const selectToken = (picked: string | TokenObj) => {
           </TabsContent>
 
           <TabsContent value="trigger" className="mt-4 space-y-3">
-            {/* HALF/MAX and Optimize/EXACT row */}
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="h-5 px-2 text-xs text-muted-foreground border border-border hover:border-primary hover:bg-muted transition-all duration-200"
-                  onClick={() => {
-                    if (!sellBal) return;
-                    const halfRaw = sellBal.value / 2n;
-                    const val = formatAmount(halfRaw, sellBal.decimals, 6);
-                    setSellAmount(val);
-                  }}
-                >
-                  HALF
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="h-5 px-2 text-xs text-muted-foreground border border-border hover:border-primary hover:bg-muted transition-all duration-200"
-                  onClick={() => {
-                    if (!sellBal) return;
-                    const gasBufferRaw = isNativeSell ? parseUnits("0.003", sellBal.decimals) : 0n;
-                    const available = sellBal.value > gasBufferRaw ? sellBal.value - gasBufferRaw : 0n;
-                    const val = formatAmount(available, sellBal.decimals, 6);
-                    setSellAmount(val);
-                  }}
-                >
-                  MAX
-                </Button>
-              </div>
-              <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                <span>Optimize</span>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="h-5 px-2 text-xs text-muted-foreground border border-border"
-                >
-                  EXACT
-                </Button>
-              </div>
-            </div>
-
             {/* Selling Section */}
             <div className="space-y-3">
               <div className="flex items-center justify-between">
-                <label className="text-sm text-muted-foreground">Sell</label>
+                <label className="text-sm text-muted-foreground">Selling</label>
+                <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                  <span>≈ {sellBalLoading ? "…" : sellBal ? `${Number(sellBal.formatted).toFixed(2)} ${sellToken}` : `0,00 ${sellToken}`}</span>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-5 px-2 text-xs text-muted-foreground border border-border hover:border-primary hover:bg-muted transition-all duration-200"
+                    onClick={() => {
+                      if (!sellBal) return;
+                      const halfRaw = sellBal.value / 2n;
+                      const val = formatAmount(halfRaw, sellBal.decimals, 6);
+                      setSellAmount(val);
+                    }}
+                  >
+                    HALF
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-5 px-2 text-xs text-muted-foreground border border-border hover:border-primary hover:bg-muted transition-all duration-200"
+                    onClick={() => {
+                      if (!sellBal) return;
+                      const gasBufferRaw = isNativeSell ? parseUnits("0.003", sellBal.decimals) : 0n;
+                      const available = sellBal.value > gasBufferRaw ? sellBal.value - gasBufferRaw : 0n;
+                      const val = formatAmount(available, sellBal.decimals, 6);
+                      setSellAmount(val);
+                    }}
+                  >
+                    MAX
+                  </Button>
+                </div>
               </div>
 
               <div className="relative bg-background/60 rounded-2xl border border-white/10 focus-within:border-primary/60 transition-colors duration-200">
@@ -598,30 +585,24 @@ const selectToken = (picked: string | TokenObj) => {
                     value={sellAmount}
                     onChange={(e) => setSellAmount(e.target.value)}
                     className="!border-none !bg-transparent text-right flex-1 !text-24 font-medium tracking-tight pr-2 h-auto text-foreground !shadow-none !ring-0 !ring-offset-0"
+                    style={{ color: isExceeding ? "#ef4444" : undefined }}
                     placeholder="0.00"
                   />
+                </div>
+                <div className="text-right text-sm text-muted-foreground pr-3 pb-3">
+                  {calculateUSDValue(sellAmount || "0", sellToken)}
                 </div>
               </div>
             </div>
 
-            {/* Swap Arrow */}
-            <div className="flex justify-center -my-2 relative z-10">
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={handleSwapTokens}
-                className="h-8 w-8 p-0 bg-background/60 hover:bg-background rounded-md border border-border/40 transition-colors duration-200"
-              >
-                <ArrowUpDown className="h-4 w-4 text-blue-600" />
-              </Button>
-            </div>
-
-            {/* Receive Section */}
+            {/* Buying Section */}
             <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <label className="text-sm text-muted-foreground">Buying</label>
+                <span className="text-xs text-muted-foreground">≈ 0,09255339 {buyToken}</span>
+              </div>
+
               <div className="relative bg-background/60 rounded-2xl border border-white/10 focus-within:border-primary/60 transition-colors duration-200">
-                <span className="absolute left-0 bottom-full mb-3 text-sm text-muted-foreground pointer-events-none select-none">
-                  Receive
-                </span>
                 <div className="flex items-center justify-between p-3">
                   <Button
                     variant="ghost"
@@ -643,39 +624,39 @@ const selectToken = (picked: string | TokenObj) => {
                     <ChevronDown className="absolute right-2 h-3.5 w-3.5 pointer-events-none" />
                   </Button>
                   <Input
-                    value="0.00"
+                    value={buyAmountDisplay}
                     readOnly
                     className="!border-none !bg-transparent text-right flex-1 !text-24 font-medium tracking-tight pr-2 h-auto text-foreground !shadow-none !ring-0 !ring-offset-0"
                     placeholder="0.00"
                   />
                 </div>
+                <div className="text-right text-sm text-muted-foreground pr-3 pb-3">
+                  {calculateUSDValue(buyAmountDerived, buyToken)}
+                </div>
               </div>
             </div>
 
-            {/* Trigger Panel: Rate and Expiry */}
+            {/* Trigger Panel: Rate and Expiry side by side */}
             <div className="bg-background/60 rounded-2xl border border-white/10 p-4">
               <div className="grid grid-cols-2 gap-4">
-                {/* Left: Sell at rate */}
+                {/* Left: Buy token at rate */}
                 <div className="space-y-2">
-                  <label className="text-sm text-muted-foreground">Sell {sellToken} at rate</label>
-                  <div className="flex items-center gap-2">
-                    <Input
-                      value={triggerPrice}
-                      onChange={(e) => setTriggerPrice(e.target.value)}
-                      className="flex-1 bg-background/60 border-white/10"
-                      placeholder="227"
-                    />
-                    <span className="text-sm text-muted-foreground">{buyToken}</span>
+                  <label className="text-xs text-muted-foreground">Buy {buyToken} at rate</label>
+                  <div className="text-3xl font-bold text-foreground">
+                    {triggerPrice || "230,062602335"}
                   </div>
+                  <button className="text-xs text-primary hover:underline">
+                    Use Market (≈ ${(cryptoPrices as any)[buyToken] || 229.99})
+                  </button>
                 </div>
 
                 {/* Right: Expiry */}
                 <div className="space-y-2">
-                  <label className="text-sm text-muted-foreground">EXPIRY</label>
+                  <label className="text-xs text-muted-foreground">Expiry</label>
                   <select
                     value={triggerExpiry}
                     onChange={(e) => setTriggerExpiry(e.target.value)}
-                    className="w-full h-10 px-3 rounded-md bg-background/60 border border-white/10 text-foreground text-sm"
+                    className="w-full h-12 px-3 rounded-md bg-background border border-white/10 text-foreground text-sm"
                   >
                     <option value="never">Never</option>
                     <option value="7days">7 days</option>
@@ -684,15 +665,6 @@ const selectToken = (picked: string | TokenObj) => {
                   </select>
                 </div>
               </div>
-            </div>
-
-            {/* Info Row */}
-            <div className="flex items-center justify-between text-xs text-muted-foreground">
-              <div className="flex items-center gap-1 border-2 border-border px-2 py-1 rounded-lg">
-                <img src={glieseLogo} alt="Gliese" className="w-4 h-4 rounded-lg" />
-                <span>Wrapdrive v1.1</span>
-              </div>
-              <span>0.1 FEE</span>
             </div>
           </TabsContent>
 
@@ -704,14 +676,10 @@ const selectToken = (picked: string | TokenObj) => {
         {/* Connect/Swap Button */}
         <div className="w-full mt-4">
           <Button
-            className="w-full"
+            className={`w-full ${activeTab === "trigger" && isExceeding ? "bg-[#6b7a4f] hover:bg-[#6b7a4f]/90 text-white" : ""}`}
             disabled={
               (!isConnected && !openConnectModal) ||
-              !sellAmount ||
-              sellAmount === "0" ||
-              sellAmount === "0.0" ||
-              (activeTab === "instant" && (isExceeding || !quote || quote.minOutRaw === 0n)) ||
-              (activeTab === "trigger" && !triggerPrice)
+              (activeTab === "instant" && (!sellAmount || sellAmount === "0" || sellAmount === "0.0" || isExceeding || !quote || quote.minOutRaw === 0n))
             }
             onClick={() => {
               if (!isConnected) return openConnectModal?.();
@@ -725,7 +693,9 @@ const selectToken = (picked: string | TokenObj) => {
             {!isConnected
               ? "Connect Wallet"
               : activeTab === "trigger"
-              ? "Place trigger order"
+              ? isExceeding
+                ? `Insufficient ${sellToken}`
+                : "Place trigger order"
               : isExceeding
               ? "Amount exceeds balance"
               : !sellAmount || sellAmount === "0" || sellAmount === "0.0"
