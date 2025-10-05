@@ -520,10 +520,8 @@ const selectToken = (picked: string | TokenObj) => {
             </div>
           </TabsContent>
 
-          <TabsContent value="trigger" className="mt-4">
+          <TabsContent value="trigger" className="mt-4" space-y-3">
             <TriggerOrderPanel
-               isConnected={isConnected}
-               onConnect={openConnectModal}
                sellToken={sellToken}
                buyToken={buyToken}
                selectedSellToken={selectedSellToken as any}
