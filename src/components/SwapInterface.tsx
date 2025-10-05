@@ -21,9 +21,6 @@ import { useYakQuote } from "@/hooks/useYakQuote";
 import { performSwap } from "@/lib/swap";
 
 import TokenAvatar from "@/components/TokenAvatar";
-import TriggerOrderPanel, { TriggerOrderFormState } from "@/components/TriggerOrderPanel";
-
-
 
 
 
@@ -61,10 +58,6 @@ const SwapInterface = () => {
   const { openConnectModal } = useConnectModal();
   const { toast } = useToast();
   const queryClient = useQueryClient(); // <-- ADDED
-
-  const [activeTab, setActiveTab] = useState<"instant" | "trigger" | "recurring">("instant");
-const [triggerForm, setTriggerForm] = useState<TriggerOrderFormState | null>(null);
-
 
   // --- Token list (your current list) ---
   const cryptoPrices = {
@@ -525,18 +518,8 @@ const selectToken = (picked: string | TokenObj) => {
             </div>
           </TabsContent>
 
-          <TabsContent value="trigger" className="mt-4">
-            <TriggerOrderPanel
-               isConnected={isConnected}
-               onConnect={openConnectModal}
-               sellToken={sellToken}
-               buyToken={buyToken}
-               selectedSellToken={selectedSellToken as any}
-               selectedBuyToken={selectedBuyToken as any}
-               openTokenModal={openTokenModal}
-               sellBalValue={sellBal?.value}
-               sellBalDecimals={sellBal?.decimals}
-            />
+          <TabsContent value="trigger">
+            <div className="text-center text-muted-foreground py-8">Trigger orders coming soon</div>
           </TabsContent>
 
           <TabsContent value="recurring">
