@@ -88,6 +88,11 @@ const SwapInterface = () => {
   const [tokenSelectionType, setTokenSelectionType] = useState<"sell" | "buy">("sell");
   const [searchTerm, setSearchTerm] = useState("");
 
+  // Trigger tab state
+  const [triggerPrice, setTriggerPrice] = useState("");
+  const [triggerExpiry, setTriggerExpiry] = useState("never");
+  const [activeTab, setActiveTab] = useState("instant");
+
   const selectedSellToken = useMemo(() => tokens.find((t) => t.symbol === sellToken), [tokens, sellToken]);
   const selectedBuyToken = useMemo(() => tokens.find((t) => t.symbol === buyToken), [tokens, buyToken]);
 
@@ -344,7 +349,7 @@ const selectToken = (picked: string | TokenObj) => {
     <Card className="w-full max-w-md mx-auto bg-muted/40 backdrop-blur-md border border-muted/60 shadow-2xl">
       <div className="p-4 space-y-4">
         {/* Tabs */}
-        <Tabs defaultValue="instant" className="w-full">
+        <Tabs defaultValue="instant" className="w-full" onValueChange={setActiveTab}>
           <TabsList className="grid w-full grid-cols-3 bg-muted/40 h-10">
             <TabsTrigger value="instant" className="text-sm flex items-center gap-2 h-8 data-[state=active]:text-primary data-[state=inactive]:text-muted-foreground">
               <span>⚡</span> Instant
@@ -518,8 +523,177 @@ const selectToken = (picked: string | TokenObj) => {
             </div>
           </TabsContent>
 
-          <TabsContent value="trigger">
-            <div className="text-center text-muted-foreground py-8">Trigger orders coming soon</div>
+          <TabsContent value="trigger" className="mt-4 space-y-3">
+            {/* HALF/MAX and Optimize/EXACT row */}
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-5 px-2 text-xs text-muted-foreground border border-border hover:border-primary hover:bg-muted transition-all duration-200"
+                  onClick={() => {
+                    if (!sellBal) return;
+                    const halfRaw = sellBal.value / 2n;
+                    const val = formatAmount(halfRaw, sellBal.decimals, 6);
+                    setSellAmount(val);
+                  }}
+                >
+                  HALF
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-5 px-2 text-xs text-muted-foreground border border-border hover:border-primary hover:bg-muted transition-all duration-200"
+                  onClick={() => {
+                    if (!sellBal) return;
+                    const gasBufferRaw = isNativeSell ? parseUnits("0.003", sellBal.decimals) : 0n;
+                    const available = sellBal.value > gasBufferRaw ? sellBal.value - gasBufferRaw : 0n;
+                    const val = formatAmount(available, sellBal.decimals, 6);
+                    setSellAmount(val);
+                  }}
+                >
+                  MAX
+                </Button>
+              </div>
+              <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                <span>Optimize</span>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-5 px-2 text-xs text-muted-foreground border border-border"
+                >
+                  EXACT
+                </Button>
+              </div>
+            </div>
+
+            {/* Selling Section */}
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <label className="text-sm text-muted-foreground">Sell</label>
+              </div>
+
+              <div className="relative bg-background/60 rounded-2xl border border-white/10 focus-within:border-primary/60 transition-colors duration-200">
+                <div className="flex items-center justify-between p-3">
+                  <Button
+                    variant="ghost"
+                    onClick={() => openTokenModal("sell")}
+                    className="relative w-32 h-10 bg-muted/60 rounded-full text-foreground border border-white/10 hover:border-white hover:bg-muted/80 hover:text-white flex items-center"
+                    aria-label="Select sell token"
+                  >
+                    <span className="absolute left-3 flex items-center gap-2 pointer-events-none">
+                      <TokenAvatar
+                        symbol={sellToken}
+                        address={selectedSellToken?.address as `0x${string}` | undefined}
+                        size={24}
+                        title={selectedSellToken?.name || sellToken}
+                      />
+                    </span>
+                    <span className="absolute inset-y-0 left-[2.75rem] right-[2.5rem] flex items-center justify-center pointer-events-none truncate">
+                      {sellToken}
+                    </span>
+                    <ChevronDown className="absolute right-2 h-3.5 w-3.5 pointer-events-none" />
+                  </Button>
+                  <Input
+                    value={sellAmount}
+                    onChange={(e) => setSellAmount(e.target.value)}
+                    className="!border-none !bg-transparent text-right flex-1 !text-24 font-medium tracking-tight pr-2 h-auto text-foreground !shadow-none !ring-0 !ring-offset-0"
+                    placeholder="0.00"
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Swap Arrow */}
+            <div className="flex justify-center -my-2 relative z-10">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={handleSwapTokens}
+                className="h-8 w-8 p-0 bg-background/60 hover:bg-background rounded-md border border-border/40 transition-colors duration-200"
+              >
+                <ArrowUpDown className="h-4 w-4 text-blue-600" />
+              </Button>
+            </div>
+
+            {/* Receive Section */}
+            <div className="space-y-3">
+              <div className="relative bg-background/60 rounded-2xl border border-white/10 focus-within:border-primary/60 transition-colors duration-200">
+                <span className="absolute left-0 bottom-full mb-3 text-sm text-muted-foreground pointer-events-none select-none">
+                  Receive
+                </span>
+                <div className="flex items-center justify-between p-3">
+                  <Button
+                    variant="ghost"
+                    onClick={() => openTokenModal("buy")}
+                    className="relative w-32 h-10 bg-muted/60 rounded-full text-foreground border border-white/10 hover:border-white hover:bg-muted/80 hover:text-white flex items-center"
+                    aria-label="Select buy token"
+                  >
+                    <span className="absolute left-3 flex items-center gap-2 pointer-events-none">
+                      <TokenAvatar
+                        symbol={buyToken}
+                        address={selectedBuyToken?.address as `0x${string}` | undefined}
+                        size={24}
+                        title={selectedBuyToken?.name || buyToken}
+                      />
+                    </span>
+                    <span className="absolute inset-y-0 left-[2.75rem] right-[2.5rem] flex items-center justify-center pointer-events-none truncate">
+                      {buyToken}
+                    </span>
+                    <ChevronDown className="absolute right-2 h-3.5 w-3.5 pointer-events-none" />
+                  </Button>
+                  <Input
+                    value="0.00"
+                    readOnly
+                    className="!border-none !bg-transparent text-right flex-1 !text-24 font-medium tracking-tight pr-2 h-auto text-foreground !shadow-none !ring-0 !ring-offset-0"
+                    placeholder="0.00"
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Trigger Panel: Rate and Expiry */}
+            <div className="bg-background/60 rounded-2xl border border-white/10 p-4">
+              <div className="grid grid-cols-2 gap-4">
+                {/* Left: Sell at rate */}
+                <div className="space-y-2">
+                  <label className="text-sm text-muted-foreground">Sell {sellToken} at rate</label>
+                  <div className="flex items-center gap-2">
+                    <Input
+                      value={triggerPrice}
+                      onChange={(e) => setTriggerPrice(e.target.value)}
+                      className="flex-1 bg-background/60 border-white/10"
+                      placeholder="227"
+                    />
+                    <span className="text-sm text-muted-foreground">{buyToken}</span>
+                  </div>
+                </div>
+
+                {/* Right: Expiry */}
+                <div className="space-y-2">
+                  <label className="text-sm text-muted-foreground">EXPIRY</label>
+                  <select
+                    value={triggerExpiry}
+                    onChange={(e) => setTriggerExpiry(e.target.value)}
+                    className="w-full h-10 px-3 rounded-md bg-background/60 border border-white/10 text-foreground text-sm"
+                  >
+                    <option value="never">Never</option>
+                    <option value="7days">7 days</option>
+                    <option value="30days">30 days</option>
+                    <option value="90days">90 days</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+
+            {/* Info Row */}
+            <div className="flex items-center justify-between text-xs text-muted-foreground">
+              <div className="flex items-center gap-1 border-2 border-border px-2 py-1 rounded-lg">
+                <img src={glieseLogo} alt="Gliese" className="w-4 h-4 rounded-lg" />
+                <span>Wrapdrive v1.1</span>
+              </div>
+              <span>0.1 FEE</span>
+            </div>
           </TabsContent>
 
           <TabsContent value="recurring">
@@ -536,17 +710,22 @@ const selectToken = (picked: string | TokenObj) => {
               !sellAmount ||
               sellAmount === "0" ||
               sellAmount === "0.0" ||
-              isExceeding ||
-              !quote ||
-              quote.minOutRaw === 0n
+              (activeTab === "instant" && (isExceeding || !quote || quote.minOutRaw === 0n)) ||
+              (activeTab === "trigger" && !triggerPrice)
             }
             onClick={() => {
               if (!isConnected) return openConnectModal?.();
-              onClickSwap();
+              if (activeTab === "trigger") {
+                toast({ title: "Trigger order created", description: "Your trigger order has been placed" });
+              } else {
+                onClickSwap();
+              }
             }}
           >
             {!isConnected
               ? "Connect Wallet"
+              : activeTab === "trigger"
+              ? "Place trigger order"
               : isExceeding
               ? "Amount exceeds balance"
               : !sellAmount || sellAmount === "0" || sellAmount === "0.0"
