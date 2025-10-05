@@ -35,14 +35,13 @@ export type TriggerOrderPanelProps = {
   onStateChange?: (s: TriggerOrderFormState) => void;
 };
 
-// compact lists so everything fits in the same card height
+// Compact sets so everything fits inside the Instant height
 const CONDITION_OPTIONS = [
   { key: "market", label: "Market" },
   { key: "gte",    label: "Price ≥" },
   { key: "lte",    label: "Price ≤" },
   { key: "eq",     label: "Price ="  },
 ] as const;
-
 const EXPIRY_OPTIONS = ["Never", "1 hour", "6 hours", "1 day", "7 days", "30 days"];
 
 function weiToFloat(value: bigint, decimals: number): number {
@@ -82,7 +81,7 @@ export default function TriggerOrderPanel(props: TriggerOrderPanelProps) {
 
   const canSubmit = !!amount && (condition === "market" || !!targetPrice);
 
-  // tell parent so it can render ONE bottom CTA
+  // Inform parent so it can control the single bottom CTA
   useEffect(() => {
     onStateChange?.({
       canSubmit,
@@ -102,9 +101,9 @@ export default function TriggerOrderPanel(props: TriggerOrderPanelProps) {
   ]);
 
   return (
-    // tighter vertical rhythm so we stay within the same overall height as Instant
+    // tighter rhythm so total height matches Instant
     <div className="space-y-2">
-      {/* row 0: HALF/MAX + Optimised/Exact */}
+      {/* Row 0: HALF/MAX + Optimised/Exact */}
       <div className="flex items-center justify-between">
         <div className="flex gap-2">
           <Button variant="secondary" size="sm" className="h-7 rounded-full px-3" onClick={half}>HALF</Button>
@@ -117,7 +116,7 @@ export default function TriggerOrderPanel(props: TriggerOrderPanelProps) {
         </div>
       </div>
 
-      {/* row 1: SELL / RECEIVE (compact heights/paddings) */}
+      {/* Row 1: SELL / RECEIVE (compact) */}
       <div className="grid grid-cols-2 gap-2">
         {/* SELL */}
         <Card className="relative bg-background/60 rounded-2xl border border-white/10">
@@ -183,7 +182,7 @@ export default function TriggerOrderPanel(props: TriggerOrderPanelProps) {
         </Card>
       </div>
 
-      {/* row 2: Condition + Expiry (tight grid so it still fits) */}
+      {/* Row 2: Condition + Expiry (tight grid so it still fits) */}
       <div className="grid grid-cols-[minmax(0,1.5fr)_minmax(0,1fr)] gap-2">
         {/* Condition */}
         <Card className="bg-background/60 rounded-2xl border border-white/10">
@@ -242,12 +241,7 @@ export default function TriggerOrderPanel(props: TriggerOrderPanelProps) {
         </Card>
       </div>
 
-      {/* No CTA here — parent renders the ONE bottom button */}
-      {/* Tiny meta row kept but compact so height matches Instant */}
-      <div className="flex items-center justify-between text-[11px] text-muted-foreground">
-        <div className="px-2 py-0.5 rounded-md border border-white/10">Wrapdrive v1.1</div>
-        <span>0.10% FEE</span>
-      </div>
+      {/* No extra meta/CTA rows here — the parent provides the single bottom CTA just like Instant */}
     </div>
   );
 }
