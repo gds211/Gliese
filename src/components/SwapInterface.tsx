@@ -21,7 +21,6 @@ import { useYakQuote } from "@/hooks/useYakQuote";
 import { performSwap } from "@/lib/swap";
 
 import TokenAvatar from "@/components/TokenAvatar";
-import TriggerTab from "@/components/TriggerTab";
 
 
 
@@ -519,25 +518,8 @@ const selectToken = (picked: string | TokenObj) => {
             </div>
           </TabsContent>
 
-          <TabsContent value="trigger" className="mt-0">
-            <TriggerTab
-               // wire these to your existing state/hooks
-               side="buy"
-               buyToken={selectedBuyToken}
-               sellToken={selectedSellToken}
-               onOpenTokenModal={(w) => openTokenModal(w)} // you already have this
-               buyAmount={buyAmount}
-               sellAmount={sellAmount}
-               onChangeAmount={(which, v) =>
-               which === "buy" ? setBuyAmount(v) : setSellAmount(v)
-               }
-                marketRate={quote?.price ?? null} // price of 1 buyToken in sellToken
-                feeBps={10} // 0.10%
-                onPlaceOrder={(payload) => {
-                // TODO: call your trigger-order flow (or show a toast)
-                console.log("Trigger order:", payload);
-               }}
-            />
+          <TabsContent value="trigger">
+            <div className="text-center text-muted-foreground py-8">Trigger orders coming soon</div>
           </TabsContent>
 
           <TabsContent value="recurring">
