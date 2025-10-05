@@ -21,7 +21,8 @@ import { useYakQuote } from "@/hooks/useYakQuote";
 import { performSwap } from "@/lib/swap";
 
 import TokenAvatar from "@/components/TokenAvatar";
-import TriggerOrderPanel from "@/components/TriggerOrderPanel";
+import TriggerOrderPanel, { TriggerOrderFormState } from "@/components/TriggerOrderPanel";
+
 
 
 
@@ -60,6 +61,10 @@ const SwapInterface = () => {
   const { openConnectModal } = useConnectModal();
   const { toast } = useToast();
   const queryClient = useQueryClient(); // <-- ADDED
+
+  const [activeTab, setActiveTab] = useState<"instant" | "trigger" | "recurring">("instant");
+const [triggerForm, setTriggerForm] = useState<TriggerOrderFormState | null>(null);
+
 
   // --- Token list (your current list) ---
   const cryptoPrices = {
