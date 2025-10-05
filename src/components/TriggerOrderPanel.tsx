@@ -82,6 +82,7 @@ export default function TriggerOrderPanel(props: TriggerOrderPanelProps) {
 
   const canSubmit = !!amount && (condition === "market" || !!targetPrice);
 
+  // notify parent so it can control the single bottom CTA
   useEffect(() => {
     onStateChange?.({
       canSubmit,
@@ -101,8 +102,9 @@ export default function TriggerOrderPanel(props: TriggerOrderPanelProps) {
   ]);
 
   return (
-    <div className="space-y-3">{/* same vertical rhythm as Instant */}
-      {/* Row 0: HALF / MAX + Optimised ↔ Exact */}
+    // roomier spacing; we removed the meta row so it still fits Instant’s height
+    <div className="space-y-3">
+      {/* Row 0: HALF / MAX + Optimised/Exact */}
       <div className="flex items-center justify-between">
         <div className="flex gap-2">
           <Button variant="secondary" size="sm" className="h-8 rounded-full px-3" onClick={half}>HALF</Button>
@@ -115,82 +117,78 @@ export default function TriggerOrderPanel(props: TriggerOrderPanelProps) {
         </div>
       </div>
 
-      {/* Row 1: SELL / RECEIVE (left: token; right: amount) */}
+      {/* Row 1: SELL / RECEIVE — same button size as Instant; more breathing room */}
       <div className="grid grid-cols-2 gap-3">
         {/* SELL */}
         <Card className="relative bg-background/60 rounded-2xl border border-white/10">
           <div className="absolute left-0 -top-3 text-xs text-muted-foreground select-none">sell</div>
-          <div className="flex items-center gap-3 p-3">
+          <div className="flex items-center justify-between p-3">
             <Button
               variant="ghost"
               onClick={() => openTokenModal("sell")}
-              className="w-36 h-10 bg-muted/60 rounded-full text-foreground border border-white/10 hover:border-white hover:bg-muted/80 hover:text-white flex items-center justify-between px-3"
+              className="relative w-36 h-10 bg-muted/60 rounded-full text-foreground border border-white/10 hover:border-white hover:bg-muted/80 hover:text-white flex items-center"
               aria-label="Select sell token"
             >
-              <span className="flex items-center gap-2 min-w-0">
+              <span className="absolute left-3 flex items-center gap-2 pointer-events-none">
                 <TokenAvatar
-                  symbol={selectedSellToken?.symbol ?? sellToken}
+                  symbol={sellToken}
                   address={selectedSellToken?.address as `0x${string}` | undefined}
                   size={16}
                   title={selectedSellToken?.name || sellToken}
                 />
-                <span className="truncate text-sm font-medium">
-                  {selectedSellToken?.symbol ?? sellToken}
-                </span>
               </span>
-              <ChevronDown className="w-4 h-4 text-muted-foreground shrink-0" />
+              <span className="mx-auto text-sm font-medium">{sellToken}</span>
+              <ChevronDown className="absolute right-3 w-4 h-4 text-muted-foreground" />
             </Button>
 
-            <Input
-              inputMode="decimal"
-              pattern="[0-9]*[.,]?[0-9]*"
-              placeholder="0.00"
-              value={amount}
-              onChange={(e) => setAmount(clampDec(e.target.value))}
-              className="flex-1 text-right h-10 bg-transparent border-0 focus-visible:ring-0 focus-visible:ring-offset-0 text-lg"
-            />
+            <div className="relative flex-1 ml-3">
+              <Input
+                inputMode="decimal"
+                pattern="[0-9]*[.,]?[0-9]*"
+                placeholder="0.00"
+                value={amount}
+                onChange={(e) => setAmount(clampDec(e.target.value))}
+                className="text-right h-10 bg-transparent border-0 focus-visible:ring-0 focus-visible:ring-offset-0 text-lg"
+              />
+            </div>
           </div>
         </Card>
 
         {/* RECEIVE */}
         <Card className="relative bg-background/60 rounded-2xl border border-white/10">
           <div className="absolute left-0 -top-3 text-xs text-muted-foreground select-none">receive</div>
-          <div className="flex items-center gap-3 p-3">
+          <div className="flex items-center justify-between p-3">
             <Button
               variant="ghost"
               onClick={() => openTokenModal("buy")}
-              className="w-36 h-10 bg-muted/60 rounded-full text-foreground border border-white/10 hover:border-white hover:bg-muted/80 hover:text-white flex items-center justify-between px-3"
+              className="relative w-36 h-10 bg-muted/60 rounded-full text-foreground border border-white/10 hover:border-white hover:bg-muted/80 hover:text-white flex items-center"
               aria-label="Select buy token"
             >
-              <span className="flex items-center gap-2 min-w-0">
+              <span className="absolute left-3 flex items-center gap-2 pointer-events-none">
                 <TokenAvatar
-                  symbol={selectedBuyToken?.symbol ?? buyToken}
+                  symbol={buyToken}
                   address={selectedBuyToken?.address as `0x${string}` | undefined}
                   size={16}
                   title={selectedBuyToken?.name || buyToken}
                 />
-                <span className="truncate text-sm font-medium">
-                  {selectedBuyToken?.symbol ?? buyToken}
-                </span>
               </span>
-              <ChevronDown className="w-4 h-4 text-muted-foreground shrink-0" />
+              <span className="mx-auto text-sm font-medium">{buyToken}</span>
+              <ChevronDown className="absolute right-3 w-4 h-4 text-muted-foreground" />
             </Button>
 
-            <Input
-              disabled
-              placeholder="—"
-              className="flex-1 text-right h-10 bg-transparent border-0 focus-visible:ring-0 focus-visible:ring-offset-0 text-lg"
-            />
+            <div className="relative flex-1 ml-3">
+              <Input disabled placeholder="0.00" className="text-right h-10 bg-transparent border-0 focus-visible:ring-0 focus-visible:ring-offset-0 text-lg" />
+            </div>
           </div>
         </Card>
       </div>
 
-      {/* Row 2: Condition + Expiry */}
+      {/* Row 2: Condition + Expiry (standard paddings so it doesn't feel cramped) */}
       <div className="grid grid-cols-2 gap-3">
         {/* Condition */}
         <Card className="bg-background/60 rounded-2xl border border-white/10">
           <div className="p-3 space-y-2">
-            <div className="text-xs text-muted-foreground">Sell {selectedSellToken?.symbol ?? sellToken} at</div>
+            <div className="text-xs text-muted-foreground">Sell {sellToken} at</div>
             <div className="grid grid-cols-[130px_1fr_100px] gap-2">
               <Select value={condition} onValueChange={(v) => setCondition(v as any)}>
                 <SelectTrigger className="h-9">
@@ -218,12 +216,12 @@ export default function TriggerOrderPanel(props: TriggerOrderPanelProps) {
                 aria-label="Select quote token"
               >
                 <TokenAvatar
-                  symbol={selectedBuyToken?.symbol ?? buyToken}
+                  symbol={buyToken}
                   address={selectedBuyToken?.address as `0x${string}` | undefined}
                   size={14}
                   title={selectedBuyToken?.name || buyToken}
                 />
-                <span className="ml-2 truncate">{selectedBuyToken?.symbol ?? buyToken}</span>
+                <span className="ml-2">{buyToken}</span>
                 <ChevronDown className="ml-auto w-4 h-4 opacity-60" />
               </Button>
             </div>
@@ -248,6 +246,7 @@ export default function TriggerOrderPanel(props: TriggerOrderPanelProps) {
         </Card>
       </div>
 
+      {/* No meta row here (we reclaimed this space to avoid a jammed feel and keep total height equal) */}
       {/* No CTA here — parent renders the single bottom CTA */}
     </div>
   );
