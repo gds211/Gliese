@@ -21,6 +21,8 @@ import { useYakQuote } from "@/hooks/useYakQuote";
 import { performSwap } from "@/lib/swap";
 
 import TokenAvatar from "@/components/TokenAvatar";
+import TriggerOrderPanel from "@/components/TriggerOrderPanel";
+
 
 
 
@@ -518,8 +520,18 @@ const selectToken = (picked: string | TokenObj) => {
             </div>
           </TabsContent>
 
-          <TabsContent value="trigger">
-            <div className="text-center text-muted-foreground py-8">Trigger orders coming soon</div>
+          <TabsContent value="trigger" className="mt-4">
+            <TriggerOrderPanel
+               isConnected={isConnected}
+               onConnect={openConnectModal}
+               sellToken={sellToken}
+               buyToken={buyToken}
+               selectedSellToken={selectedSellToken as any}
+               selectedBuyToken={selectedBuyToken as any}
+               openTokenModal={openTokenModal}
+               sellBalValue={sellBal?.value}
+               sellBalDecimals={sellBal?.decimals}
+            />
           </TabsContent>
 
           <TabsContent value="recurring">
