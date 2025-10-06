@@ -268,7 +268,7 @@ export function computeDynamicSlippage(i: DynSlipInputs): DynSlipResult {
     + staleBps
     + mevBps
     + Math.round(confBps)
-    + routeGuardBps;
+    + routeGuardBps
     + feeBps
     + roundCushBps;
 
