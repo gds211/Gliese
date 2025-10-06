@@ -28,6 +28,7 @@ export const PUBLIC_CONFIG = {
   QUOTE_POLL_MS: 2000,                     // poll quotes every 2s
   UPDATE_THRESHOLD_BPS: 10n,               // 0.1% = 10 bps
   SLIPPAGE_BPS: 500,                      // 5%
+  AGGREGATOR_FEE_BPS: 2,
 } as const;
 
 // Type helper (optional)
