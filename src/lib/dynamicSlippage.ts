@@ -98,11 +98,13 @@ function outPerIn1e18(outRaw: bigint, inRaw: bigint, outDec: number, inDec: numb
 }
 
 // Bounded conversion for analytics (ratios only). Returns 0 if non-finite.
+// Safer: scale down BEFORE Number() to avoid overflow on huge bigints.
 function toNumberFrom1e18(x: bigint): number {
-  const n = Number(x); // may overflow but stays finite for practical ranges
-  const v = n / 1e18;
-  return Number.isFinite(v) && !Number.isNaN(v) ? v : 0;
+  const q = x / 1_000_000_000n;   // 1e9
+  const n = Number(q) / 1e9;      // back to 1e18 scale
+  return Number.isFinite(n) && !Number.isNaN(n) ? n : 0;
 }
+
 
 function clampBps(x: number, lo = 0, hi = 5000): number {
   const v = Number.isFinite(x) && !Number.isNaN(x) ? x : 0;
