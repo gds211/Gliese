@@ -276,66 +276,35 @@ export function useYakQuote({ router, tokenIn, tokenOut, amountInHuman, enabled 
           }
         }
 
-         const [routerMinFeeBps, setRouterMinFeeBps] = useState<number>(0);
-  useEffect(() => {
-    (async () => {
-      try {
-        const v = await (client as any).readContract({
-          address: router,
-          abi: YAK_ROUTER_ABI,
-          functionName: "MIN_FEE",
-          args: [],
-      });
-        setRouterMinFeeBps(Number(v ?? 0));
-      } catch { setRouterMinFeeBps(0); }
-    })();
-  }, [client, router]);
-
         // --- Compute dynamic slippage & minOut ---
-const dyn = computeDynamicSlippage({
-  amountInRaw: amountIn,
-  outRaw,
-  inDecimals: inDec,
-  outDecimals: outDec,
-  probe5,
-  probe10,
-  gasPriceWei: gasRef.current, // wei
-  estGasUnits,
-  quoteAgeMs: prevQuoteTsRef.current ? now - prevQuoteTsRef.current : 0,
-  recentRates1e18: ratesBufRef.current.values(),
-  confidenceLevel: 0.95,
-
-  // Routing guard
-  routeChanged,
-  routeGuardBps: routeChanged ? 30 : 0,
-
-  // Treat UI slippage as a CAP; estimator can go below it
-  userMinSlippageBps: Math.max(
-    (PUBLIC_CONFIG.AGGREGATOR_FEE_BPS ?? 0) + 10,
-    routerMinFeeBps + 10
-  ),
-  userMaxSlippageBps: PUBLIC_CONFIG.SLIPPAGE_BPS,
-  minFloorBps: 25, // 0.25% absolute guardrail; adjust later if you like
-  mevBufferBps: 10,
-  staleQuoteMs: PUBLIC_CONFIG.QUOTE_POLL_MS
-    ? Math.max(8000, PUBLIC_CONFIG.QUOTE_POLL_MS * 2)
-    : 15000,
-  staleQuoteBps: 10,
-  hardCapBps: 5000,
-
-  // Native context for gas/size heuristic
-  isNativeIn: isNative(tokenIn),
-  isNativeOut: isNative(tokenOut),
-  nativeDecimals: 18,
-
-  // Execution cushions
-  aggregatorFeeBps: Math.max(
-    PUBLIC_CONFIG.AGGREGATOR_FEE_BPS ?? 0,
-    routerMinFeeBps
-  ),
-  roundingCushionBps: 5,
-});
-
+        const dyn = computeDynamicSlippage({
+          amountInRaw: amountIn,
+          outRaw,
+          inDecimals: inDec,
+          outDecimals: outDec,
+          probe5,
+          probe10,
+          gasPriceWei: gasRef.current, // **wei** (NOT gwei)
+          estGasUnits,
+          quoteAgeMs: prevQuoteTsRef.current ? now - prevQuoteTsRef.current : 0,
+          recentRates1e18: ratesBufRef.current.values(),
+          confidenceLevel: 0.95,
+          routeChanged,
+          routeChangeBps: 15,
+          // Treat UI slippage as a CAP; estimator can go below it
+          userMaxSlippageBps: PUBLIC_CONFIG.SLIPPAGE_BPS,
+          userMinSlippageBps: 0,
+          minFloorBps: 5,
+          mevBufferBps: 10,
+          staleQuoteMs: PUBLIC_CONFIG.QUOTE_POLL_MS
+            ? Math.max(8000, PUBLIC_CONFIG.QUOTE_POLL_MS * 2)
+            : 15000,
+          staleQuoteBps: 10,
+          hardCapBps: 5000,
+          isNativeIn: isNative(tokenIn),
+          isNativeOut: isNative(tokenOut),
+          nativeDecimals: 18,
+        });
 
         const minOutRaw = dyn.minOut;
 
