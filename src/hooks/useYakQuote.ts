@@ -293,8 +293,8 @@ export function useYakQuote({ router, tokenIn, tokenOut, amountInHuman, enabled 
           routeChangeBps: 15,
           // Treat UI slippage as a CAP; estimator can go below it
           userMaxSlippageBps: PUBLIC_CONFIG.SLIPPAGE_BPS,
-          userMinSlippageBps: 0,
-          minFloorBps: 5,
+          userMinSlippageBps: 25,
+          minFloorBps: 25,
           mevBufferBps: 10,
           staleQuoteMs: PUBLIC_CONFIG.QUOTE_POLL_MS
             ? Math.max(8000, PUBLIC_CONFIG.QUOTE_POLL_MS * 2)
