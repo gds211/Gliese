@@ -36,7 +36,7 @@ export interface DynSlipInputs {
   // Policy/caps:
   userMaxSlippageBps?: number; // UI cap (e.g., 300 = 3.00%). If omitted, defaults to hardCap.
   userMinSlippageBps?: number; // optional user floor (default 0)
-  minFloorBps?: number;        // global soft floor (default 5 = 0.05%)
+  minFloorBps?: number;        // global soft floor (default 25 = 0.25%)
   mevBufferBps?: number;       // +bps for MEV window (default 10)
   staleQuoteMs?: number;       // threshold for stale quotes (default 15_000)
   staleQuoteBps?: number;      // +bps if stale (default 10)
@@ -63,6 +63,7 @@ export interface DynSlipResult {
     floorBps: number;
     capBps: number;
     userCapBps: number;
+    userMinBps: number;
     priceImpactBps: number;
     impactSlopeBps: number;
     volBps: number;
@@ -71,6 +72,8 @@ export interface DynSlipResult {
     mevBps: number;
     staleBps: number;
     routeGuardBps: number;
+    feeBps: number;
+    roundingBps: number;
     blendedPreClamp: number;
     reasons: string[];
   };
@@ -108,7 +111,6 @@ function toNumberFrom1e18(x: bigint): number {
   const n = Number(q) / 1e9;      // back to 1e18 scale
   return Number.isFinite(n) && !Number.isNaN(n) ? n : 0;
 }
-
 
 function clampBps(x: number, lo = 0, hi = 5000): number {
   const v = Number.isFinite(x) && !Number.isNaN(x) ? x : 0;
@@ -233,16 +235,16 @@ function gasTradeAdjustmentBps(i: DynSlipInputs): number {
 export function computeDynamicSlippage(i: DynSlipInputs): DynSlipResult {
   // Policy defaults & clamps
   const hardCap = clampBps(i.hardCapBps ?? 5000, 0, 5000);
-  const floor   = clampBps(i.minFloorBps ?? 5, 0, hardCap);
+  const floor   = clampBps(i.minFloorBps ?? 25, 0, hardCap); // default 0.25%
   const userCap = clampBps(i.userMaxSlippageBps ?? hardCap, floor, hardCap);
   const userMin = clampBps(i.userMinSlippageBps ?? 0, 0, userCap);
 
   // Signals
   const { impactBps, slopeBps } = estimateImpactAndSlopeBps(i);
-  const volBps  = estimateVolatilityBps(i.recentRates1e18);
-  const gasBps  = gasTradeAdjustmentBps(i);
-  const feeBps      = clampBps(i.aggregatorFeeBps ?? 0);
-  const roundCushBps= clampBps(i.roundingCushionBps ?? 5);
+  const volBps   = estimateVolatilityBps(i.recentRates1e18);
+  const gasBps   = gasTradeAdjustmentBps(i);
+  const feeBps   = clampBps(i.aggregatorFeeBps ?? 0);
+  const roundBps = clampBps(i.roundingCushionBps ?? 5);
 
   // Stale & MEV buffers
   const staleLimit = i.staleQuoteMs ?? 15_000;
@@ -258,7 +260,7 @@ export function computeDynamicSlippage(i: DynSlipInputs): DynSlipResult {
   // Route-change guard
   const routeGuardBps = i.routeChanged ? (i.routeChangeBps ?? 15) : 0;
 
-  // Blend (purely data-driven)
+  // Blend (purely data-driven) — all additive contributors
   const blended =
     floor
     + Math.round(impactBps * 0.9)
@@ -270,7 +272,7 @@ export function computeDynamicSlippage(i: DynSlipInputs): DynSlipResult {
     + Math.round(confBps)
     + routeGuardBps
     + feeBps
-    + roundCushBps;
+    + roundBps;
 
   // Clamp to user/hard bounds, enforce userMin/floor
   const preClamp = blended;
@@ -284,6 +286,7 @@ export function computeDynamicSlippage(i: DynSlipInputs): DynSlipResult {
       floorBps: floor,
       capBps: hardCap,
       userCapBps: userCap,
+      userMinBps: userMin,
       priceImpactBps: impactBps,
       impactSlopeBps: slopeBps,
       volBps,
@@ -292,8 +295,12 @@ export function computeDynamicSlippage(i: DynSlipInputs): DynSlipResult {
       mevBps,
       staleBps,
       routeGuardBps,
+      feeBps,
+      roundingBps: roundBps,
       blendedPreClamp: preClamp,
-      reasons: buildReasons({ impactBps, slopeBps, volBps, confBps, gasBps, staleBps, mevBps, routeGuardBps }),
+      reasons: buildReasons({
+        impactBps, slopeBps, volBps, confBps, gasBps, staleBps, mevBps, routeGuardBps, feeBps, roundBps
+      }),
     },
   };
 }
@@ -301,6 +308,7 @@ export function computeDynamicSlippage(i: DynSlipInputs): DynSlipResult {
 function buildReasons(s: {
   impactBps: number; slopeBps: number; volBps: number; confBps: number;
   gasBps: number; staleBps: number; mevBps: number; routeGuardBps: number;
+  feeBps: number; roundBps: number;
 }): string[] {
   const r: string[] = [];
   if (s.impactBps     > 0) r.push(`price-impact ${s.impactBps}bps`);
@@ -311,6 +319,8 @@ function buildReasons(s: {
   if (s.staleBps      > 0) r.push(`stale-quote ${s.staleBps}bps`);
   if (s.mevBps        > 0) r.push(`mev-buffer ${s.mevBps}bps`);
   if (s.routeGuardBps > 0) r.push(`route-change ${s.routeGuardBps}bps`);
+  if (s.feeBps        > 0) r.push(`fee ${s.feeBps}bps`);
+  if (s.roundBps      > 0) r.push(`rounding ${s.roundBps}bps`);
   return r;
 }
 
@@ -335,4 +345,3 @@ export class RollingRates1e18 {
 export function makeRouteKey(parts: Array<string | undefined | null>): string {
   return parts.filter(Boolean).map(s => String(s).toLowerCase()).join(">");
 }
-
