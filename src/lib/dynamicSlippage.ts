@@ -42,6 +42,10 @@ export interface DynSlipInputs {
   staleQuoteBps?: number;      // +bps if stale (default 10)
   hardCapBps?: number;         // absolute clamp (default 5000 = 50%)
 
+  // Execution cushions:
+  aggregatorFeeBps?: number;   // router/aggregator fee applied to amountIn (e.g., 2)
+  roundingCushionBps?: number; // small buffer for multi-hop integer rounding (e.g., 3–7)
+
   // Native context for gas/size heuristic:
   isNativeIn?: boolean;        // true if tokenIn is native
   isNativeOut?: boolean;       // true if tokenOut is native
@@ -113,7 +117,10 @@ function clampBps(x: number, lo = 0, hi = 5000): number {
 
 function minOutFromBps(outRaw: bigint, slippageBps: number): bigint {
   const s = BigInt(clampBps(slippageBps));
-  return (outRaw * BigInt(BPS) - outRaw * s) / BigInt(BPS);
+  let m = (outRaw * BigInt(BPS) - outRaw * s) / BigInt(BPS);
+  // Safety: ensure strictly below outRaw so tiny on-chain drift can't revert
+  if (m >= outRaw && outRaw > 0n) m = outRaw - 1n;
+  return m >= 0n ? m : 0n;
 }
 
 // ---------------------- Signal estimators -------------------------
@@ -234,6 +241,8 @@ export function computeDynamicSlippage(i: DynSlipInputs): DynSlipResult {
   const { impactBps, slopeBps } = estimateImpactAndSlopeBps(i);
   const volBps  = estimateVolatilityBps(i.recentRates1e18);
   const gasBps  = gasTradeAdjustmentBps(i);
+  const feeBps      = clampBps(i.aggregatorFeeBps ?? 0);
+  const roundCushBps= clampBps(i.roundingCushionBps ?? 5);
 
   // Stale & MEV buffers
   const staleLimit = i.staleQuoteMs ?? 15_000;
@@ -260,6 +269,8 @@ export function computeDynamicSlippage(i: DynSlipInputs): DynSlipResult {
     + mevBps
     + Math.round(confBps)
     + routeGuardBps;
+    + feeBps
+    + roundCushBps;
 
   // Clamp to user/hard bounds, enforce userMin/floor
   const preClamp = blended;
