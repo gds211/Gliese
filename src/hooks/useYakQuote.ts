@@ -8,8 +8,6 @@ import { PUBLIC_CONFIG } from "@/config/public";
 import { getDecimals } from "@/lib/decimals";
 import { changedByAtLeastBps } from "@/lib/math";
 import { useNetworkFees } from "@/hooks/useNetworkFees";
-import { computeDynamicSlippage } from "@/lib/dynamicSlippage";
-
 
 
 // local helpers (keep types shallow)
@@ -153,33 +151,6 @@ async function getDecimalsCached(addr: Address, native: boolean): Promise<number
 
         const outRaw = amounts.length ? amounts[amounts.length - 1] : 0n;
         const minOutRaw = (outRaw * (10_000n - PUBLIC_CONFIG.SLIPPAGE_BPS)) / 10_000n;
-        const outRaw = amounts.length ? amounts[amounts.length - 1] : 0n;
-
-        const dyn = computeDynamicSlippage({
-  amountInRaw: amountIn,
-  outRaw,
-  inDecimals: inDec,
-  outDecimals: outDec,
-  gasPriceWei: gasRef.current,
-  estGasUnits: Number(gasEstimate),
-  quoteAgeMs: prevQuoteTsRef.current ? now - prevQuoteTsRef.current : 0,
-  recentRates1e18: ratesBufRef.current?.values?.() ?? [],
-  confidenceLevel: 0.95,
-  routeChanged,
-  routeChangeBps: 15,
-  userMaxSlippageBps: Number(PUBLIC_CONFIG.SLIPPAGE_BPS), // make SLIPPAGE_BPS a number
-  userMinSlippageBps: 0,
-  minFloorBps: 5,
-  mevBufferBps: 10,
-  staleQuoteMs: PUBLIC_CONFIG.QUOTE_POLL_MS ? Math.max(8000, PUBLIC_CONFIG.QUOTE_POLL_MS * 2) : 15000,
-  staleQuoteBps: 10,
-  hardCapBps: 5000,
-  isNativeIn: isNative(tokenIn),
-  isNativeOut: isNative(tokenOut),
-  nativeDecimals: PUBLIC_CONFIG.NATIVE_DECIMALS,
-});
-
-const minOutRaw = dyn.minOut < outRaw ? dyn.minOut : (outRaw > 1n ? outRaw - 1n : 0n);
 
         if (!changedByAtLeastBps(lastMinOutRef.current, minOutRaw, PUBLIC_CONFIG.UPDATE_THRESHOLD_BPS)) {
           // skip UI update
