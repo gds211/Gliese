@@ -370,7 +370,7 @@ const selectToken = (picked: string | TokenObj) => {
                   <Button
                     variant="ghost"
                     size="sm"
-                    className="h-5 px-2 text-xs text-muted-foreground bg-background/40 border border-border/40 hover:border-orange-500 hover:shadow-[0_0_8px_rgba(249,115,22,0.5)] hover:text-orange-500 transition-all duration-200 rounded-sm"
+                    className="h-5 px-2 text-xs text-muted-foreground bg-background/40 border border-border/40 hover:border-orange-500 hover:text-orange-500 transition-all duration-200 rounded-[2px]"
                     onClick={() => {
                       if (!sellBal) return;
                       const halfRaw = sellBal.value / 2n;
@@ -383,7 +383,7 @@ const selectToken = (picked: string | TokenObj) => {
                   <Button
                     variant="ghost"
                     size="sm"
-                    className="h-5 px-2 text-xs text-muted-foreground bg-background/40 border border-border/40 hover:border-orange-500 hover:shadow-[0_0_8px_rgba(249,115,22,0.5)] hover:text-orange-500 transition-all duration-200 rounded-sm"
+                    className="h-5 px-2 text-xs text-muted-foreground bg-background/40 border border-border/40 hover:border-orange-500 hover:text-orange-500 transition-all duration-200 rounded-[2px]"
                     onClick={() => {
                       if (!sellBal) return;
                       // keep small MON buffer for gas when selling native
