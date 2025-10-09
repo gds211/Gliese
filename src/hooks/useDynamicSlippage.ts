@@ -28,7 +28,7 @@ export function useDynamicSlippageBps({
   const CFG = (PUBLIC_CONFIG as any).AUTO_SLIPPAGE ?? {};
   const BASE_BPS: number = Number(CFG.BASE_BPS ?? 50n);            // 0.50%
   const MIN_BPS: number = Number(CFG.MIN_BPS ?? 10n);              // 0.10%
-  const MAX_BPS: number = Number(CFG.MAX_BPS ?? 2000n);            // 20%
+  const MAX_BPS: number = Number(CFG.MAX_BPS ?? 500n);            // 5%
   const K_SIGMA: number = CFG.K_SIGMA ?? 3;
   const HYSTERESIS_BPS: number = CFG.HYSTERESIS_BPS ?? 10;
   const EXTRA_PER_HOP_BPS: number = Number(CFG.EXTRA_PER_HOP_BPS ?? 5n);
