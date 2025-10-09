@@ -143,6 +143,7 @@ const SwapInterface = () => {
     enabled: Boolean(sellAmount && selectedSellToken && selectedBuyToken),
   });
 
+  
   // NEW: when user hasn't typed a positive amount, fetch a 1-unit quote for an accurate rate
   const hasPositiveSell = useMemo(() => {
     const n = Number(sellAmount);
@@ -162,8 +163,38 @@ const SwapInterface = () => {
     ),
   });
 
-  // Derived buy amount shown to the user (minOut, already 5% slippage)
-  const buyAmountDerived = quote?.minOutFormatted ?? "0.00";
+  // --- Dynamic slippage (EWMA + adaptive top-up; SIZE-AWARE) ---
+const dynamicSlippage = useDynamicSlippageBps({
+  enabled: autoSlippage,
+  unitQuote,                                   // for real-time volatility
+  userOutFormatted: quote?.outFormatted ?? null, // size-aware top-up
+  pathLength: quote?.path?.length ?? 1,        // per-hop buffer
+});
+
+// Clamp chosen slippage to global cap (covers both auto/manual)
+const capBps =
+  ((PUBLIC_CONFIG as any).AUTO_SLIPPAGE?.MAX_BPS ?? PUBLIC_CONFIG.SLIPPAGE_BPS) as bigint;
+const slipRaw = autoSlippage ? (dynamicSlippage.bps ?? 0n) : PUBLIC_CONFIG.SLIPPAGE_BPS;
+const SLIP = slipRaw > capBps ? capBps : slipRaw;
+
+// Precompute a minOut **raw** using the live (no-slippage) outRaw
+const minOutRawDynamic =
+  quote?.outRaw != null
+    ? (quote.outRaw * (10_000n - SLIP)) / 10_000n
+    : 0n;
+
+
+  // Derived buy amount (minOut) using dynamic slippage (size-aware)
+const buyAmountDerived = (() => {
+  // For display we can scale the formatted out by (1 - SLIP/10000)
+  const baseOut = Number(quote?.outFormatted ?? NaN);
+  if (!Number.isFinite(baseOut)) return "0.00";
+  const s = Number(SLIP) / 10_000;
+  const v = baseOut * (1 - s);
+  if (!Number.isFinite(v) || v <= 0) return "0.00";
+  return v.toString();
+})();
+
   
   // Display version limited to 6 decimals for UI
   const buyAmountDisplay = useMemo(() => {
@@ -323,7 +354,7 @@ const selectToken = (picked: string | TokenObj) => {
         tokenIn: selectedSellToken.address ?? selectedSellToken.symbol, // "MON" is fine here for native detection
         tokenOut: selectedBuyToken.address ?? selectedBuyToken.symbol,
         amountIn,
-        amountOutMin: quote.minOutRaw, // 5% slippage already applied by the hook
+        amountOutMin: minOutRawDynamic, // dynamic, size-aware (hard-capped) slippage
         path: quote.path,
         adapters: quote.adapters,
       });
