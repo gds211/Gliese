@@ -12,6 +12,7 @@ import { Card } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogOverlay } from "@/components/ui/dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useToast } from "@/components/ui/use-toast";
+import { useDynamicSlippageBps } from "@/hooks/useDynamicSlippage";
 
 import { ArrowUpDown, Wallet, Search, ChevronDown } from "lucide-react";
 import glieseLogo from "@/assets/gliese-logo.png";
@@ -87,6 +88,9 @@ const SwapInterface = () => {
   const [showTokenModal, setShowTokenModal] = useState(false);
   const [tokenSelectionType, setTokenSelectionType] = useState<"sell" | "buy">("sell");
   const [searchTerm, setSearchTerm] = useState("");
+  const [autoSlippage, setAutoSlippage] = useState(
+    Boolean((PUBLIC_CONFIG as any).AUTO_SLIPPAGE?.ENABLED_BY_DEFAULT ?? true)
+  );
 
   const selectedSellToken = useMemo(() => tokens.find((t) => t.symbol === sellToken), [tokens, sellToken]);
   const selectedBuyToken = useMemo(() => tokens.find((t) => t.symbol === buyToken), [tokens, buyToken]);
