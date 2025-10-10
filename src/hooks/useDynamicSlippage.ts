@@ -24,7 +24,9 @@ export function useDynamicSlippageBps({
   userOutFormatted,
   pathLength = 1,
 }: UseDynamicSlippageArgs) {
-  // --- Config (safe defaults) ---
+// --- Config (safe defaults) ---
+  // Use unit price when available; otherwise fall back to sized quote as the price feed
+  const priceSource = unitQuote?.outFormatted ?? userOutFormatted ?? null;
   const CFG = (PUBLIC_CONFIG as any).AUTO_SLIPPAGE ?? {};
   const BASE_BPS: number = Number(CFG.BASE_BPS ?? 50n);            // 0.50%
   const MIN_BPS: number = Number(CFG.MIN_BPS ?? 10n);              // 0.10%
@@ -56,8 +58,8 @@ export function useDynamicSlippageBps({
 
   // Ingest new 1-unit price each tick
   useEffect(() => {
-    if (!enabled || !unitQuote || unitQuote.outFormatted == null) return;
-    const p = Number(unitQuote.outFormatted);
+    if (!enabled || priceSource == null) return;
+    const p = Number(priceSource);
     if (!Number.isFinite(p) || p <= 0) return;
 
     const last = lastPriceRef.current;
@@ -73,7 +75,7 @@ export function useDynamicSlippageBps({
       warmupCountRef.current = 1;
     }
     lastPriceRef.current = p;
-  }, [enabled, unitQuote?.outFormatted, EWMA_LAMBDA]);
+  }, [enabled, priceSource, EWMA_LAMBDA]);
 
   // Compute bps from EWMA + buffers + adaptive size top-up
   useEffect(() => {
