@@ -508,7 +508,7 @@ const selectToken = (picked: string | TokenObj) => {
                   Buying
                 </span>
                 <div className="absolute right-0 bottom-full mb-3 flex items-center gap-1.5 text-sm text-muted-foreground select-none">
-                     <img src={SlippageIcon} alt="Slippage" className="w-4 h-4" />
+                     <img src={SlippageIcon} alt="Slippage" className="w-3.5 h-3.5 shrink-0" />
                      <span className="leading-none tabular-nums">{slippageDisplay}</span>
                 </div>
                 <div className="flex items-center justify-between p-3">
