@@ -22,6 +22,7 @@ import { useYakQuote } from "@/hooks/useYakQuote";
 import { performSwap } from "@/lib/swap";
 
 import TokenAvatar from "@/components/TokenAvatar";
+import SlippageIcon from "@/assets/slippage.png";
 
 
 
@@ -176,6 +177,12 @@ const capBps =
   ((PUBLIC_CONFIG as any).AUTO_SLIPPAGE?.MAX_BPS ?? PUBLIC_CONFIG.SLIPPAGE_BPS) as bigint;
 const slipRaw = autoSlippage ? (dynamicSlippage.bps ?? 0n) : PUBLIC_CONFIG.SLIPPAGE_BPS;
 const SLIP = slipRaw > capBps ? capBps : slipRaw;
+// --- UI: formatted slippage for the indicator (one decimal, rounds) ---
+const slippageDisplay = useMemo(() => {
+  const bps = Number(SLIP ?? 0n);           // bigint -> number (safe; bps is small)
+  const pctOneDec = Math.round(bps / 10) / 10;
+  return `${pctOneDec.toFixed(1)}%`;
+}, [SLIP]);
 
 // Precompute a minOut **raw** using the live (no-slippage) outRaw
 const minOutRawDynamic =
@@ -499,7 +506,11 @@ const selectToken = (picked: string | TokenObj) => {
               <div className="relative bg-background/60 rounded-2xl border border-white/10 focus-within:border-primary/60 transition-colors duration-200">
                 <span className="absolute left-0 bottom-full mb-3 text-sm text-muted-foreground pointer-events-none select-none">
                   Buying
-                </span>               
+                </span>
+                <div className="absolute right-0 bottom-full mb-3 flex items-center gap-1.5 text-sm text-muted-foreground select-none">
+                     <img src={SlippageIcon} alt="Slippage" className="w-4 h-4" />
+                     <span className="leading-none tabular-nums">{slippageDisplay}</span>
+                </div>
                 <div className="flex items-center justify-between p-3">
                   <Button
                     variant="ghost"
