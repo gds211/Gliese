@@ -31,22 +31,36 @@ export const PUBLIC_CONFIG = {
 
   // --- Dynamic (auto) slippage config: adaptive + EWMA
    AUTO_SLIPPAGE: {
-     ENABLED_BY_DEFAULT: true,
-     MIN_BPS: 10n,
-     BASE_BPS: 50n,
-     MAX_BPS: 500n,
-     VOL_LOOKBACK: 12,        // (kept for backward-compat; unused by EWMA)
-     K_SIGMA: 3,
-     HYSTERESIS_BPS: 10,
-     EXTRA_PER_HOP_BPS: 5n,
-     EWMA_LAMBDA: 0.85,
-     // ---- Adaptive size-aware top-up (factor scales with measured price impact) ----
-     // Factor ∈ [IMPACT_TOPUP_MIN, IMPACT_TOPUP_MAX], rising linearly between L/H breakpoints.
-     IMPACT_TOPUP_MIN: 0.30,   // factor at low impact (e.g., 0–0.25%)
-     IMPACT_TOPUP_MAX: 0.60,   // factor at high impact (e.g., ≥2.5%)
-     IMPACT_TOPUP_L_BPS: 20,   // lower breakpoint (bps)  = 0.25%
-     IMPACT_TOPUP_H_BPS: 400,  // upper breakpoint (bps)  = 2.50%
-   },
+    ENABLED_BY_DEFAULT: true,   // UI default; the hook itself reads the fields below
+
+    // --- Base/limits (bps) ---
+    BASE_BPS: 30,               // 0.30% baseline cushion
+    MIN_BPS: 5,                 // 0.05% absolute floor
+    MAX_BPS: 500,               // 5.00% hard cap (seatbelt)
+
+    // --- Volatility model (runs on per-unit returns) ---
+    EWMA_ALPHA: 0.20,           // weight on newest return; if you want to mirror old EWMA_LAMBDA=0.85, set 0.15
+    QRET_WINDOW: 48,            // number of recent returns to keep for robust tail
+    QRET_QUANTILE: 0.95,        // tail quantile of |returns| to guard against bursts
+    VOL_SCALE: 1.0,             // global knob to scale volatility contribution
+
+    // --- Size impact (per-unit degradation scaling) ---
+    SIZE_FACTOR: 1.0,           // 1.0 is neutral; >1 tightens more for size
+
+    // --- Path complexity / MEV ---
+    PER_HOP_BPS: 4,             // small additive per extra hop
+    MEV_PROTECTED: true,       // set true if swaps use private relay / intents → lower MEV cushion
+
+    // --- Hysteresis & cool-off (stability) ---
+    UP_HYSTERESIS_BPS: 3,       // ignore tiny upticks smaller than this
+    DOWN_HYSTERESIS_BPS: 6,     // ignore tiny downticks smaller than this
+    COOL_OFF_BPS_PER_SEC: 1,    // when risk cools, drift down by this many bps/sec toward target
+
+    // --- Optional: local elasticity probe (extra quotes; leave false to avoid extra RPCs) ---
+    ELASTICITY_PROBE: true,    // true → use tiny +ε size bump to estimate curvature on CLMM paths
+    PROBE_EPS: 0.02,            // +2% input bump
+    PROBE_MIN_INTERVAL_MS: 2500 // min spacing between probes
+  },
 
 } as const;
 
