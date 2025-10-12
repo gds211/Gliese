@@ -1,6 +1,6 @@
 // src/components/SwapInterface.tsx
 import { useState, useMemo, useEffect } from "react";
-import { Address, parseUnits } from "viem";
+import { Address, parseUnits, formatUnits } from "viem";
 import { useAccount, useBalance } from "wagmi";
 import { useConnectModal } from "@rainbow-me/rainbowkit";
 import { useQueryClient } from "@tanstack/react-query"; // <-- ADDED
@@ -12,6 +12,10 @@ import { Card } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogOverlay } from "@/components/ui/dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useToast } from "@/components/ui/use-toast";
+import { usePublicClient } from "wagmi";
+import { useNetworkFees } from "@/hooks/useNetworkFees";
+import { getDecimals } from "@/lib/decimals";
+import { YAK_ROUTER_ABI } from "@/abi/yakRouter";
 import { useDynamicSlippageBps } from "@/hooks/useDynamicSlippage";
 
 import { ArrowUpDown, Wallet, Search, ChevronDown } from "lucide-react";
@@ -60,6 +64,8 @@ const SwapInterface = () => {
   const { openConnectModal } = useConnectModal();
   const { toast } = useToast();
   const queryClient = useQueryClient(); // <-- ADDED
+  const publicClient = usePublicClient();
+  const { effectiveGasPriceWei } = useNetworkFees(PUBLIC_CONFIG.FEE_REFRESH_MS);
 
   // --- Token list (your current list) ---
   const cryptoPrices = {
@@ -79,6 +85,8 @@ const SwapInterface = () => {
     { symbol: "DAK", name: "Molandak", address: "0x0F0BDEbF0F83cD1EE3974779Bcb7315f9808c714" as `0x${string}` },
     { symbol: "aprMON", name: "apriori MON", address: "0xb2f82D0f38dc453D596Ad40A37799446Cc89274A" as `0x${string}` },
   ];
+
+  
 
   // --- UI State ---
   const [sellAmount, setSellAmount] = useState("");
@@ -136,6 +144,41 @@ const SwapInterface = () => {
   const tokenInArg = selectedSellToken?.address ?? sellToken; // pass address if exists; otherwise symbol "MON"
   const tokenOutArg = selectedBuyToken?.address ?? buyToken;
 
+  // --- Helper: quote per-unit OUT for an arbitrary human input amount
+  const ZERO = "0x0000000000000000000000000000000000000000";
+  const isNativeSymbol = (v?: string) =>
+    !v || v.toUpperCase() === PUBLIC_CONFIG.NATIVE_SYMBOL || v === ZERO;
+  const toQuoteAddr = (v?: string) =>
+    (isNativeSymbol(v) ? (PUBLIC_CONFIG.WRAPPED_NATIVE as Address) : (v as Address));
+
+  async function getYakQuotePerUnit(amountHuman: number | string): Promise<{ perUnitOut: number } | null> {
+    try {
+      const inAddr  = toQuoteAddr(tokenInArg);
+      const outAddr = toQuoteAddr(tokenOutArg);
+      const inDec   = await getDecimals(publicClient as any, isNativeSymbol(tokenInArg) ? ZERO : inAddr);
+      const outDec  = await getDecimals(publicClient as any, isNativeSymbol(tokenOutArg) ? ZERO : outAddr);
+      const amtIn   = parseUnits(String(amountHuman), inDec);
+      if (amtIn === 0n) return null;
+      const gasWei  = effectiveGasPriceWei ?? PUBLIC_CONFIG.GAS_PRICE_WEI_FALLBACK;
+
+      const formatted: any = await (publicClient as any).readContract({
+        address: router,
+        abi: YAK_ROUTER_ABI,
+        functionName: "findBestPathWithGas",
+        args: [amtIn, inAddr, outAddr, BigInt(PUBLIC_CONFIG.MAX_STEPS), gasWei],
+      });
+      const amounts: bigint[] = formatted?.amounts ?? formatted?.[0] ?? [];
+      const outRaw = amounts.length ? amounts[amounts.length - 1] : 0n;
+      if (outRaw === 0n) return null;
+      const outHuman = Number(formatUnits(outRaw, outDec));
+      const baseIn   = Number(amountHuman);
+      if (!Number.isFinite(outHuman) || !Number.isFinite(baseIn) || baseIn <= 0) return null;
+      return { perUnitOut: outHuman / baseIn };
+    } catch {
+      return null;
+    }
+  }
+
   const quote = useYakQuote({
     router,
     tokenIn: tokenInArg,
@@ -145,42 +188,43 @@ const SwapInterface = () => {
   });
 
   
-  // NEW: when user hasn't typed a positive amount, fetch a 1-unit quote for an accurate rate
-  const hasPositiveSell = useMemo(() => {
-    const n = Number(sellAmount);
-    return Number.isFinite(n) && n > 0;
-  }, [sellAmount]);
-
   const unitQuote = useYakQuote({
     router,
     tokenIn: tokenInArg,
     tokenOut: tokenOutArg,
     amountInHuman: "1", // 1 whole unit of the SELL token
     enabled: Boolean(
-      !hasPositiveSell &&
       selectedSellToken &&
       selectedBuyToken &&
       selectedSellToken.symbol !== selectedBuyToken.symbol
     ),
   });
 
-  // --- Dynamic slippage (EWMA + adaptive top-up; SIZE-AWARE) ---
+const notionalUsd = useMemo(() => {
+  const amt = Number(sellAmount);
+  const p = (cryptoPrices as any)[sellToken];
+  if (!Number.isFinite(amt) || !Number.isFinite(p)) return null;
+  return amt * p;
+}, [sellAmount, sellToken]);
+
 const dynamicSlippage = useDynamicSlippageBps({
   enabled: autoSlippage,
-  unitQuote,                                   // for real-time volatility
-  userOutFormatted: quote?.outFormatted ?? null, // size-aware top-up
-  pathLength: quote?.path?.length ?? 1,        // per-hop buffer  
-  // OPTIONAL: only if you enable the probe and can fetch per-unit quotes for arbitrary amounts
+  unitQuote,                                      // volatility source
+  userOutFormatted: quote?.outFormatted ?? null,  // size-aware top-up
+  userInHuman: sellAmount || null,                // <<< critical for size awareness
+  pathLength: quote?.path?.length ?? 1,
+  notionalUsd,                                    // MEV cushion calibration
   probePerUnit: async (amountHuman) => {
-      const q = await getYakQuotePerUnit(amountHuman); // implement with your quoting util
-      return q?.perUnitOut ?? null;
-   },
-  
+    const q = await getYakQuotePerUnit(amountHuman);
+    return q?.perUnitOut ?? null;
+  },
 });
 
+
 // Clamp chosen slippage to global cap (covers both auto/manual)
-const capBps =
-  ((PUBLIC_CONFIG as any).AUTO_SLIPPAGE?.MAX_BPS ?? PUBLIC_CONFIG.SLIPPAGE_BPS) as bigint;
+const capBps = BigInt(
+  (PUBLIC_CONFIG as any).AUTO_SLIPPAGE?.MAX_BPS ?? Number(PUBLIC_CONFIG.SLIPPAGE_BPS)
+);
 const slipRaw = autoSlippage ? (dynamicSlippage.bps ?? 0n) : PUBLIC_CONFIG.SLIPPAGE_BPS;
 const SLIP = slipRaw > capBps ? capBps : slipRaw;
 // --- UI: formatted slippage for the indicator (one decimal, rounds) ---
@@ -192,9 +236,7 @@ const slippageDisplay = useMemo(() => {
 
 // Precompute a minOut **raw** using the live (no-slippage) outRaw
 const minOutRawDynamic =
-  quote?.outRaw != null
-    ? (quote.outRaw * (10_000n - SLIP)) / 10_000n
-    : 0n;
+  quote?.outRaw != null ? (quote.outRaw * (10_000n - SLIP)) / 10_000n : 0n;
 
 
   // Derived buy amount (minOut) using dynamic slippage (size-aware)
