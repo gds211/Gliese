@@ -1,152 +1,274 @@
 // src/hooks/useDynamicSlippage.ts
 import { useEffect, useMemo, useRef, useState } from "react";
 import { PUBLIC_CONFIG } from "@/config/public";
-import type { QuoteState } from "@/hooks/useYakQuote";
 
-/**
- * Dynamic slippage:
- *  - EWMA volatility from 1-unit quote
- *  - Immediate up, hysteretic down
- *  - Size-aware top-up with ADAPTIVE factor (based on measured price impact)
- *  - Per-hop + latency buffers
- * Zero extra RPCs.
- */
-export type UseDynamicSlippageArgs = {
-  enabled: boolean;
-  unitQuote: QuoteState | null | undefined;           // use outFormatted as clean price proxy
-  userOutFormatted?: string | number | null;          // sized quote out; for size top-up
-  pathLength?: number;                                 // hop buffer
+// ----- Types -----
+export type SimpleQuote = {
+  /** Per-unit price proxy: amount out for ~1 unit of input, human formatted. */
+  outFormatted?: string | number | null;
+  // optional: updatedAtMs?: number;
 };
 
+export type UseDynamicSlippageArgs = {
+  enabled: boolean;
+
+  /** Preferred volatility source: per-unit output for ~1 input unit. */
+  unitQuote?: SimpleQuote | null;
+
+  /** User-sized total out (we normalize it to per-unit internally). */
+  userOutFormatted?: string | number | null;
+
+  /** User human input size (same unit as UI input). */
+  userInHuman?: string | number | null;
+
+  /** Hop count for path pad. */
+  pathLength?: number;
+
+  /** Optional notional in USD for MEV cushion calibration. */
+  notionalUsd?: number | null;
+
+  /**
+   * OPTIONAL local elasticity probe. If provided AND enabled in config,
+   * we'll occasionally call this to get per-unit outputs at two close sizes
+   * to estimate a local slope/curvature for size impact prediction.
+   * Return per-unit OUT (amountOut/amountIn) or null on failure.
+   */
+  probePerUnit?: (amountInHuman: number) => Promise<number | null>;
+};
+
+export type DynamicSlippage = { bps: bigint; bpsNumber: number };
+
+// ----- Utils -----
+const toNum = (x: unknown): number | null => {
+  const n = Number(x);
+  return Number.isFinite(n) ? n : null;
+};
+const clamp = (n: number, lo: number, hi: number) => Math.min(hi, Math.max(lo, n));
+
+/** In-place nth element (quickselect) to get quantile without full sort (small N safe) */
+function quantileAbs(returns: number[], q: number): number {
+  if (!returns.length) return 0;
+  const arr = returns.map((x) => Math.abs(x));
+  const k = Math.max(0, Math.min(arr.length - 1, Math.floor(q * (arr.length - 1))));
+  // small N -> simple sort is fine, readable and stable
+  arr.sort((a, b) => a - b);
+  return arr[k];
+}
+
+/** EWMA variance on log-returns (dimensionless). */
+function useEwmaSigma(active: boolean, price: number | null, alpha: number) {
+  const last = useRef<number | null>(null);
+  const [v, setV] = useState(0);
+  useEffect(() => {
+    if (!active || price === null || price <= 0) return;
+    if (last.current && last.current > 0) {
+      const r = Math.log(price / last.current);
+      setV((prev) => alpha * (r * r) + (1 - alpha) * prev);
+    }
+    last.current = price;
+  }, [active, price, alpha]);
+  return Math.sqrt(v);
+}
+
+/** Rolling ring-buffer of log-returns for robust quantile vol. */
+function useReturnWindow(active: boolean, price: number | null, capacity: number) {
+  const last = useRef<number | null>(null);
+  const buf = useRef<number[]>([]);
+  useEffect(() => {
+    if (!active || price === null || price <= 0) return;
+    if (last.current && last.current > 0) {
+      const r = Math.log(price / last.current);
+      const a = buf.current;
+      if (a.length >= capacity) a.shift();
+      a.push(r);
+    }
+    last.current = price;
+  }, [active, price, capacity]);
+  return buf.current;
+}
+
+/** Piecewise MEV cushion by notional USD. */
+function mevBpsByUsd(usd: number | null | undefined, protectedFlow: boolean): number {
+  if (usd == null || !Number.isFinite(usd)) return 0;
+  // Reduce cushion if flow is MEV-protected (Flashbots/MEV-Blocker/intents)
+  const scale = protectedFlow ? 0.5 : 1.0;
+  if (usd < 50) return 0;
+  if (usd < 500) return Math.round(8 * scale);
+  if (usd < 5_000) return Math.round(15 * scale);
+  if (usd < 25_000) return Math.round(25 * scale);
+  return Math.round(35 * scale);
+}
+
+// ----- Main hook -----
 export function useDynamicSlippageBps({
   enabled,
   unitQuote,
   userOutFormatted,
+  userInHuman,
   pathLength = 1,
-}: UseDynamicSlippageArgs) {
-// --- Config (safe defaults) ---
-  // Use unit price when available; otherwise fall back to sized quote as the price feed
-  const priceSource = unitQuote?.outFormatted ?? userOutFormatted ?? null;
+  notionalUsd = null,
+  probePerUnit,
+}: UseDynamicSlippageArgs): DynamicSlippage {
+  // ---- Config ----
   const CFG = (PUBLIC_CONFIG as any).AUTO_SLIPPAGE ?? {};
-  const BASE_BPS: number = Number(CFG.BASE_BPS ?? 50n);            // 0.50%
-  const MIN_BPS: number = Number(CFG.MIN_BPS ?? 10n);              // 0.10%
-  const MAX_BPS: number = Number(CFG.MAX_BPS ?? 500n);            // 5%
-  const K_SIGMA: number = CFG.K_SIGMA ?? 3;
-  const HYSTERESIS_BPS: number = CFG.HYSTERESIS_BPS ?? 10;
-  const EXTRA_PER_HOP_BPS: number = Number(CFG.EXTRA_PER_HOP_BPS ?? 5n);
-  const POLL_MS: number = PUBLIC_CONFIG.QUOTE_POLL_MS ?? 2000;
+  const BASE_BPS: number = toNum(CFG.BASE_BPS) ?? 30;          // 0.30%
+  const MIN_BPS: number = toNum(CFG.MIN_BPS) ?? 5;             // 0.05%
+  const MAX_BPS: number = toNum(CFG.MAX_BPS) ?? 500;           // 5.00%
 
-  // EWMA memory + adaptive size top-up shape
-  const EWMA_LAMBDA: number = CFG.EWMA_LAMBDA ?? 0.85;
-  const IMP_MIN: number = CFG.IMPACT_TOPUP_MIN ?? 0.35;           // min factor
-  const IMP_MAX: number = CFG.IMPACT_TOPUP_MAX ?? 0.75;           // max factor
-  const IMP_L_BPS: number = CFG.IMPACT_TOPUP_L_BPS ?? 25;         // 0.25%
-  const IMP_H_BPS: number = CFG.IMPACT_TOPUP_H_BPS ?? 250;        // 2.50%
+  // Volatility
+  const EWMA_ALPHA: number = toNum(CFG.EWMA_ALPHA) ?? 0.20;
+  const QRET_WINDOW: number = toNum(CFG.QRET_WINDOW) ?? 48;    // last N returns
+  const QRET_QUANTILE: number = toNum(CFG.QRET_QUANTILE) ?? 0.95; // 95% tail
+  const VOL_SCALE: number = toNum(CFG.VOL_SCALE) ?? 1.0;       // global vol knob
 
-  // --- Helpers ---
-  const clamp = (n: number, lo: number, hi: number) => Math.min(hi, Math.max(lo, n));
-  const invLerp = (a: number, b: number, v: number) => (a === b ? 1 : clamp((v - a) / (b - a), 0, 1));
-  const lerp = (a: number, b: number, t: number) => a + (b - a) * t;
+  // Size impact
+  const SIZE_FACTOR: number = toNum(CFG.SIZE_FACTOR) ?? 1.0;
 
-  // --- State/refs for EWMA variance of returns ---
-  const ewmaVarRef = useRef<number | null>(null);
-  const lastPriceRef = useRef<number | null>(null);
-  const warmupCountRef = useRef<number>(0);
+  // Hops / MEV / Hysteresis
+  const PER_HOP_BPS: number = toNum(CFG.PER_HOP_BPS) ?? 4;
+  const MEV_PROTECTED: boolean = Boolean(CFG.MEV_PROTECTED ?? false);
+  const UP_HYST_BPS: number = toNum(CFG.UP_HYSTERESIS_BPS) ?? 3;
+  const DOWN_HYST_BPS: number = toNum(CFG.DOWN_HYSTERESIS_BPS) ?? 6;
+  const COOL_OFF_BPS_PER_SEC: number = toNum(CFG.COOL_OFF_BPS_PER_SEC) ?? 1; // gentle decay
 
-  const lastBpsRef = useRef<number>(BASE_BPS);
-  const [bps, setBps] = useState<number>(BASE_BPS);
+  // Elasticity probe (optional)
+  const ELASTICITY_PROBE: boolean = Boolean(CFG.ELASTICITY_PROBE ?? false);
+  const PROBE_EPS: number = toNum(CFG.PROBE_EPS) ?? 0.02;      // +2% size nudge
+  const PROBE_MIN_INTERVAL_MS: number = toNum(CFG.PROBE_MIN_INTERVAL_MS) ?? 2500;
 
-  // Ingest new 1-unit price each tick
+  // ---- Per-unit sources ----
+  const unitPerUnit = toNum(unitQuote?.outFormatted); // per-unit OUT@~1in
+  const userOut = toNum(userOutFormatted);
+  const userIn = toNum(userInHuman);
+  const userPerUnit = useMemo(() => {
+    if (userOut && userOut > 0 && userIn && userIn > 0) return userOut / userIn;
+    return null;
+  }, [userOut, userIn]);
+
+  // Preferred price source for volatility: unit quote; fallback to normalized user quote
+  const priceSource = unitPerUnit ?? userPerUnit ?? null;
+
+  // ---- Volatility (robust) ----
+  const sigma = useEwmaSigma(enabled, priceSource, EWMA_ALPHA);
+  const window = useReturnWindow(enabled, priceSource, QRET_WINDOW);
+  const qAbs = quantileAbs(window, QRET_QUANTILE); // tail of |returns|
+
+  // Convert to bps (small log-returns ≈ percent change)
+  const volBpsEWMA = enabled ? Math.ceil(VOL_SCALE * 10_000 * sigma) : 0;
+  const volBpsQ = enabled ? Math.ceil(VOL_SCALE * 10_000 * qAbs) : 0;
+  const volBps = Math.max(volBpsEWMA, volBpsQ);
+
+  // ---- Size impact (two modes) ----
+  // Fallback: per-unit vs per-unit (1-unit vs user)
+  let sizeImpactBps = 0;
+  if (enabled && unitPerUnit && unitPerUnit > 0 && userPerUnit && userPerUnit > 0) {
+    const impact = (unitPerUnit - userPerUnit) / unitPerUnit;
+    sizeImpactBps = Math.max(0, Math.ceil(SIZE_FACTOR * impact * 10_000));
+  }
+
+  // Optional local elasticity probe improves size estimate for curved CLMM segments
+  const [probeBps, setProbeBps] = useState<number | null>(null);
+  const lastProbeAt = useRef<number>(0);
   useEffect(() => {
-    if (!enabled || priceSource == null) return;
-    const p = Number(priceSource);
-    if (!Number.isFinite(p) || p <= 0) return;
-
-    const last = lastPriceRef.current;
-    if (last != null) {
-      const r = p / last - 1; // signed return
-      const r2 = r * r;
-      const prevVar = ewmaVarRef.current ?? r2;
-      const v = EWMA_LAMBDA * prevVar + (1 - EWMA_LAMBDA) * r2;
-      ewmaVarRef.current = v;
-      warmupCountRef.current = Math.min(999, warmupCountRef.current + 1);
-    } else {
-      ewmaVarRef.current = 0;
-      warmupCountRef.current = 1;
-    }
-    lastPriceRef.current = p;
-  }, [enabled, priceSource, EWMA_LAMBDA]);
-
-  // Compute bps from EWMA + buffers + adaptive size top-up
-  useEffect(() => {
-    if (!enabled) {
-      setBps(BASE_BPS);
-      lastBpsRef.current = BASE_BPS;
+    if (
+      !enabled ||
+      !ELASTICITY_PROBE ||
+      !probePerUnit ||
+      !userIn ||
+      !(userIn > 0) ||
+      !Number.isFinite(userIn)
+    ) {
+      setProbeBps(null);
       return;
     }
+    const now = Date.now();
+    if (now - lastProbeAt.current < PROBE_MIN_INTERVAL_MS) return;
 
-    const hasVar = ewmaVarRef.current != null && warmupCountRef.current >= 2;
-    let stdBps = 0;
-    if (hasVar) {
-      const std = Math.sqrt(Math.max(ewmaVarRef.current as number, 0));
-      stdBps = Math.round(std * 10_000); // → bps
-    }
-
-    // Volatility component
-    const volComponent = K_SIGMA * stdBps;
-
-    // Latency buffer: light proportional uplift (e.g., ~+20% at 2s)
-    const latencyMultiplier = 1 + Math.min(1, Math.max(0, POLL_MS / 10_000));
-    const latencyBps = Math.round(volComponent * (latencyMultiplier - 1));
-
-    // Hop buffer
-    const hopBps = Math.max(0, pathLength - 1) * EXTRA_PER_HOP_BPS;
-
-    // Size-aware top-up with ADAPTIVE factor
-    let impactTopUpBps = 0;
-    const unitOut = Number(unitQuote?.outFormatted ?? NaN);
-    const userOut = Number(userOutFormatted ?? NaN);
-
-    if (Number.isFinite(unitOut) && unitOut > 0 && Number.isFinite(userOut) && userOut >= 0) {
-      const impact = (unitOut - userOut) / unitOut;       // 0..1 (share lost due to size/route)
-      const impactBps = Math.max(0, Math.round(impact * 10_000));
-      // Factor rises linearly from IMP_MIN at IMP_L_BPS to IMP_MAX at IMP_H_BPS (clamped).
-      const t = invLerp(IMP_L_BPS, IMP_H_BPS, impactBps);
-      const factor = lerp(IMP_MIN, IMP_MAX, t);
-      impactTopUpBps = Math.ceil(factor * impactBps);
-    }
-
-    // Assemble
-    let proposed =
-      (hasVar ? BASE_BPS + volComponent + latencyBps : Math.min(MAX_BPS, Math.max(BASE_BPS, MIN_BPS))) +
-      hopBps +
-      impactTopUpBps;
-
-    // Clamp + hysteresis (instant up, cautious down)
-    proposed = Math.min(MAX_BPS, Math.max(MIN_BPS, Math.round(proposed)));
-    const last = lastBpsRef.current;
-    const next = proposed >= last ? proposed : (last - proposed >= HYSTERESIS_BPS ? proposed : last);
-
-    lastBpsRef.current = next;
-    setBps(next);
+    let cancelled = false;
+    const run = async () => {
+      try {
+        const baseIn = userIn;
+        const bumpIn = baseIn * (1 + PROBE_EPS);
+        const [ppBase, ppBump] = await Promise.all([
+          probePerUnit!(baseIn),
+          probePerUnit!(bumpIn),
+        ]);
+        if (cancelled || ppBase == null || ppBase <= 0 || ppBump == null || ppBump <= 0) {
+          setProbeBps(null);
+          return;
+        }
+        // local slope: drop in per-unit for +ε input
+        const drop = Math.max(0, ppBase - ppBump);
+        // extrapolate to full distance between 1-unit and user size
+        // (safe, conservative: multiply by distance in units of ε)
+        const dist = Math.max(0, baseIn - 1);
+        const steps = dist / (baseIn * PROBE_EPS || 1); // ~how many +ε bumps
+        const predicted = Math.min(ppBase, drop * steps); // cannot exceed ppBase
+        const bps = Math.ceil((predicted / ppBase) * 10_000);
+        setProbeBps(bps);
+        lastProbeAt.current = Date.now();
+      } catch {
+        setProbeBps(null);
+      }
+    };
+    run();
+    return () => {
+      cancelled = true;
+    };
   }, [
     enabled,
-    pathLength,
-    K_SIGMA,
-    HYSTERESIS_BPS,
-    EXTRA_PER_HOP_BPS,
-    POLL_MS,
-    IMP_MIN,
-    IMP_MAX,
-    IMP_L_BPS,
-    IMP_H_BPS,
-    unitQuote?.outFormatted,
-    userOutFormatted,
+    ELASTICITY_PROBE,
+    probePerUnit,
+    userIn,
+    PROBE_EPS,
+    PROBE_MIN_INTERVAL_MS,
   ]);
 
-  const bpsBig: bigint = useMemo(() => BigInt(bps), [bps]);
-  const label: string = useMemo(() => `${(bps / 100).toFixed(2)}%`, [bps]);
+  const sizeBps = probeBps != null ? Math.max(sizeImpactBps, probeBps) : sizeImpactBps;
 
-  return { bps: bpsBig, bpsNumber: bps, label };
+  // ---- Hop & MEV ----
+  const extraHops = Math.max(0, (pathLength ?? 1) - 1);
+  const hopBps = enabled ? extraHops * PER_HOP_BPS : 0;
+  const mevBps = enabled ? mevBpsByUsd(notionalUsd, MEV_PROTECTED) : 0;
+
+  // ---- Compose target ----
+  const rawTarget = enabled ? BASE_BPS + volBps + sizeBps + hopBps + mevBps : BASE_BPS;
+
+  // ---- Hysteresis + gentle cool-off ----
+  const lastRef = useRef<number>(BASE_BPS);
+  const [coolTick, setCoolTick] = useState(0);
+
+  // Cool-off ticker (decay toward new target to avoid sticky highs)
+  useEffect(() => {
+    if (!enabled || COOL_OFF_BPS_PER_SEC <= 0) return;
+    const id = setInterval(() => setCoolTick((x) => x + 1), 1000);
+    return () => clearInterval(id);
+  }, [enabled, COOL_OFF_BPS_PER_SEC]);
+
+  let target = rawTarget;
+  const delta = rawTarget - lastRef.current;
+  if (delta > 0 && delta < UP_HYST_BPS) {
+    target = lastRef.current; // ignore tiny uptick
+  } else if (delta < 0 && -delta < DOWN_HYST_BPS) {
+    target = lastRef.current; // ignore tiny downtick
+  }
+
+  // Gentle decay: if raw target is lower than our held value, step down gradually
+  useEffect(() => {
+    if (!enabled || COOL_OFF_BPS_PER_SEC <= 0) return;
+    if (rawTarget < lastRef.current) {
+      const step = COOL_OFF_BPS_PER_SEC;
+      const next = Math.max(rawTarget, lastRef.current - step);
+      lastRef.current = next;
+    }
+  }, [coolTick, enabled, COOL_OFF_BPS_PER_SEC, rawTarget]);
+
+  target = clamp(target, MIN_BPS, MAX_BPS);
+  if (target !== lastRef.current) lastRef.current = target;
+
+  const bpsNumber = Math.round(target);
+  const bps = BigInt(bpsNumber);
+  return { bps, bpsNumber };
 }
 
+export default useDynamicSlippageBps;
