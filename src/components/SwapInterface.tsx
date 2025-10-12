@@ -20,6 +20,7 @@ import glieseLogo from "@/assets/gliese-logo.png";
 import { PUBLIC_CONFIG } from "@/config/public";
 import { useYakQuote } from "@/hooks/useYakQuote";
 import { performSwap } from "@/lib/swap";
+import { getYakPerUnit } from "@/lib/getYakPerUnit";
 
 import TokenAvatar from "@/components/TokenAvatar";
 import SlippageIcon from "@/assets/slippage.png";
@@ -140,8 +141,12 @@ const SwapInterface = () => {
     router,
     tokenIn: tokenInArg,
     tokenOut: tokenOutArg,
-    amountInHuman: sellAmount || "0",
-    enabled: Boolean(sellAmount && selectedSellToken && selectedBuyToken),
+    amountInHuman: "1", // per-unit anchor
+    enabled: Boolean(
+    selectedSellToken &&
+    selectedBuyToken &&
+    selectedSellToken.symbol !== selectedBuyToken.symbol
+    ),
   });
 
   
@@ -167,20 +172,31 @@ const SwapInterface = () => {
   // --- Dynamic slippage (EWMA + adaptive top-up; SIZE-AWARE) ---
 const dynamicSlippage = useDynamicSlippageBps({
   enabled: autoSlippage,
-  unitQuote,                                   // for real-time volatility
-  userOutFormatted: quote?.outFormatted ?? null, // size-aware top-up
-  pathLength: quote?.path?.length ?? 1,        // per-hop buffer  
-  // OPTIONAL: only if you enable the probe and can fetch per-unit quotes for arbitrary amounts
+  unitQuote,                                  // per-unit volatility anchor (kept polling)
+  userOutFormatted: quote?.outFormatted ?? null,
+  userInHuman: sellAmount || "0",
+  pathLength: quote?.path?.length ?? 1,
+  notionalUsd: (() => {
+    const p = (cryptoPrices as any)[sellToken];
+    const amt = Number(sellAmount);
+    if (!Number.isFinite(amt) || amt <= 0 || !Number.isFinite(p)) return null;
+    return amt * p;
+  })(),
   probePerUnit: async (amountHuman) => {
-      const q = await getYakQuotePerUnit(amountHuman); // implement with your quoting util
-      return q?.perUnitOut ?? null;
-   },
+    return await getYakPerUnit({
+      router,
+      tokenIn: tokenInArg,
+      tokenOut: tokenOutArg,
+      amountInHuman: amountHuman,
+    });
+  },
   
 });
 
 // Clamp chosen slippage to global cap (covers both auto/manual)
-const capBps =
-  ((PUBLIC_CONFIG as any).AUTO_SLIPPAGE?.MAX_BPS ?? PUBLIC_CONFIG.SLIPPAGE_BPS) as bigint;
+const capBps = ((PUBLIC_CONFIG as any).AUTO_SLIPPAGE?.MAX_BPS != null
+  ? BigInt((PUBLIC_CONFIG as any).AUTO_SLIPPAGE.MAX_BPS)
+  : PUBLIC_CONFIG.SLIPPAGE_BPS);
 const slipRaw = autoSlippage ? (dynamicSlippage.bps ?? 0n) : PUBLIC_CONFIG.SLIPPAGE_BPS;
 const SLIP = slipRaw > capBps ? capBps : slipRaw;
 // --- UI: formatted slippage for the indicator (one decimal, rounds) ---
