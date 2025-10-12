@@ -169,8 +169,7 @@ const dynamicSlippage = useDynamicSlippageBps({
   enabled: autoSlippage,
   unitQuote,                                   // for real-time volatility
   userOutFormatted: quote?.outFormatted ?? null, // size-aware top-up
-  pathLength: quote?.path?.length ?? 1,        // per-hop buffer
-  notionalUsd: /* if you compute this */ estimatedUsd ?? null,
+  pathLength: quote?.path?.length ?? 1,        // per-hop buffer  
   // OPTIONAL: only if you enable the probe and can fetch per-unit quotes for arbitrary amounts
   probePerUnit: async (amountHuman) => {
       const q = await getYakQuotePerUnit(amountHuman); // implement with your quoting util
