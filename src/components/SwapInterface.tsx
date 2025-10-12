@@ -170,6 +170,13 @@ const dynamicSlippage = useDynamicSlippageBps({
   unitQuote,                                   // for real-time volatility
   userOutFormatted: quote?.outFormatted ?? null, // size-aware top-up
   pathLength: quote?.path?.length ?? 1,        // per-hop buffer
+  notionalUsd: /* if you compute this */ estimatedUsd ?? null,
+  // OPTIONAL: only if you enable the probe and can fetch per-unit quotes for arbitrary amounts
+  probePerUnit: async (amountHuman) => {
+      const q = await getYakQuotePerUnit(amountHuman); // implement with your quoting util
+      return q?.perUnitOut ?? null;
+   },
+  
 });
 
 // Clamp chosen slippage to global cap (covers both auto/manual)
