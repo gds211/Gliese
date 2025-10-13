@@ -218,6 +218,8 @@ const dynamicSlippage = useDynamicSlippageBps({
     const q = await getYakQuotePerUnit(amountHuman);
     return q?.perUnitOut ?? null;
   },
+  // reset when the trading context changes (address if available, else symbol)
+  resetKey: `${selectedSellToken?.address ?? sellToken}->${selectedBuyToken?.address ?? buyToken}`,
 });
 
 
@@ -275,10 +277,12 @@ const buyAmountDerived = (() => {
       }
     }
 
-    // Before typing: use the 1-unit quote
-    if (unitQuote && unitQuote.minOutRaw && unitQuote.minOutRaw > 0n) {
-      const u = Number(unitQuote.minOutFormatted);
-      if (Number.isFinite(u) && u > 0) {
+    // Before typing: use the 1-unit *raw* quote, but apply *dynamic* slippage (SLIP)
+    if (unitQuote && unitQuote.outFormatted) {
+      const uRaw = Number(unitQuote.outFormatted);
+      if (Number.isFinite(uRaw) && uRaw > 0) {
+        const s = Number(SLIP) / 10_000;
+        const u = uRaw * (1 - s);
         return `1 ${sellToken} = ${u.toFixed(6).replace(/\.?0+$/, "")} ${buyToken}`;
       }
     }
