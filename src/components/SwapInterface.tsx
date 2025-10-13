@@ -68,6 +68,11 @@ const SwapInterface = () => {
   const publicClient = usePublicClient();
   const { effectiveGasPriceWei } = useNetworkFees(PUBLIC_CONFIG.FEE_REFRESH_MS);
 
+  // Which tab is active: controls when the bottom swap button shows
+  type TabKey = "instant" | "trigger" | "recurring";
+  const [activeTab, setActiveTab] = useState<TabKey>("instant");
+
+
   // --- Token list (your current list) ---
   const cryptoPrices = {
     MON: 0.00215,
@@ -439,7 +444,7 @@ const selectToken = (picked: string | TokenObj) => {
     <Card className="w-full max-w-md mx-auto bg-muted/40 backdrop-blur-md border border-muted/60 shadow-2xl">
       <div className="p-4 space-y-4">
         {/* Tabs */}
-        <Tabs defaultValue="instant" className="w-full">
+        <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as TabKey)} className="w-full">
           <TabsList className="grid w-full grid-cols-3 bg-muted/40 h-10">
             <TabsTrigger value="instant" className="text-sm flex items-center gap-2 h-8 data-[state=active]:text-primary data-[state=inactive]:text-muted-foreground">
               <span>⚡</span> Instant
@@ -627,6 +632,7 @@ const selectToken = (picked: string | TokenObj) => {
         </Tabs>
 
         {/* Connect/Swap Button */}
+      {activeTab === "instant" && (
         <div className="w-full mt-4">
           <Button
             className="w-full"
@@ -655,6 +661,7 @@ const selectToken = (picked: string | TokenObj) => {
               : "Swap"}
           </Button>
         </div>
+        )}
       </div>
 
       {/* Token Selection Modal */}
