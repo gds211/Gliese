@@ -241,52 +241,57 @@ const minOutRawDynamic =
   quote?.outRaw != null ? (quote.outRaw * (10_000n - SLIP)) / 10_000n : 0n;
 
 
-  // Unslipped buy amount (raw quote)
-const buyAmountRaw = useMemo(() => {
-  const n = Number(quote?.outFormatted ?? NaN);
-  if (!Number.isFinite(n) || n <= 0) return "0.00";
-  return n.toString();
-}, [quote?.outFormatted]);
-
+  // Derived buy amount (minOut) using dynamic slippage (size-aware)
+const buyAmountDerived = (() => {
+  // For display we can scale the formatted out by (1 - SLIP/10000)
+  const baseOut = Number(quote?.outFormatted ?? NaN);
+  if (!Number.isFinite(baseOut)) return "0.00";
+  const s = Number(SLIP) / 10_000;
+  const v = baseOut * (1 - s);
+  if (!Number.isFinite(v) || v <= 0) return "0.00";
+  return v.toString();
+})();
 
   
-const buyAmountDisplay = useMemo(() => {
-  const num = Number(buyAmountRaw);
-  if (isNaN(num)) return "0.00";
-  if (num === 0) return "0.00";
-  return num.toFixed(6).replace(/\.?0+$/, '');
-}, [buyAmountRaw]);
+  // Display version limited to 6 decimals for UI
+  const buyAmountDisplay = useMemo(() => {
+    const num = Number(buyAmountDerived);
+    if (isNaN(num)) return "0.00";
+    if (num === 0) return "0.00";
+    return num.toFixed(6).replace(/\.?0+$/, '');
+  }, [buyAmountDerived]);
 
   // Rate display: accurate even before typing (uses a 1-unit on-chain quote)
-const rateDisplay = useMemo(() => {
-  if (selectedSellToken && selectedBuyToken && selectedSellToken.symbol === selectedBuyToken.symbol) {
-    return `1 ${sellToken} = 1 ${buyToken}`;
-  }
-
-  const amt = Number(sellAmount);
-
-  // If user typed a positive amount, compute rate from the *raw* active quote
-  if (quote && Number.isFinite(amt) && amt > 0) {
-    const r = Number(quote?.outFormatted ?? NaN) / amt; // <<— raw, no slippage
-    if (Number.isFinite(r) && r > 0) {
-      return `1 ${sellToken} = ${r.toFixed(6).replace(/\.?0+$/, "")} ${buyToken}`;
+  const rateDisplay = useMemo(() => {
+    if (selectedSellToken && selectedBuyToken && selectedSellToken.symbol === selectedBuyToken.symbol) {
+      return `1 ${sellToken} = 1 ${buyToken}`;
     }
-  }
 
-  // Before typing: use the 1-unit *raw* quote (no slippage)
-  if (unitQuote && unitQuote.outFormatted) {
-    const uRaw = Number(unitQuote.outFormatted);
-    if (Number.isFinite(uRaw) && uRaw > 0) {
-      return `1 ${sellToken} = ${uRaw.toFixed(6).replace(/\.?0+$/, "")} ${buyToken}`;
+    const amt = Number(sellAmount);
+
+    // If user typed a positive amount, compute rate from active quote
+    if (quote && Number.isFinite(amt) && amt > 0) {
+      const r = Number(buyAmountDerived) / amt;
+      if (Number.isFinite(r) && r > 0) {
+        return `1 ${sellToken} = ${r.toFixed(6).replace(/\.?0+$/, "")} ${buyToken}`;
+      }
     }
-  }
 
-  // Fallback to your mock when no on-chain path yet
-  return priceRate;
-}, [quote, unitQuote, sellAmount, sellToken, buyToken, selectedSellToken, selectedBuyToken, priceRate]);
+    // Before typing: use the 1-unit *raw* quote, but apply *dynamic* slippage (SLIP)
+    if (unitQuote && unitQuote.outFormatted) {
+      const uRaw = Number(unitQuote.outFormatted);
+      if (Number.isFinite(uRaw) && uRaw > 0) {
+        const s = Number(SLIP) / 10_000;
+        const u = uRaw * (1 - s);
+        return `1 ${sellToken} = ${u.toFixed(6).replace(/\.?0+$/, "")} ${buyToken}`;
+      }
+    }
 
-  
-// Keep your existing mock updater as a fallback when no quote yet
+    // Fallback to your mock when no on-chain path yet
+    return priceRate;
+  }, [quote, unitQuote, buyAmountDerived, sellAmount, sellToken, buyToken, selectedSellToken, selectedBuyToken, priceRate]);
+
+  // Keep your existing mock updater as a fallback when no quote yet
   useEffect(() => {
     const updatePriceRate = () => {
       const sellPrice = (cryptoPrices as any)[sellToken] || 0;
