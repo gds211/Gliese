@@ -27,6 +27,7 @@ import { performSwap } from "@/lib/swap";
 
 import TokenAvatar from "@/components/TokenAvatar";
 import SlippageIcon from "@/assets/slippage.png";
+import TriggerInterface from "@/components/TriggerInterface";
 
 
 
@@ -616,8 +617,8 @@ const selectToken = (picked: string | TokenObj) => {
             </div>
           </TabsContent>
 
-          <TabsContent value="trigger">
-            <div className="text-center text-muted-foreground py-8">Trigger orders coming soon</div>
+          <TabsContent value="trigger" className="mt-4">
+            <TriggerInterface tokens={tokens} />
           </TabsContent>
 
           <TabsContent value="recurring">
