@@ -54,7 +54,7 @@ export const PUBLIC_CONFIG = {
     // --- Hysteresis & cool-off (stability) ---
     UP_HYSTERESIS_BPS: 3,       // ignore tiny upticks smaller than this
     DOWN_HYSTERESIS_BPS: 6,     // ignore tiny downticks smaller than this
-    COOL_OFF_BPS_PER_SEC: 1,    // when risk cools, drift down by this many bps/sec toward target
+    COOL_OFF_BPS_PER_SEC: 25,    // when risk cools, drift down by this many bps/sec toward target
 
     // --- Optional: local elasticity probe (extra quotes; leave false to avoid extra RPCs) ---
     ELASTICITY_PROBE: true,    // true → use tiny +ε size bump to estimate curvature on CLMM paths
