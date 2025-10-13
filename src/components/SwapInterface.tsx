@@ -1,4 +1,3 @@
-// src/components/SwapInterface.tsx
 import { useState, useMemo, useEffect } from "react";
 import { Address, parseUnits, formatUnits } from "viem";
 import { useAccount, useBalance } from "wagmi";
@@ -26,6 +25,7 @@ import { useYakQuote } from "@/hooks/useYakQuote";
 import { performSwap } from "@/lib/swap";
 
 import TokenAvatar from "@/components/TokenAvatar";
+import TriggerInterface from "@/components/TriggerInterface";
 import SlippageIcon from "@/assets/slippage.png";
 
 
@@ -617,7 +617,7 @@ const selectToken = (picked: string | TokenObj) => {
           </TabsContent>
 
           <TabsContent value="trigger">
-            <div className="text-center text-muted-foreground py-8">Trigger orders coming soon</div>
+            <TriggerInterface />
           </TabsContent>
 
           <TabsContent value="recurring">
