@@ -9,7 +9,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { ArrowUpDown, ChevronDown, Info } from "lucide-react";
+import { ChevronDown, Info } from "lucide-react";
 import TokenAvatar from "@/components/TokenAvatar";
 import { useAccount, useBalance } from "wagmi";
 
@@ -97,7 +97,7 @@ const TriggerInterface = ({ tokens }: TriggerInterfaceProps) => {
     : "~$0.00";
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-2">
       {/* You pay section */}
       <div className="space-y-2">
         <div className="flex justify-between items-center text-sm">
@@ -157,18 +157,6 @@ const TriggerInterface = ({ tokens }: TriggerInterfaceProps) => {
             <span className="text-xs text-muted-foreground">{payUsdValue}</span>
           </div>
         </Card>
-      </div>
-
-      {/* Swap arrow */}
-      <div className="flex justify-center">
-        <Button
-          variant="ghost"
-          size="icon"
-          onClick={handleSwapTokens}
-          className="rounded-full bg-muted/50 hover:bg-muted border border-border"
-        >
-          <ArrowUpDown className="h-4 w-4" />
-        </Button>
       </div>
 
       {/* You receive section */}
