@@ -185,6 +185,7 @@ const SwapInterface = () => {
     tokenOut: tokenOutArg,
     amountInHuman: sellAmount || "0",
     enabled: Boolean(sellAmount && selectedSellToken && selectedBuyToken),
+    slippageBpsOverride: slipBpsForQuote, // ⟵ keep hook’s minOut aligned with UI
   });
 
   
