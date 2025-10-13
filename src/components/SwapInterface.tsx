@@ -185,6 +185,7 @@ const SwapInterface = () => {
     tokenOut: tokenOutArg,
     amountInHuman: sellAmount || "0",
     enabled: Boolean(sellAmount && selectedSellToken && selectedBuyToken),
+    slippageBpsOverride: SLIP, // <— pass the adaptive bps (already capped)
   });
 
   
@@ -198,6 +199,7 @@ const SwapInterface = () => {
       selectedBuyToken &&
       selectedSellToken.symbol !== selectedBuyToken.symbol
     ),
+    slippageBpsOverride: SLIP, // harmless; unitQuote consumers use outFormatted
   });
 
 const notionalUsd = useMemo(() => {
