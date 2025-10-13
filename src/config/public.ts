@@ -27,7 +27,7 @@ export const PUBLIC_CONFIG = {
   FEE_REFRESH_MS: 800,                    // refresh on-chain fee estimates every 0.8s
   QUOTE_POLL_MS: 1000,                     // poll quotes every 1s
   UPDATE_THRESHOLD_BPS: 1n,               // 0.01% = 1 bps
-  SLIPPAGE_BPS: 500n,                      // 5%
+  SLIPPAGE_BPS: 250n,                      // 2.5%
 
   // --- Dynamic (auto) slippage config: adaptive + EWMA
    AUTO_SLIPPAGE: {
