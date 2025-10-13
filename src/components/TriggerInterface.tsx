@@ -108,7 +108,7 @@ const TriggerInterface = ({ tokens }: TriggerInterfaceProps) => {
       {/* You pay section */}
       <div className="space-y-2">
         <div className="flex justify-between items-center text-sm">
-          <span className="text-muted-foreground">You pay</span>
+          <span className="text-muted-foreground">Paying</span>
           <div className="flex items-center gap-2 text-xs text-muted-foreground">
             <span className="flex items-center gap-1">
               <Wallet className="h-3 w-3" />
@@ -178,7 +178,7 @@ const TriggerInterface = ({ tokens }: TriggerInterfaceProps) => {
       {/* You receive section */}
       <div className="space-y-2">
         <div className="flex justify-between items-center text-sm">
-          <span className="text-muted-foreground">You receive</span>
+          <span className="text-muted-foreground">Receiving</span>
           <span className="flex items-center gap-1 text-xs text-muted-foreground">
             <Wallet className="h-3 w-3" />
             {receiveBalance ? `${Number(receiveBalance.formatted).toFixed(4)} ${receiveToken}` : `0.0000 ${receiveToken}`}
@@ -275,7 +275,7 @@ const TriggerInterface = ({ tokens }: TriggerInterfaceProps) => {
 
       {/* Create order button */}
       <Button
-        className="w-full h-12 text-base font-semibold bg-primary hover:bg-primary/90 text-primary-foreground"
+        className="w-full"
         disabled={!isConnected || !payAmount || !rate}
       >
         {getButtonText()}
