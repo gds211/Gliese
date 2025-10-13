@@ -9,7 +9,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { ChevronDown, Info } from "lucide-react";
+import { ChevronDown, Info, Wallet } from "lucide-react";
 import TokenAvatar from "@/components/TokenAvatar";
 import { useAccount, useBalance } from "wagmi";
 
@@ -102,14 +102,23 @@ const TriggerInterface = ({ tokens }: TriggerInterfaceProps) => {
       <div className="space-y-2">
         <div className="flex justify-between items-center text-sm">
           <span className="text-muted-foreground">You pay</span>
-          <div className="flex items-center gap-2">
-            <span className="text-muted-foreground">
-              Balance: {payBalance?.formatted.slice(0, 8) || "0"}
+          <div className="flex items-center gap-2 text-xs text-muted-foreground">
+            <span className="flex items-center gap-1">
+              <Wallet className="h-3 w-3" />
+              {payBalance ? `${Number(payBalance.formatted).toFixed(4)} ${payToken}` : `0.0000 ${payToken}`}
             </span>
             <Button
               variant="ghost"
               size="sm"
-              className="h-6 px-2 text-xs text-primary hover:text-primary"
+              className="h-5 px-2 text-xs text-muted-foreground bg-background/40 hover:bg-background/40 border border-border/40 hover:border-orange-500 hover:text-orange-500 transition-all duration-200 rounded"
+              onClick={handleHalf}
+            >
+              HALF
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-5 px-2 text-xs text-muted-foreground bg-background/40 hover:bg-background/40 border border-border/40 hover:border-orange-500 hover:text-orange-500 transition-all duration-200 rounded"
               onClick={handleMax}
             >
               MAX
@@ -163,8 +172,9 @@ const TriggerInterface = ({ tokens }: TriggerInterfaceProps) => {
       <div className="space-y-2">
         <div className="flex justify-between items-center text-sm">
           <span className="text-muted-foreground">You receive</span>
-          <span className="text-muted-foreground">
-            Balance: {receiveBalance?.formatted.slice(0, 8) || "0"}
+          <span className="flex items-center gap-1 text-xs text-muted-foreground">
+            <Wallet className="h-3 w-3" />
+            {receiveBalance ? `${Number(receiveBalance.formatted).toFixed(4)} ${receiveToken}` : `0.0000 ${receiveToken}`}
           </span>
         </div>
 
