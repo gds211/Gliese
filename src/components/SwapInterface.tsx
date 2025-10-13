@@ -144,6 +144,15 @@ const SwapInterface = () => {
   const tokenInArg = selectedSellToken?.address ?? sellToken; // pass address if exists; otherwise symbol "MON"
   const tokenOutArg = selectedBuyToken?.address ?? buyToken;
 
+  // ---- Precomputed slippage for hooks (avoid TDZ) ----
+// Use a safe default for the *initial* quotes; the final dynamic SLIP is computed later.
+const DEFAULT_BPS = BigInt(Number((PUBLIC_CONFIG as any).SLIPPAGE_BPS ?? 50));
+const QUOTE_SLIP_BPS = BigInt(
+  (PUBLIC_CONFIG as any).AUTO_SLIPPAGE?.DEFAULT_BPS ?? Number(DEFAULT_BPS)
+);
+// ----------------------------------------------------
+
+
   // --- Helper: quote per-unit OUT for an arbitrary human input amount
   const ZERO = "0x0000000000000000000000000000000000000000";
   const isNativeSymbol = (v?: string) =>
@@ -185,7 +194,7 @@ const SwapInterface = () => {
     tokenOut: tokenOutArg,
     amountInHuman: sellAmount || "0",
     enabled: Boolean(sellAmount && selectedSellToken && selectedBuyToken),
-    slippageBpsOverride: SLIP, // <— pass the adaptive bps (already capped)
+    slippageBpsOverride: QUOTE_SLIP_BPS,
   });
 
   
@@ -199,7 +208,7 @@ const SwapInterface = () => {
       selectedBuyToken &&
       selectedSellToken.symbol !== selectedBuyToken.symbol
     ),
-    slippageBpsOverride: SLIP, // harmless; unitQuote consumers use outFormatted
+      slippageBpsOverride: QUOTE_SLIP_BPS,
   });
 
 const notionalUsd = useMemo(() => {
