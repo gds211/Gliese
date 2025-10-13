@@ -144,13 +144,14 @@ const SwapInterface = () => {
   const tokenInArg = selectedSellToken?.address ?? sellToken; // pass address if exists; otherwise symbol "MON"
   const tokenOutArg = selectedBuyToken?.address ?? buyToken;
 
-  // ---- Precomputed slippage for hooks (avoid TDZ) ----
-// Use a safe default for the *initial* quotes; the final dynamic SLIP is computed later.
+  // ---- Precomputed slippage for hooks (exists early; prevents TDZ) ----
 const DEFAULT_BPS = BigInt(Number((PUBLIC_CONFIG as any).SLIPPAGE_BPS ?? 50));
-const QUOTE_SLIP_BPS = BigInt(
-  (PUBLIC_CONFIG as any).AUTO_SLIPPAGE?.DEFAULT_BPS ?? Number(DEFAULT_BPS)
-);
-// ----------------------------------------------------
+// If auto is enabled we can allow a different default for quotes; if not present, fall back to DEFAULT_BPS.
+const QUOTE_SLIP_BPS = autoSlippage
+  ? BigInt((PUBLIC_CONFIG as any).AUTO_SLIPPAGE?.DEFAULT_BPS ?? Number(DEFAULT_BPS))
+  : DEFAULT_BPS;
+// --------------------------------------------------------------------
+
 
 
   // --- Helper: quote per-unit OUT for an arbitrary human input amount
@@ -235,11 +236,18 @@ const dynamicSlippage = useDynamicSlippageBps({
 
 
 // Clamp chosen slippage to global cap (covers both auto/manual)
+// Clamp chosen slippage to global cap (covers both auto/manual)
 const capBps = BigInt(
-  (PUBLIC_CONFIG as any).AUTO_SLIPPAGE?.MAX_BPS ?? Number(PUBLIC_CONFIG.SLIPPAGE_BPS)
+  (PUBLIC_CONFIG as any).AUTO_SLIPPAGE?.MAX_BPS ?? Number(DEFAULT_BPS)
 );
-const slipRaw = autoSlippage ? (dynamicSlippage.bps ?? 0n) : PUBLIC_CONFIG.SLIPPAGE_BPS;
+
+// When auto is OFF => use DEFAULT_BPS
+// When auto is ON  => use dynamicSlippage.bps if ready, otherwise fallback to DEFAULT_BPS
+const slipRaw = autoSlippage ? (dynamicSlippage.bps ?? DEFAULT_BPS) : DEFAULT_BPS;
+
+// Final dynamic (capped) slippage for minOut & UI
 const SLIP = slipRaw > capBps ? capBps : slipRaw;
+
 // --- UI: formatted slippage for the indicator (one decimal, rounds) ---
 const slippageDisplay = useMemo(() => {
   const bps = Number(SLIP ?? 0n);           // bigint -> number (safe; bps is small)
