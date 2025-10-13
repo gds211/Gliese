@@ -144,24 +144,6 @@ const SwapInterface = () => {
   const tokenInArg = selectedSellToken?.address ?? sellToken; // pass address if exists; otherwise symbol "MON"
   const tokenOutArg = selectedBuyToken?.address ?? buyToken;
 
- 
-// ---- Precomputed slippage for hooks (exists early; prevents TDZ) ----
-const DEFAULT_BPS: bigint = (() => {
-  const v = (PUBLIC_CONFIG as any).SLIPPAGE_BPS;
-  if (typeof v === "bigint") return v;                 // e.g. 500n
-  const n = Number(v ?? 50);
-  return BigInt(Number.isFinite(n) ? n : 50);
-})();
-
-// For polling quotes, feed a small, safe baseline when auto mode is ON.
-// (BASE_BPS lives under AUTO_SLIPPAGE and is 30 bps by default = 0.30%.)
-const QUOTE_SLIP_BPS: bigint = autoSlippage
-  ? BigInt((PUBLIC_CONFIG as any).AUTO_SLIPPAGE?.BASE_BPS ?? 30)
-  : DEFAULT_BPS;
-// --------------------------------------------------------------------
-
-
-
   // --- Helper: quote per-unit OUT for an arbitrary human input amount
   const ZERO = "0x0000000000000000000000000000000000000000";
   const isNativeSymbol = (v?: string) =>
@@ -203,7 +185,6 @@ const QUOTE_SLIP_BPS: bigint = autoSlippage
     tokenOut: tokenOutArg,
     amountInHuman: sellAmount || "0",
     enabled: Boolean(sellAmount && selectedSellToken && selectedBuyToken),
-    slippageBpsOverride: QUOTE_SLIP_BPS,
   });
 
   
@@ -217,7 +198,6 @@ const QUOTE_SLIP_BPS: bigint = autoSlippage
       selectedBuyToken &&
       selectedSellToken.symbol !== selectedBuyToken.symbol
     ),
-      slippageBpsOverride: QUOTE_SLIP_BPS,
   });
 
 const notionalUsd = useMemo(() => {
@@ -244,18 +224,11 @@ const dynamicSlippage = useDynamicSlippageBps({
 
 
 // Clamp chosen slippage to global cap (covers both auto/manual)
-// Clamp chosen slippage to global cap (covers both auto/manual)
 const capBps = BigInt(
-  (PUBLIC_CONFIG as any).AUTO_SLIPPAGE?.MAX_BPS ?? Number(DEFAULT_BPS)
+  (PUBLIC_CONFIG as any).AUTO_SLIPPAGE?.MAX_BPS ?? Number(PUBLIC_CONFIG.SLIPPAGE_BPS)
 );
-
-// When auto is OFF => use DEFAULT_BPS
-// When auto is ON  => use dynamicSlippage.bps if ready, otherwise fallback to DEFAULT_BPS
-const slipRaw = autoSlippage ? (dynamicSlippage.bps ?? DEFAULT_BPS) : DEFAULT_BPS;
-
-// Final dynamic (capped) slippage for minOut & UI
+const slipRaw = autoSlippage ? (dynamicSlippage.bps ?? 0n) : PUBLIC_CONFIG.SLIPPAGE_BPS;
 const SLIP = slipRaw > capBps ? capBps : slipRaw;
-
 // --- UI: formatted slippage for the indicator (one decimal, rounds) ---
 const slippageDisplay = useMemo(() => {
   const bps = Number(SLIP ?? 0n);           // bigint -> number (safe; bps is small)

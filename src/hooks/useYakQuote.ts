@@ -42,7 +42,6 @@ export function useYakQuote({ router, tokenIn, tokenOut, amountInHuman, enabled 
   const { effectiveGasPriceWei } = useNetworkFees(PUBLIC_CONFIG.FEE_REFRESH_MS);
   const FALLBACK = PUBLIC_CONFIG.GAS_PRICE_WEI_FALLBACK;
   const gasRef = useRef<bigint>(effectiveGasPriceWei ?? FALLBACK);
-  const outDecimalsRef = useRef<number | null>(null);
   // === Decimals cache ===
 // Stores either a resolved value or an in-flight promise to dedupe concurrent loads.
 type DecCacheEntry = { value?: number; promise?: Promise<number> };
@@ -58,7 +57,6 @@ async function getDecimalsCached(addr: Address, native: boolean): Promise<number
   const cache = decCacheRef.current;
   const hit = cache.get(key);
 
-  
   // Fast paths
   if (hit?.value !== undefined) return hit.value;
   if (hit?.promise) return hit.promise!;
@@ -92,36 +90,7 @@ async function getDecimalsCached(addr: Address, native: boolean): Promise<number
   const tokenInAddr  = toQuoteAddr(tokenIn);
   const tokenOutAddr = toQuoteAddr(tokenOut);
 
-  // Reset the “last minOut” guard whenever the pair changes
-  useEffect(() => {
-    lastMinOutRef.current = null;
-  }, [tokenInAddr, tokenOutAddr]);
-
-  useEffect(() => {
-  if (!quote) return;
-  const outDec = outDecimalsRef.current;
-  if (outDec == null) return;
-
-  const capBps = BigInt(
-    (PUBLIC_CONFIG as any).AUTO_SLIPPAGE?.MAX_BPS ?? Number(PUBLIC_CONFIG.SLIPPAGE_BPS)
-  );
-  const rawSlip = (slippageBpsOverride ?? PUBLIC_CONFIG.SLIPPAGE_BPS);
-  const SLIP = rawSlip > capBps ? capBps : rawSlip;
-
-  const minOutRaw = (quote.outRaw * (10_000n - SLIP)) / 10_000n;
-
-  // avoid UI churn for tiny changes
-  if (!changedByAtLeastBps(lastMinOutRef.current, minOutRaw, PUBLIC_CONFIG.UPDATE_THRESHOLD_BPS)) {
-    return;
-  }
-
-  const minOutFormatted = formatUnits(minOutRaw, outDec);
-  setQuote((q) => (q ? { ...q, minOutRaw, minOutFormatted } : q));
-  lastMinOutRef.current = minOutRaw;
-}, [slippageBpsOverride, quote]); // <— responds immediately to dynamic bps changes
-
-
- // Warm the decimals cache whenever tokens or chain change
+  // Warm the decimals cache whenever tokens or chain change
   useEffect(() => {
     (async () => {
       try {
@@ -149,7 +118,6 @@ async function getDecimalsCached(addr: Address, native: boolean): Promise<number
            getDecimalsCached(tokenInAddr, isNative(tokenIn)),
            getDecimalsCached(tokenOutAddr, isNative(tokenOut)),
         ]);
-        outDecimalsRef.current = outDec;
         
         const amountIn = parseUnits(amountInHuman, inDec);
         if (amountIn === 0n) {
@@ -177,12 +145,7 @@ async function getDecimalsCached(addr: Address, native: boolean): Promise<number
         const gasEstimate: bigint = formatted?.gasEstimate ?? formatted?.[3] ?? 0n;
 
         const outRaw = amounts.length ? amounts[amounts.length - 1] : 0n;
-        const capBps = BigInt(
-            (PUBLIC_CONFIG as any).AUTO_SLIPPAGE?.MAX_BPS ?? Number(PUBLIC_CONFIG.SLIPPAGE_BPS)
-        );
-        const rawSlip = (slippageBpsOverride ?? PUBLIC_CONFIG.SLIPPAGE_BPS);
-        const SLIP = rawSlip > capBps ? capBps : rawSlip;
-
+        const SLIP = (slippageBpsOverride ?? PUBLIC_CONFIG.SLIPPAGE_BPS);
         const minOutRaw = (outRaw * (10_000n - SLIP)) / 10_000n;
 
         if (!changedByAtLeastBps(lastMinOutRef.current, minOutRaw, PUBLIC_CONFIG.UPDATE_THRESHOLD_BPS)) {

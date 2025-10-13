@@ -59,7 +59,7 @@ function quantileAbs(returns: number[], q: number): number {
 }
 
 /** EWMA variance on log-returns (dimensionless). */
-function useEwmaSigma(active: boolean, price: number | null, alpha: number, resetSeed?: unknown) {
+function useEwmaSigma(active: boolean, price: number | null, alpha: number) {
   const last = useRef<number | null>(null);
   const [v, setV] = useState(0);
   useEffect(() => {
@@ -70,13 +70,11 @@ function useEwmaSigma(active: boolean, price: number | null, alpha: number, rese
     }
     last.current = price;
   }, [active, price, alpha]);
-  // hard reset on pair change
-  useEffect(() => { last.current = null; setV(0); }, [resetSeed]);
   return Math.sqrt(v);
 }
 
 /** Rolling ring-buffer of log-returns for robust quantile vol. */
-function useReturnWindow(active: boolean, price: number | null, capacity: number, resetSeed?: unknown) {
+function useReturnWindow(active: boolean, price: number | null, capacity: number) {
   const last = useRef<number | null>(null);
   const buf = useRef<number[]>([]);
   useEffect(() => {
@@ -89,9 +87,7 @@ function useReturnWindow(active: boolean, price: number | null, capacity: number
     }
     last.current = price;
   }, [active, price, capacity]);
-  // hard reset on pair change
-  useEffect(() => { last.current = null; buf.current = []; }, [resetSeed]);
-  return buf.slice;
+  return buf.current;
 }
 
 /** Piecewise MEV cushion by notional USD. */
