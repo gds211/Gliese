@@ -144,11 +144,19 @@ const SwapInterface = () => {
   const tokenInArg = selectedSellToken?.address ?? sellToken; // pass address if exists; otherwise symbol "MON"
   const tokenOutArg = selectedBuyToken?.address ?? buyToken;
 
-  // ---- Precomputed slippage for hooks (exists early; prevents TDZ) ----
-const DEFAULT_BPS = BigInt(Number((PUBLIC_CONFIG as any).SLIPPAGE_BPS ?? 50));
-// If auto is enabled we can allow a different default for quotes; if not present, fall back to DEFAULT_BPS.
-const QUOTE_SLIP_BPS = autoSlippage
-  ? BigInt((PUBLIC_CONFIG as any).AUTO_SLIPPAGE?.DEFAULT_BPS ?? Number(DEFAULT_BPS))
+ 
+// ---- Precomputed slippage for hooks (exists early; prevents TDZ) ----
+const DEFAULT_BPS: bigint = (() => {
+  const v = (PUBLIC_CONFIG as any).SLIPPAGE_BPS;
+  if (typeof v === "bigint") return v;                 // e.g. 500n
+  const n = Number(v ?? 50);
+  return BigInt(Number.isFinite(n) ? n : 50);
+})();
+
+// For polling quotes, feed a small, safe baseline when auto mode is ON.
+// (BASE_BPS lives under AUTO_SLIPPAGE and is 30 bps by default = 0.30%.)
+const QUOTE_SLIP_BPS: bigint = autoSlippage
+  ? BigInt((PUBLIC_CONFIG as any).AUTO_SLIPPAGE?.BASE_BPS ?? 30)
   : DEFAULT_BPS;
 // --------------------------------------------------------------------
 
