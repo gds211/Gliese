@@ -9,7 +9,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { ChevronDown, Info, Wallet } from "lucide-react";
+import { ChevronDown, Wallet } from "lucide-react";
 import TokenAvatar from "@/components/TokenAvatar";
 import { useAccount, useBalance } from "wagmi";
 
@@ -95,6 +95,13 @@ const TriggerInterface = ({ tokens }: TriggerInterfaceProps) => {
   const receiveUsdValue = calculateReceiveAmount() 
     ? `~$${Number(calculateReceiveAmount()).toFixed(2)}` 
     : "~$0.00";
+
+  const getButtonText = () => {
+    if (!isConnected) return "Connect Wallet";
+    if (!payAmount || payAmount === "0" || Number(payAmount) === 0) return "Enter an amount";
+    if (!rate || rate === "0" || Number(rate) === 0) return "Enter an amount";
+    return "Place trigger order";
+  };
 
   return (
     <div className="space-y-2">
@@ -271,10 +278,7 @@ const TriggerInterface = ({ tokens }: TriggerInterfaceProps) => {
         className="w-full h-12 text-base font-semibold bg-primary hover:bg-primary/90 text-primary-foreground"
         disabled={!isConnected || !payAmount || !rate}
       >
-        <span className="flex items-center gap-2">
-          {isConnected ? `Give permission to use ${payToken}` : "Connect Wallet"}
-          <Info className="h-4 w-4" />
-        </span>
+        {getButtonText()}
       </Button>
     </div>
   );
