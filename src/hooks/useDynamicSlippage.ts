@@ -35,6 +35,8 @@ export type UseDynamicSlippageArgs = {
    * Return per-unit OUT (amountOut/amountIn) or null on failure.
    */
   probePerUnit?: (amountInHuman: number) => Promise<number | null>;
+  /** Reset state when trade context changes (pair, direction, pool/path shape, etc.). */
+  resetKey?: string | number | boolean | null;
 };
 
 export type DynamicSlippage = { bps: bigint; bpsNumber: number };
@@ -109,6 +111,7 @@ export function useDynamicSlippageBps({
   pathLength = 1,
   notionalUsd = null,
   probePerUnit,
+  resetKey,
 }: UseDynamicSlippageArgs): DynamicSlippage {
   // ---- Config ----
   const CFG = (PUBLIC_CONFIG as any).AUTO_SLIPPAGE ?? {};
@@ -238,6 +241,11 @@ export function useDynamicSlippageBps({
   // ---- Hysteresis + gentle cool-off ----
   const lastRef = useRef<number>(BASE_BPS);
   const [coolTick, setCoolTick] = useState(0);
+  // Reset the held value when the trade context changes so a previous spike
+  // doesn’t leak into a different pair/route/amount regime.
+  useEffect(() => {
+    lastRef.current = BASE_BPS;
+  }, [resetKey, enabled, BASE_BPS]);
 
   // Cool-off ticker (decay toward new target to avoid sticky highs)
   useEffect(() => {
@@ -258,9 +266,10 @@ export function useDynamicSlippageBps({
   useEffect(() => {
     if (!enabled || COOL_OFF_BPS_PER_SEC <= 0) return;
     if (rawTarget < lastRef.current) {
-      const step = COOL_OFF_BPS_PER_SEC;
-      const next = Math.max(rawTarget, lastRef.current - step);
-      lastRef.current = next;
+      const gap = lastRef.current - rawTarget;
+      // Drop at least COOL_OFF_BPS_PER_SEC, and also ~20% of the gap for fast recovery.
+      const step = Math.max(COOL_OFF_BPS_PER_SEC, Math.ceil(gap * 0.2));
+      lastRef.current = Math.max(rawTarget, lastRef.current - step);
     }
   }, [coolTick, enabled, COOL_OFF_BPS_PER_SEC, rawTarget]);
 
