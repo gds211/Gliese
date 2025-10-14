@@ -457,8 +457,7 @@ const selectToken = (picked: string | TokenObj) => {
             </TabsTrigger>
           </TabsList>
 
-          <div className="min-h-[520px] flex flex-col">
-            <TabsContent value="instant" className="mt-4 space-y-3 flex-1">
+          <TabsContent value="instant" className="mt-4 space-y-3">
             {/* Selling Section */}
             <div className="space-y-3">
               <div className="flex items-center justify-between">
@@ -621,48 +620,48 @@ const selectToken = (picked: string | TokenObj) => {
                 </div>
               </div>
             </div>
-
-            {/* Swap Button */}
-            <Button
-              className="w-full mt-4"
-              disabled={
-                (!isConnected && !openConnectModal) ||
-                !sellAmount ||
-                sellAmount === "0" ||
-                sellAmount === "0.0" ||
-                isExceeding ||
-                !quote ||
-                quote.minOutRaw === 0n
-              }
-              onClick={() => {
-                if (!isConnected) return openConnectModal?.();
-                onClickSwap();
-              }}
-            >
-              {!isConnected
-                ? "Connect Wallet"
-                : isExceeding
-                ? "Amount exceeds balance"
-                : !sellAmount || sellAmount === "0" || sellAmount === "0.0"
-                ? "Enter an amount"
-                : !quote || quote.minOutRaw === 0n
-                ? "No route"
-                : "Swap"}
-            </Button>
           </TabsContent>
 
-          <TabsContent value="trigger" className="mt-4 space-y-3 flex-1">
+          <TabsContent value="trigger" className="mt-4">
             <TriggerInterface tokens={tokens} />
           </TabsContent>
 
-          <TabsContent value="recurring" className="mt-4 space-y-3 flex-1">
+          <TabsContent value="recurring">
             <div className="text-center text-muted-foreground py-8">Recurring orders coming soon</div>
-            <Button className="w-full mt-4" disabled>
-              Coming Soon
-            </Button>
           </TabsContent>
-          </div>
         </Tabs>
+
+        {/* Connect/Swap Button */}
+      {activeTab === "instant" && (
+        <div className="w-full mt-4">
+          <Button
+            className="w-full"
+            disabled={
+              (!isConnected && !openConnectModal) ||
+              !sellAmount ||
+              sellAmount === "0" ||
+              sellAmount === "0.0" ||
+              isExceeding ||
+              !quote ||
+              quote.minOutRaw === 0n
+            }
+            onClick={() => {
+              if (!isConnected) return openConnectModal?.();
+              onClickSwap();
+            }}
+          >
+            {!isConnected
+              ? "Connect Wallet"
+              : isExceeding
+              ? "Amount exceeds balance"
+              : !sellAmount || sellAmount === "0" || sellAmount === "0.0"
+              ? "Enter an amount"
+              : !quote || quote.minOutRaw === 0n
+              ? "No route"
+              : "Swap"}
+          </Button>
+        </div>
+        )}
       </div>
 
       {/* Token Selection Modal */}

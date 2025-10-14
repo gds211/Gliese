@@ -104,7 +104,7 @@ const TriggerInterface = ({ tokens }: TriggerInterfaceProps) => {
   };
 
   return (
-    <div className="space-y-3">
+    <div className="space-y-2">
       {/* You pay section */}
       <div className="space-y-2">
         <div className="flex justify-between items-center text-sm">
