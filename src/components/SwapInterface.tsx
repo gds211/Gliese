@@ -622,11 +622,11 @@ const selectToken = (picked: string | TokenObj) => {
             </div>
           </TabsContent>
 
-          <TabsContent value="trigger" className="mt-4">
+          <TabsContent value="trigger" className="mt-4 space-y-3">
             <TriggerInterface tokens={tokens} />
           </TabsContent>
 
-          <TabsContent value="recurring">
+          <TabsContent value="recurring" className="mt-4 space-y-3">
             <div className="text-center text-muted-foreground py-8">Recurring orders coming soon</div>
           </TabsContent>
         </Tabs>
