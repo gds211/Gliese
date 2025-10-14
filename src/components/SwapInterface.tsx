@@ -444,20 +444,21 @@ const selectToken = (picked: string | TokenObj) => {
     <Card className="w-full max-w-md mx-auto bg-muted/40 backdrop-blur-md border border-muted/60 shadow-2xl">
       <div className="p-4 space-y-4">
         {/* Tabs */}
-        <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as TabKey)} className="w-full">
-          <TabsList className="grid w-full grid-cols-3 bg-muted/40 h-10">
-            <TabsTrigger value="instant" className="text-sm flex items-center gap-2 h-8 data-[state=active]:text-primary data-[state=inactive]:text-muted-foreground">
-              <span>⚡</span> Instant
-            </TabsTrigger>
-            <TabsTrigger value="trigger" className="text-sm flex items-center gap-2 h-8 data-[state=active]:text-primary data-[state=inactive]:text-muted-foreground">
-              <span>🔫</span> Trigger
-            </TabsTrigger>
-            <TabsTrigger value="recurring" className="text-sm flex items-center gap-2 h-8 data-[state=active]:text-primary data-[state=inactive]:text-muted-foreground">
-              <span>🔄</span> Recurring
-            </TabsTrigger>
-          </TabsList>
+        <div className="min-h-[520px]">
+          <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as TabKey)} className="w-full">
+            <TabsList className="grid w-full grid-cols-3 bg-muted/40 h-10">
+              <TabsTrigger value="instant" className="text-sm flex items-center gap-2 h-8 data-[state=active]:text-primary data-[state=inactive]:text-muted-foreground">
+                <span>⚡</span> Instant
+              </TabsTrigger>
+              <TabsTrigger value="trigger" className="text-sm flex items-center gap-2 h-8 data-[state=active]:text-primary data-[state=inactive]:text-muted-foreground">
+                <span>🔫</span> Trigger
+              </TabsTrigger>
+              <TabsTrigger value="recurring" className="text-sm flex items-center gap-2 h-8 data-[state=active]:text-primary data-[state=inactive]:text-muted-foreground">
+                <span>🔄</span> Recurring
+              </TabsTrigger>
+            </TabsList>
 
-          <TabsContent value="instant" className="mt-4 space-y-3">
+            <TabsContent value="instant" className="mt-4 space-y-3">
             {/* Selling Section */}
             <div className="space-y-3">
               <div className="flex items-center justify-between">
@@ -622,14 +623,15 @@ const selectToken = (picked: string | TokenObj) => {
             </div>
           </TabsContent>
 
-          <TabsContent value="trigger" className="mt-4">
+          <TabsContent value="trigger" className="mt-4 space-y-3">
             <TriggerInterface tokens={tokens} />
           </TabsContent>
 
-          <TabsContent value="recurring">
+          <TabsContent value="recurring" className="mt-4 space-y-3">
             <div className="text-center text-muted-foreground py-8">Recurring orders coming soon</div>
           </TabsContent>
-        </Tabs>
+          </Tabs>
+        </div>
 
         {/* Connect/Swap Button */}
       {activeTab === "instant" && (
