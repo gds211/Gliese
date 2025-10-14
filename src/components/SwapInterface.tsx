@@ -445,19 +445,28 @@ const selectToken = (picked: string | TokenObj) => {
       <div className="p-4 space-y-4">
         {/* Tabs */}
         <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as TabKey)} className="w-full">
-          <TabsList className="grid w-full grid-cols-3 bg-muted/40 h-10">
-            <TabsTrigger value="instant" className="text-sm flex items-center gap-2 h-8 data-[state=active]:text-primary data-[state=inactive]:text-muted-foreground">
-              <span>⚡</span> Instant
+          <TabsList className="grid w-full grid-cols-3 bg-muted/40 h-10 items-center p-0">
+            <TabsTrigger
+              value="instant"
+              className="h-10 px-4 inline-flex items-center justify-center leading-none data-[state=active]:shadow-none"
+            >
+            <span>⚡</span><span className="ml-1">Instant</span>
             </TabsTrigger>
-            <TabsTrigger value="trigger" className="text-sm flex items-center gap-2 h-8 data-[state=active]:text-primary data-[state=inactive]:text-muted-foreground">
-              <span>🔫</span> Trigger
+            <TabsTrigger
+               value="trigger"
+               className="h-10 px-4 inline-flex items-center justify-center leading-none data-[state=active]:shadow-none"
+            >
+               <span>🔫</span><span className="ml-1">Trigger</span>
             </TabsTrigger>
-            <TabsTrigger value="recurring" className="text-sm flex items-center gap-2 h-8 data-[state=active]:text-primary data-[state=inactive]:text-muted-foreground">
-              <span>🔄</span> Recurring
-            </TabsTrigger>
+            <TabsTrigger
+               value="recurring"
+               className="h-10 px-4 inline-flex items-center justify-center leading-none data-[state=active]:shadow-none"
+            >
+              <span>🔄</span><span className="ml-1">Recurring</span>
+           </TabsTrigger>
           </TabsList>
 
-          <TabsContent value="instant" className="mt-4 space-y-3">
+          <TabsContent value="instant" className="mt-0 space-y-3">
             {/* Selling Section */}
             <div className="space-y-3">
               <div className="flex items-center justify-between">
