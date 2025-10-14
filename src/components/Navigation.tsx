@@ -2,7 +2,7 @@ import { Button } from "@/components/ui/button";
 import { useState } from "react";
 import glieseLogo from "@/assets/gliese-logo.png";
 import WalletButton from "@/components/WalletButton"; // ⟵ use your custom RK-powered button
-import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from "@/components/ui/tooltip";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 
 const Navigation = () => {
   const [activeTab, setActiveTab] = useState("Swap");
@@ -28,8 +28,7 @@ const Navigation = () => {
       </div>
 
       {/* Navigation Links */}
-      <TooltipProvider>
-        <div className="flex items-center gap-1 bg-black rounded-lg p-1 backdrop-blur-sm">
+      <div className="flex items-center gap-1 bg-black rounded-lg p-1 backdrop-blur-sm">
           {navItems.map((item) => {
             const button = (
               <Button
@@ -68,7 +67,6 @@ const Navigation = () => {
             return button;
           })}
         </div>
-      </TooltipProvider>
 
       {/* Connect Wallet (RainbowKit modal pops from this custom button) */}
       <WalletButton />
