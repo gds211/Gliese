@@ -425,6 +425,7 @@ const selectToken = (picked: string | TokenObj) => {
         amountOutMin: minOutRawDynamic, // dynamic, size-aware (hard-capped) slippage
         path: quote.path,
         adapters: quote.adapters,
+        splitPlan: quote.splitPlan ?? null,
       });
 
       toast({
