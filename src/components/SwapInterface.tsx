@@ -406,10 +406,7 @@ const selectToken = (picked: string | TokenObj) => {
         return;
       }
       if (!sellAmount || Number(sellAmount) <= 0) throw new Error("Enter an amount.");
-      if (!quote || quote.minOutRaw === 0n || (!quote.splitPlan && !quote.path?.length)) {
-         throw new Error("No route found.");
-      }
-
+      if (!quote || quote.minOutRaw === 0n || !quote.path?.length) throw new Error("No route found.");
       if (!selectedSellToken || !selectedBuyToken) throw new Error("Select tokens.");
 
       const inDec = sellBal?.decimals ?? 18;
@@ -425,7 +422,6 @@ const selectToken = (picked: string | TokenObj) => {
         amountOutMin: minOutRawDynamic, // dynamic, size-aware (hard-capped) slippage
         path: quote.path,
         adapters: quote.adapters,
-        splitPlan: quote.splitPlan ?? null,
       });
 
       toast({
