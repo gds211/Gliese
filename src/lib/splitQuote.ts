@@ -40,17 +40,17 @@ type QuoteFnCtx = {
 };
 
 async function quoteSingleAmount(ctx: QuoteFnCtx, amountIn: bigint) {
-  const formatted = await (ctx.client as any).readContract({
+  const res = await (ctx.client as any).readContract({
     address: ctx.router,
     abi: YAK_ROUTER_ABI,
     functionName: "findBestPathWithGas",
     args: [amountIn, ctx.inAddr, ctx.outAddr, BigInt(ctx.maxSteps), ctx.gasWei],
   });
 
-  const amounts: bigint[]   = formatted?.amounts    ?? formatted?.[0] ?? [];
-  const adapters: Address[] = formatted?.adapters   ?? formatted?.[1] ?? [];
-  const path: Address[]     = formatted?.path       ?? formatted?.[2] ?? [];
-  const gasEstimate: bigint = formatted?.gasEstimate?? formatted?.[3] ?? 0n;
+  const amounts: bigint[]   = (res as any)?.amounts     ?? (res as any)?.[0] ?? [];
+  const adapters: Address[] = (res as any)?.adapters    ?? (res as any)?.[1] ?? [];
+  const path: Address[]     = (res as any)?.path        ?? (res as any)?.[2] ?? [];
+  const gasEstimate: bigint = (res as any)?.gasEstimate ?? (res as any)?.[3] ?? 0n;
 
   const outRaw = amounts.length ? amounts[amounts.length - 1] : 0n;
   const minOutRaw = (outRaw * (10_000n - ctx.slippageBps)) / 10_000n;
@@ -62,33 +62,46 @@ function routeId(adapters: Address[], path: Address[]) {
   return [...adapters, ...path].map(a => a.toLowerCase()).join("|");
 }
 
+/**
+ * Try split allocations (e.g., 80/20, 70/30, 60/40, 50/50) and return the best plan
+ * if it beats the baseline single-route quote by MIN_GAIN_BPS.
+ */
 export async function computeBestSplitPlan(args: {
   client: any;
   router: Address;
   wrapper: Address;
-  tokenIn: string;   // must be ERC20 (no native)
-  tokenOut: string;  // must be ERC20 (no native)
+  tokenIn: string;   // ERC20 only (no native)
+  tokenOut: string;  // ERC20 only (no native)
   amountInHuman: string;
   gasWei: bigint;
   slippageBps: bigint;
   maxSteps?: number;
 }): Promise<{ best: SplitPlan | null; baselineOut: bigint; baselineMinOut: bigint }> {
-  const { client, router, wrapper, tokenIn, tokenOut, amountInHuman, gasWei, slippageBps, maxSteps = PUBLIC_CONFIG.MAX_STEPS } = args;
+  const {
+    client, router, wrapper, tokenIn, tokenOut,
+    amountInHuman, gasWei, slippageBps, maxSteps = PUBLIC_CONFIG.MAX_STEPS
+  } = args;
 
   const ZERO = "0x0000000000000000000000000000000000000000";
-  const isNative = (v?: string) => !v || v.toUpperCase() === PUBLIC_CONFIG.NATIVE_SYMBOL || v === ZERO;
-  if (isNative(tokenIn) || isNative(tokenOut)) return { best: null, baselineOut: 0n, baselineMinOut: 0n };
+  const isNative = (v?: string) =>
+    !v || v.toUpperCase() === PUBLIC_CONFIG.NATIVE_SYMBOL || v === ZERO;
+
+  // Splitter is ERC20-only
+  if (isNative(tokenIn) || isNative(tokenOut)) {
+    return { best: null, baselineOut: 0n, baselineMinOut: 0n };
+  }
 
   const inAddr  = tokenIn  as Address;
   const outAddr = tokenOut as Address;
   const inDec   = await getDecimals(client as any, inAddr);
   const outDec  = await getDecimals(client as any, outAddr);
+
   const totalIn = parseUnits(amountInHuman || "0", inDec);
   if (totalIn === 0n) return { best: null, baselineOut: 0n, baselineMinOut: 0n };
 
   const ctx: QuoteFnCtx = { client, router, inAddr, outAddr, inDec, outDec, gasWei, maxSteps, slippageBps };
 
-  // Baseline
+  // Baseline single-route
   const base = await quoteSingleAmount(ctx, totalIn);
   const baselineOut    = base.outRaw;
   const baselineMinOut = base.minOutRaw;
@@ -109,19 +122,29 @@ export async function computeBestSplitPlan(args: {
     const qa = await quoteSingleAmount(ctx, aIn);
     const qb = await quoteSingleAmount(ctx, bIn);
 
-    // If both legs pick the exact same route, splitting provides no AMM advantage; skip
+    // If both legs use identical route, skip
     if (routeId(qa.adapters, qa.path) === routeId(qb.adapters, qb.path)) continue;
 
-    const totalOut     = qa.outRaw + qb.outRaw;
-    const minTotalOut  = qa.minOutRaw + qb.minOutRaw;
-    const totalGas     = qa.gasEstimate + qb.gasEstimate + WRAP_GAS; // noted for visibility; not subtracting in this v1
+    const totalOut    = qa.outRaw + qb.outRaw;
+    const minTotalOut = qa.minOutRaw + qb.minOutRaw;
+    const _totalGas   = qa.gasEstimate + qb.gasEstimate + WRAP_GAS; // reserved for visibility
 
     if (totalOut > bestOut) {
       const tradeA = { amountIn: aIn, amountOut: qa.minOutRaw, path: qa.path as Address[], adapters: qa.adapters as Address[] };
       const tradeB = { amountIn: bIn, amountOut: qb.minOutRaw, path: qb.path as Address[], adapters: qb.adapters as Address[] };
 
-      const cdA = encodeFunctionData({ abi: YAK_ROUTER_ABI as any, functionName: "swapNoSplit", args: [tradeA, wrapper, 0n] }) as Hex;
-      const cdB = encodeFunctionData({ abi: YAK_ROUTER_ABI as any, functionName: "swapNoSplit", args: [tradeB, wrapper, 0n] }) as Hex;
+      // Encode Yak legs to pay out to the wrapper; wrapper applies single fee on aggregate
+      const cdA = encodeFunctionData({
+        abi: YAK_ROUTER_ABI as any,
+        functionName: "swapNoSplit",
+        args: [tradeA, wrapper, 0n],
+      }) as Hex;
+
+      const cdB = encodeFunctionData({
+        abi: YAK_ROUTER_ABI as any,
+        functionName: "swapNoSplit",
+        args: [tradeB, wrapper, 0n],
+      }) as Hex;
 
       best = {
         wrapper,
@@ -140,9 +163,12 @@ export async function computeBestSplitPlan(args: {
     }
   }
 
-  // Only accept if materially better than baseline (covers wrapper overhead & unknown gas conversion)
+  // Only accept if materially better than baseline
   if (best && (best.totalOut * 10_000n) / (baselineOut || 1n) >= (10_000n + MIN_GAIN)) {
     return { best, baselineOut, baselineMinOut };
   }
   return { best: null, baselineOut, baselineMinOut };
 }
+
+// (Optional) re-export types in case you need them elsewhere
+export type { SplitPlan as YakSplitPlan, LegQuote as YakSplitLeg };
