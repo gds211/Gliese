@@ -62,6 +62,19 @@ export const PUBLIC_CONFIG = {
     PROBE_MIN_INTERVAL_MS: 2500 // min spacing between probes
   },
 
+  // --- Split trades (off-chain planned; on-chain executed via wrapper) ---
+  YAK_SPLIT: {
+    ENABLED: true,
+    WRAPPER_ADDRESS: "0x6a47EdCFc4c88A04D0F0a69dd9D8d8Cc4eC05b2D", // TODO: set after you deploy
+    // Fractions we test (in % of totalIn for leg A). Leg B uses the remainder.
+    FRACTIONS: [80, 70, 60, 50],
+    // Only accept split if combined out beats single route by at least this many bps.
+    MIN_GAIN_BPS: 20,
+    // Safety margins / gas
+    DEADLINE_SECONDS: 120,
+    WRAPPER_GAS_OVERHEAD: 50000
+  },
+
 } as const;
 
 // Type helper (optional)
