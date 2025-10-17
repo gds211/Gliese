@@ -8,7 +8,7 @@ import { PUBLIC_CONFIG } from "@/config/public";
 import { getDecimals } from "@/lib/decimals";
 import { changedByAtLeastBps } from "@/lib/math";
 import { useNetworkFees } from "@/hooks/useNetworkFees";
-import { computeBestSplitPlan, type SplitPlan } from "@/lib/splitQuote";
+import { computeBestSplitPlan } from "@/lib/splitQuote";
 
 // local helpers
 const ZERO = "0x0000000000000000000000000000000000000000";
