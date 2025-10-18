@@ -1,26 +1,27 @@
 // src/hooks/useNetworkFees.ts
 import { useEffect, useMemo, useState } from "react";
 import { usePublicClient } from "wagmi";
+import { PUBLIC_CONFIG } from "@/config/public";
 
 type FeeState = {
   type: "eip1559" | "legacy" | "fallback";
   gasPriceWei?: bigint;                 // legacy
-  maxFeePerGasWei?: bigint;             // EIP-1559
-  maxPriorityFeePerGasWei?: bigint;     // EIP-1559
-  baseFeePerGasWei?: bigint;            // EIP-1559 (from latest block)
-  effectiveGasPriceWei: bigint;         // what we’ll pass to Yak for costing
-  lastUpdated: number;                  // ms epoch
+  maxFeePerGasWei?: bigint;            // EIP-1559
+  maxPriorityFeePerGasWei?: bigint;    // EIP-1559
+  baseFeePerGasWei?: bigint;           // EIP-1559 (from latest block)
+  effectiveGasPriceWei: bigint;        // what we’ll pass to Yak for costing
+  lastUpdated: number;                 // ms epoch
   source: "estimateFeesPerGas" | "getGasPrice" | "fallback";
 };
 
-export function useNetworkFees(refreshMs: number = 1500) {
+export function useNetworkFees(refreshMs = PUBLIC_CONFIG.FEE_REFRESH_MS) {
   const client = usePublicClient();
-  const [fees, setFees] = useState<FeeState>({
+  const [fees, setFees] = useState<FeeState>(() => ({
     type: "fallback",
-    effectiveGasPriceWei: 1_000_000_000n, // 1 gwei fallback
+    effectiveGasPriceWei: PUBLIC_CONFIG.GAS_PRICE_WEI_FALLBACK,
     lastUpdated: Date.now(),
     source: "fallback",
-  });
+  }));
 
   useEffect(() => {
     if (!client) return;
@@ -30,26 +31,33 @@ export function useNetworkFees(refreshMs: number = 1500) {
     async function load() {
       try {
         // Try EIP-1559 first
-        if ((client as any).estimateFeesPerGas) {
-          const est = await (client as any).estimateFeesPerGas();
-          // est has: maxFeePerGas, maxPriorityFeePerGas (and maybe baseFeePerGas on some clients)
-          const latest = await client.getBlock();
-          const base = latest.baseFeePerGas ?? undefined;
+        const e = await (client as any).estimateFeesPerGas?.();
+        if (e && (e.maxFeePerGas ?? e["maxFeePerGas"])) {
+          const maxFee = BigInt(e.maxFeePerGas);
+          const maxPrio = BigInt(e.maxPriorityFeePerGas ?? 0n);
 
-          const next: FeeState = {
-            type: "eip1559",
-            maxFeePerGasWei: est.maxFeePerGas,
-            maxPriorityFeePerGasWei: est.maxPriorityFeePerGas,
-            baseFeePerGasWei: base,
-            effectiveGasPriceWei: est.maxFeePerGas ?? est.maxPriorityFeePerGas ?? 0n,
-            lastUpdated: Date.now(),
-            source: "estimateFeesPerGas",
-          };
-          if (!dead) setFees(next);
+          // Base fee from latest block (if available)
+          const block = await client.getBlock({ blockTag: "latest" }).catch(() => null as any);
+          const base = BigInt(block?.baseFeePerGas ?? 0n);
+
+          // Effective = min(maxFeePerGas, baseFee + maxPriority)
+          const effective = (base + maxPrio) > maxFee ? maxFee : (base + maxPrio);
+
+          if (!dead) {
+            setFees({
+              type: "eip1559",
+              maxFeePerGasWei: maxFee,
+              maxPriorityFeePerGasWei: maxPrio,
+              baseFeePerGasWei: base,
+              effectiveGasPriceWei: effective,
+              lastUpdated: Date.now(),
+              source: "estimateFeesPerGas",
+            });
+          }
           return;
         }
 
-        // Legacy gas price
+        // Fallback to legacy getGasPrice
         const gp = await client.getGasPrice();
         if (!dead) {
           setFees({
@@ -64,7 +72,7 @@ export function useNetworkFees(refreshMs: number = 1500) {
         if (!dead) {
           setFees({
             type: "fallback",
-            effectiveGasPriceWei: 1_000_000_000n,
+            effectiveGasPriceWei: PUBLIC_CONFIG.GAS_PRICE_WEI_FALLBACK,
             lastUpdated: Date.now(),
             source: "fallback",
           });
@@ -77,5 +85,7 @@ export function useNetworkFees(refreshMs: number = 1500) {
     return () => { dead = true; clearInterval(timer); };
   }, [client, refreshMs]);
 
+  // Memo just in case a parent renders frequently
   return useMemo(() => fees, [fees]);
 }
+

@@ -1,9 +1,9 @@
 // src/components/SwapInterface.tsx
 import { useState, useMemo, useEffect } from "react";
 import { Address, parseUnits, formatUnits } from "viem";
-import { useAccount, useBalance, usePublicClient } from "wagmi";
+import { useAccount, useBalance } from "wagmi";
 import { useConnectModal } from "@rainbow-me/rainbowkit";
-import { useQueryClient } from "@tanstack/react-query";
+import { useQueryClient } from "@tanstack/react-query"; // <-- ADDED
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -12,12 +12,11 @@ import { Card } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogOverlay } from "@/components/ui/dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useToast } from "@/components/ui/use-toast";
-
+import { usePublicClient } from "wagmi";
 import { useNetworkFees } from "@/hooks/useNetworkFees";
 import { getDecimals } from "@/lib/decimals";
 import { YAK_ROUTER_ABI } from "@/abi/yakRouter";
 import { useDynamicSlippageBps } from "@/hooks/useDynamicSlippage";
-import { useYakSplitQuote } from "@/hooks/useYakSplitQuote"; // <-- ADDED
 
 import { ArrowUpDown, Wallet, Search, ChevronDown } from "lucide-react";
 import glieseLogo from "@/assets/gliese-logo.png";
@@ -29,6 +28,9 @@ import { performSwap } from "@/lib/swap";
 import TokenAvatar from "@/components/TokenAvatar";
 import SlippageIcon from "@/assets/slippage.png";
 import TriggerInterface from "@/components/TriggerInterface";
+
+
+
 
 // -------------------- Local helpers --------------------
 function formatAmount(raw: bigint, decimals: number, maxFrac: number = 6): string {
@@ -55,18 +57,21 @@ const tokensEqual = (a?: TokenPick | null, b?: TokenPick | null) => {
   return aSym !== "" && aSym === bSym;        // fallback for native/no-address
 };
 
+
+
 // -------------------- Component --------------------
 const SwapInterface = () => {
   const { address, isConnected } = useAccount();
   const { openConnectModal } = useConnectModal();
   const { toast } = useToast();
-  const queryClient = useQueryClient();
+  const queryClient = useQueryClient(); // <-- ADDED
   const publicClient = usePublicClient();
   const { effectiveGasPriceWei } = useNetworkFees(PUBLIC_CONFIG.FEE_REFRESH_MS);
 
   // Which tab is active: controls when the bottom swap button shows
   type TabKey = "instant" | "trigger" | "recurring";
   const [activeTab, setActiveTab] = useState<TabKey>("instant");
+
 
   // --- Token list (your current list) ---
   const cryptoPrices = {
@@ -86,6 +91,8 @@ const SwapInterface = () => {
     { symbol: "DAK", name: "Molandak", address: "0x0F0BDEbF0F83cD1EE3974779Bcb7315f9808c714" as `0x${string}` },
     { symbol: "aprMON", name: "apriori MON", address: "0xb2f82D0f38dc453D596Ad40A37799446Cc89274A" as `0x${string}` },
   ];
+
+  
 
   // --- UI State ---
   const [sellAmount, setSellAmount] = useState("");
@@ -113,7 +120,7 @@ const SwapInterface = () => {
   const {
     data: sellBal,
     isLoading: sellBalLoading,
-    refetch: refetchSellBalance,
+    refetch: refetchSellBalance, // <-- ADDED
   } = useBalance({
     address,
     token: isNativeSell ? undefined : (selectedSellToken?.address as `0x${string}` | undefined),
@@ -138,43 +145,18 @@ const SwapInterface = () => {
       t.name.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  // --- Quote addr helpers ---
+  // --- Quote from Yak (every 2s, 5% slippage, threshold ≥ 0.1%) ---
   const router = PUBLIC_CONFIG.YAK_ROUTER as Address;
   const tokenInArg = selectedSellToken?.address ?? sellToken; // pass address if exists; otherwise symbol "MON"
   const tokenOutArg = selectedBuyToken?.address ?? buyToken;
+
+  // --- Helper: quote per-unit OUT for an arbitrary human input amount
   const ZERO = "0x0000000000000000000000000000000000000000";
   const isNativeSymbol = (v?: string) =>
     !v || v.toUpperCase() === PUBLIC_CONFIG.NATIVE_SYMBOL || v === ZERO;
   const toQuoteAddr = (v?: string) =>
     (isNativeSymbol(v) ? (PUBLIC_CONFIG.WRAPPED_NATIVE as Address) : (v as Address));
 
-  // --- Decimals for both sides (robust for native/ERC20) ---
-  const [inDecimals, setInDecimals] = useState<number | null>(null);
-  const [outDecimals, setOutDecimals] = useState<number | null>(null);
-
-  useEffect(() => {
-    let dead = false;
-    (async () => {
-      try {
-        const inAddrQ = toQuoteAddr(tokenInArg);
-        const outAddrQ = toQuoteAddr(tokenOutArg);
-        const inDec = await getDecimals(publicClient as any, isNativeSymbol(tokenInArg) ? ZERO : inAddrQ);
-        const outDec = await getDecimals(publicClient as any, isNativeSymbol(tokenOutArg) ? ZERO : outAddrQ);
-        if (!dead) {
-          setInDecimals(inDec);
-          setOutDecimals(outDec);
-        }
-      } catch {
-        if (!dead) {
-          setInDecimals(null);
-          setOutDecimals(null);
-        }
-      }
-    })();
-    return () => { dead = true; };
-  }, [publicClient, tokenInArg, tokenOutArg]);
-
-  // --- Helper: quote per-unit OUT for an arbitrary human input amount (for dynamic slippage) ---
   async function getYakQuotePerUnit(amountHuman: number | string): Promise<{ perUnitOut: number } | null> {
     try {
       const inAddr  = toQuoteAddr(tokenInArg);
@@ -185,19 +167,12 @@ const SwapInterface = () => {
       if (amtIn === 0n) return null;
       const gasWei  = effectiveGasPriceWei ?? PUBLIC_CONFIG.GAS_PRICE_WEI_FALLBACK;
 
-      let formatted: any;
-try {
-  formatted = await (publicClient as any).readContract({
-    address: router, abi: YAK_ROUTER_ABI, functionName: "findBestPathWithGas",
-    args: [ amtIn, inAddr, outAddr, BigInt(PUBLIC_CONFIG.MAX_STEPS), gasWei ],
-  });
-} catch {
-  formatted = await (publicClient as any).readContract({
-    address: router, abi: YAK_ROUTER_ABI, functionName: "findBestPath",
-    args: [ amtIn, inAddr, outAddr, BigInt(PUBLIC_CONFIG.MAX_STEPS) ],
-  });
-}
-
+      const formatted: any = await (publicClient as any).readContract({
+        address: router,
+        abi: YAK_ROUTER_ABI,
+        functionName: "findBestPathWithGas",
+        args: [amtIn, inAddr, outAddr, BigInt(PUBLIC_CONFIG.MAX_STEPS), gasWei],
+      });
       const amounts: bigint[] = formatted?.amounts ?? formatted?.[0] ?? [];
       const outRaw = amounts.length ? amounts[amounts.length - 1] : 0n;
       if (outRaw === 0n) return null;
@@ -210,7 +185,6 @@ try {
     }
   }
 
-  // --- Single-route quotes from your existing hook ---
   const quote = useYakQuote({
     router,
     tokenIn: tokenInArg,
@@ -219,11 +193,12 @@ try {
     enabled: Boolean(sellAmount && selectedSellToken && selectedBuyToken),
   });
 
+  
   const unitQuote = useYakQuote({
     router,
     tokenIn: tokenInArg,
     tokenOut: tokenOutArg,
-    amountInHuman: "1",
+    amountInHuman: "1", // 1 whole unit of the SELL token
     enabled: Boolean(
       selectedSellToken &&
       selectedBuyToken &&
@@ -231,113 +206,96 @@ try {
     ),
   });
 
-  // --- Split planner: computes best 2-way split vs single ---
-  const amountInAtomicForSplit = useMemo(() => {
-    if (!sellAmount || !inDecimals) return 0n;
-    try { return parseUnits(sellAmount, inDecimals); } catch { return 0n; }
-  }, [sellAmount, inDecimals]);
+const notionalUsd = useMemo(() => {
+  const amt = Number(sellAmount);
+  const p = (cryptoPrices as any)[sellToken];
+  if (!Number.isFinite(amt) || !Number.isFinite(p)) return null;
+  return amt * p;
+}, [sellAmount, sellToken]);
 
-  const splitState = useYakSplitQuote({
-    router: router as Address,
-    tokenIn: toQuoteAddr(tokenInArg),
-    tokenOut: toQuoteAddr(tokenOutArg),
-    amountIn: amountInAtomicForSplit,
-    maxSteps: PUBLIC_CONFIG.MAX_STEPS ?? 3,
-    enableSplit: true,
-  });
+const dynamicSlippage = useDynamicSlippageBps({
+  enabled: autoSlippage,
+  unitQuote,                                      // volatility source
+  userOutFormatted: quote?.outFormatted ?? null,  // size-aware top-up
+  userInHuman: sellAmount || null,                // <<< critical for size awareness
+  pathLength: quote?.path?.length ?? 1,
+  notionalUsd,                                    // MEV cushion calibration
+  probePerUnit: async (amountHuman) => {
+    const q = await getYakQuotePerUnit(amountHuman);
+    return q?.perUnitOut ?? null;
+  },
+  // reset when the trading context changes (address if available, else symbol)
+  resetKey: `${selectedSellToken?.address ?? sellToken}->${selectedBuyToken?.address ?? buyToken}`,
+});
 
-  // Choose best OUT (split vs single) for display and validation
-  const singleOutRaw = quote?.outRaw ?? 0n;
-  const splitOutRaw = splitState.split?.totalOut ?? 0n;
-  const bestIsSplit = splitOutRaw > singleOutRaw;
-  const bestOutRaw = bestIsSplit ? splitOutRaw : singleOutRaw;
 
-  // --- Dynamic slippage (size-aware) ---
-  const notionalUsd = useMemo(() => {
-    const amt = Number(sellAmount);
-    const p = (cryptoPrices as any)[sellToken];
-    if (!Number.isFinite(amt) || !Number.isFinite(p)) return null;
-    return amt * p;
-  }, [sellAmount, sellToken]);
+// Clamp chosen slippage to global cap (covers both auto/manual)
+const capBps = BigInt(
+  (PUBLIC_CONFIG as any).AUTO_SLIPPAGE?.MAX_BPS ?? Number(PUBLIC_CONFIG.SLIPPAGE_BPS)
+);
+const slipRaw = autoSlippage ? (dynamicSlippage.bps ?? 0n) : PUBLIC_CONFIG.SLIPPAGE_BPS;
+const SLIP = slipRaw > capBps ? capBps : slipRaw;
+// --- UI: formatted slippage for the indicator (one decimal, rounds) ---
+const slippageDisplay = useMemo(() => {
+  const bps = Number(SLIP ?? 0n);           // bigint -> number (safe; bps is small)
+  const pctOneDec = Math.round(bps / 10) / 10;
+  return `${pctOneDec.toFixed(1)}%`;
+}, [SLIP]);
 
-  const dynamicSlippage = useDynamicSlippageBps({
-    enabled: autoSlippage,
-    unitQuote,                                      // volatility source
-    userOutFormatted: quote?.outFormatted ?? null,  // size-aware top-up (single baseline ok)
-    userInHuman: sellAmount || null,
-    pathLength: (bestIsSplit ? Math.max(splitState.split?.a.offer.path.length ?? 1, splitState.split?.b.offer.path.length ?? 1)
-                             : (quote?.path?.length ?? 1)),
-    notionalUsd,
-    probePerUnit: async (amountHuman) => {
-      const q = await getYakQuotePerUnit(amountHuman);
-      return q?.perUnitOut ?? null;
-    },
-    resetKey: `${selectedSellToken?.address ?? sellToken}->${selectedBuyToken?.address ?? buyToken}`,
-  });
+// Precompute a minOut **raw** using the live (no-slippage) outRaw
+const minOutRawDynamic =
+  quote?.outRaw != null ? (quote.outRaw * (10_000n - SLIP)) / 10_000n : 0n;
 
-  // Clamp chosen slippage to global cap (covers both auto/manual)
-  const capBps = BigInt(
-    (PUBLIC_CONFIG as any).AUTO_SLIPPAGE?.MAX_BPS ?? Number(PUBLIC_CONFIG.SLIPPAGE_BPS)
-  );
-  const slipRaw = autoSlippage ? (dynamicSlippage.bps ?? 0n) : PUBLIC_CONFIG.SLIPPAGE_BPS;
-  const SLIP = slipRaw > capBps ? capBps : slipRaw;
 
-  // --- UI: formatted slippage for the indicator (one decimal) ---
-  const slippageDisplay = useMemo(() => {
-    const bps = Number(SLIP ?? 0n);
-    const pctOneDec = Math.round(bps / 10) / 10;
-    return `${pctOneDec.toFixed(1)}%`;
-  }, [SLIP]);
+  // Derived buy amount (minOut) using dynamic slippage (size-aware)
+const buyAmountDerived = (() => {
+  // For display we can scale the formatted out by (1 - SLIP/10000)
+  const baseOut = Number(quote?.outFormatted ?? NaN);
+  if (!Number.isFinite(baseOut)) return "0.00";
+  const s = Number(SLIP) / 10_000;
+  const v = baseOut * (1 - s);
+  if (!Number.isFinite(v) || v <= 0) return "0.00";
+  return v.toString();
+})();
 
-  // MinOut for single-route (still used when split not chosen)
-  const minOutRawDynamic =
-    singleOutRaw !== 0n ? (singleOutRaw * (10_000n - SLIP)) / 10_000n : 0n;
-
-  // Derived buy amount (display) using BEST of single vs split, with slippage
+  
+  // Display version limited to 6 decimals for UI
   const buyAmountDisplay = useMemo(() => {
-    try {
-      if (!outDecimals) return "0.00";
-      if (bestOutRaw === 0n) return "0.00";
-      const bestAdj = (bestOutRaw * (10_000n - SLIP)) / 10_000n;
-      const v = Number(formatUnits(bestAdj, outDecimals));
-      if (!Number.isFinite(v) || v <= 0) return "0.00";
-      return v.toFixed(6).replace(/\.?0+$/, "");
-    } catch {
-      return "0.00";
-    }
-  }, [bestOutRaw, SLIP, outDecimals]);
+    const num = Number(buyAmountDerived);
+    if (isNaN(num)) return "0.00";
+    if (num === 0) return "0.00";
+    return num.toFixed(6).replace(/\.?0+$/, '');
+  }, [buyAmountDerived]);
 
-  // Rate display (uses best path)
+  // Rate display: accurate even before typing (uses a 1-unit on-chain quote)
   const rateDisplay = useMemo(() => {
     if (selectedSellToken && selectedBuyToken && selectedSellToken.symbol === selectedBuyToken.symbol) {
       return `1 ${sellToken} = 1 ${buyToken}`;
     }
-    const amt = Number(sellAmount);
-    if (!Number.isFinite(amt) || amt <= 0) {
-      // Before typing: use the 1-unit single-route quote adjusted by slippage
-      if (unitQuote && unitQuote.outFormatted) {
-        const uRaw = Number(unitQuote.outFormatted);
-        if (Number.isFinite(uRaw) && uRaw > 0) {
-          const s = Number(SLIP) / 10_000;
-          const u = uRaw * (1 - s);
-          return `1 ${sellToken} = ${u.toFixed(6).replace(/\.?0+$/, "")} ${buyToken}`;
-        }
-      }
-      return priceRate;
-    }
 
-    // With typed amount: compute from bestOut against typed input
-    if (outDecimals && bestOutRaw > 0n) {
-      const bestAdj = (bestOutRaw * (10_000n - SLIP)) / 10_000n;
-      const outHuman = Number(formatUnits(bestAdj, outDecimals));
-      const r = outHuman / amt;
+    const amt = Number(sellAmount);
+
+    // If user typed a positive amount, compute rate from active quote
+    if (quote && Number.isFinite(amt) && amt > 0) {
+      const r = Number(buyAmountDerived) / amt;
       if (Number.isFinite(r) && r > 0) {
         return `1 ${sellToken} = ${r.toFixed(6).replace(/\.?0+$/, "")} ${buyToken}`;
       }
     }
 
+    // Before typing: use the 1-unit *raw* quote, but apply *dynamic* slippage (SLIP)
+    if (unitQuote && unitQuote.outFormatted) {
+      const uRaw = Number(unitQuote.outFormatted);
+      if (Number.isFinite(uRaw) && uRaw > 0) {
+        const s = Number(SLIP) / 10_000;
+        const u = uRaw * (1 - s);
+        return `1 ${sellToken} = ${u.toFixed(6).replace(/\.?0+$/, "")} ${buyToken}`;
+      }
+    }
+
+    // Fallback to your mock when no on-chain path yet
     return priceRate;
-  }, [selectedSellToken, selectedBuyToken, sellToken, buyToken, sellAmount, unitQuote, SLIP, bestOutRaw, outDecimals, priceRate]);
+  }, [quote, unitQuote, buyAmountDerived, sellAmount, sellToken, buyToken, selectedSellToken, selectedBuyToken, priceRate]);
 
   // Keep your existing mock updater as a fallback when no quote yet
   useEffect(() => {
@@ -364,9 +322,13 @@ try {
     return usdValue < 0.01 && usdValue > 0 ? `$${usdValue.toFixed(6)}` : `$${usdValue.toFixed(2)}`;
   };
 
-  // ------------ precise, safe post-swap refresh ------------
+  // ------------ ADDED: precise, safe post-swap refresh ------------
   const refreshBalances = async () => {
+    // 1) Hard refresh the currently displayed SELL token balance (wallet icon near input)
     await Promise.allSettled([refetchSellBalance()]);
+
+    // 2) Broadly invalidate any "balance" queries for this wallet
+    //    (covers your top-right wallet icon or other components using useBalance)
     const ownerLc = (address ?? "").toLowerCase();
     queryClient.invalidateQueries({
       predicate: (q) => {
@@ -381,7 +343,7 @@ try {
       },
     });
   };
-  // ---------------------------------------------------------
+  // ---------------------------------------------------------------
 
   // Handlers
   const handleSwapTokens = () => {
@@ -389,8 +351,7 @@ try {
     setSellToken(buyToken);
     setBuyToken(t);
     const hasValue = sellAmount && sellAmount !== "0" && sellAmount !== "0.0" && sellAmount !== "0.00";
-    // Keep intuitive carry-over: use current derived buy amount as next sell amount
-    setSellAmount(hasValue ? buyAmountDisplay : "");
+    setSellAmount(hasValue ? buyAmountDerived : "");
   };
 
   const openTokenModal = (type: "sell" | "buy") => {
@@ -399,34 +360,43 @@ try {
     setSearchTerm("");
   };
 
-  type TokenObj = { symbol: string; address?: `0x${string}`; name?: string; decimals?: number };
+ // Keep TokenPick/tokensEqual as you already have above.
 
-  const selectToken = (picked: string | TokenObj) => {
-    const tokenObj: TokenObj | undefined =
-      typeof picked === "string" ? tokens.find((t) => t.symbol === picked) : picked;
+type TokenObj = { symbol: string; address?: `0x${string}`; name?: string; decimals?: number };
 
-    if (!tokenObj) {
-      setShowTokenModal(false);
-      return;
-    }
+const selectToken = (picked: string | TokenObj) => {
+  // Normalize to a full token object regardless of how it's called
+  const tokenObj: TokenObj | undefined =
+    typeof picked === "string" ? tokens.find((t) => t.symbol === picked) : picked;
 
-    const other = tokenSelectionType === "sell" ? selectedBuyToken : selectedSellToken;
-
-    if (tokensEqual(tokenObj, other)) {
-      handleSwapTokens();
-      setShowTokenModal(false);
-      return;
-    }
-
-    if (tokenSelectionType === "sell") {
-      setSellToken(tokenObj.symbol);
-      setSellAmount("");
-    } else {
-      setBuyToken(tokenObj.symbol);
-    }
-
+  // If not found (bad symbol or empty search), just close the modal safely
+  if (!tokenObj) {
     setShowTokenModal(false);
-  };
+    return;
+  }
+
+  const other = tokenSelectionType === "sell" ? selectedBuyToken : selectedSellToken;
+
+  // If user picked the same token as the other side, reuse your existing arrow handler
+  if (tokensEqual(tokenObj, other)) {
+    handleSwapTokens();       // <-- your arrow button handler
+    setShowTokenModal(false);
+    return;
+  }
+
+  // Normal assignment
+  if (tokenSelectionType === "sell") {
+    setSellToken(tokenObj.symbol);
+    setSellAmount("");        // keep your reset
+  } else {
+    setBuyToken(tokenObj.symbol);
+  }
+
+  setShowTokenModal(false);
+};
+
+
+
 
   // === SWAP click ===
   const onClickSwap = async () => {
@@ -436,54 +406,30 @@ try {
         return;
       }
       if (!sellAmount || Number(sellAmount) <= 0) throw new Error("Enter an amount.");
+      if (!quote || quote.minOutRaw === 0n || !quote.path?.length) throw new Error("No route found.");
       if (!selectedSellToken || !selectedBuyToken) throw new Error("Select tokens.");
-      if (!inDecimals || !outDecimals) throw new Error("Resolving token decimals…");
 
-      // Route existence: prefer split if it beats single
-      if (bestOutRaw === 0n) throw new Error("No route found.");
-
-      const inDec = inDecimals ?? sellBal?.decimals ?? 18;
+      const inDec = sellBal?.decimals ?? 18;
       const amountIn = parseUnits(sellAmount, inDec);
 
       toast({ title: "Preparing swap...", description: "Checking allowance & building txn" });
 
-      // If split wins, build a split payload with per-leg minOut=0 and aggregate minTotalOut
-      const splitPayload =
-        bestIsSplit && splitState.split
-          ? {
-              isSplit: true,
-              legA: {
-                amountIn: splitState.split.a.amountIn,
-                minOut: 0n, // IMPORTANT: per-leg 0, rely on _minTotalOut
-                path: splitState.split.a.offer.path,
-                adapters: splitState.split.a.offer.adapters,
-              },
-              legB: {
-                amountIn: splitState.split.b.amountIn,
-                minOut: 0n, // IMPORTANT
-                path: splitState.split.b.offer.path,
-                adapters: splitState.split.b.offer.adapters,
-              },
-              minTotalOut: (splitState.split.totalOut * (10_000n - SLIP)) / 10_000n,
-            }
-          : undefined;
-
       const receipt = await performSwap({
         router,
-        tokenIn: selectedSellToken.address ?? selectedSellToken.symbol,
+        tokenIn: selectedSellToken.address ?? selectedSellToken.symbol, // "MON" is fine here for native detection
         tokenOut: selectedBuyToken.address ?? selectedBuyToken.symbol,
         amountIn,
-        amountOutMin: minOutRawDynamic,         // used only for single-route
-        path: quote?.path,
-        adapters: quote?.adapters,
-        split: splitPayload,                    // when present, performSwap must call swapSplit*
+        amountOutMin: minOutRawDynamic, // dynamic, size-aware (hard-capped) slippage
+        path: quote.path,
+        adapters: quote.adapters,
       });
 
       toast({
         title: "Swap confirmed ✅",
-        description: `Tx: ${(receipt as any).transactionHash?.slice(0, 10)}…`,
+        description: `Tx: ${receipt.transactionHash.slice(0, 10)}…`,
       });
 
+      // Instant balance refresh
       const status = (receipt as any)?.status;
       if (status === "success" || status === 1 || status === "0x1") {
         await refreshBalances();
@@ -493,8 +439,6 @@ try {
       toast({ title: "Swap failed", description: msg });
     }
   };
-
-  const hasBestRoute = bestOutRaw > 0n;
 
   return (
     <Card className="w-full max-w-md mx-auto bg-muted/40 backdrop-blur-md border border-muted/60 shadow-2xl">
@@ -562,21 +506,29 @@ try {
                       className="relative w-32 h-10 bg-muted/60 rounded-full text-foreground border border-white/10 hover:border-white hover:bg-muted/80 hover:text-white flex items-center"
                       aria-label="Select sell token"
                   >
-                    {/* Left logo */}
-                    <span className="absolute left-3 flex items-center gap-2 pointer-events-none">
-                      <TokenAvatar
-                        symbol={sellToken}
-                        address={selectedSellToken?.address as `0x${string}` | undefined}
-                        size={24}
-                        title={selectedSellToken?.name || sellToken}
-                      />
-                    </span>
-                    {/* Label */}
-                    <span className="absolute inset-y-0 left-[2.75rem] right-[2.5rem] flex items-center justify-center pointer-events-none truncate">
-                      {sellToken}
-                    </span>
+                      {/* Left logo (shifted slightly right) */}
+                  <span className="absolute left-3 flex items-center gap-2 pointer-events-none">
+                    <TokenAvatar
+                      symbol={sellToken}
+                      address={selectedSellToken?.address as `0x${string}` | undefined}
+                      size={24}
+                      title={selectedSellToken?.name || sellToken}
+                    />
+                  </span>
+
+                  {/* Label zone spans between the logo and the chevron; text biased toward the chevron */}
+                   {/* Label centered in the space between logo and chevron */}
+                  <span
+                    className="absolute inset-y-0 left-[2.75rem] right-[2.5rem] flex items-center justify-center pointer-events-none truncate"
+                  >
+                    {sellToken}
+                  </span>
+
+
+                  
+
                     {/* Right chevron */}
-                    <ChevronDown className="absolute right-2 h-3.5 w-3.5 pointer-events-none" />
+                   <ChevronDown className="absolute right-2 h-3.5 w-3.5 pointer-events-none" />
                   </Button>
                   <Input
                     value={sellAmount}
@@ -614,8 +566,8 @@ try {
                   Buying
                 </span>
                 <div className="absolute right-0 bottom-full mb-3 flex items-center gap-1.5 text-sm text-muted-foreground select-none">
-                  <img src={SlippageIcon} alt="Slippage" className="w-3.5 h-3.5 shrink-0" />
-                  <span className="leading-none tabular-nums">{slippageDisplay}</span>
+                     <img src={SlippageIcon} alt="Slippage" className="w-3.5 h-3.5 shrink-0" />
+                     <span className="leading-none tabular-nums">{slippageDisplay}</span>
                 </div>
                 <div className="flex items-center justify-between p-3">
                   <Button
@@ -623,22 +575,26 @@ try {
                     onClick={() => openTokenModal("buy")}
                     className="relative w-32 h-10 bg-muted/60 rounded-full text-foreground border border-white/10 hover:border-white hover:bg-muted/80 hover:text-white flex items-center"
                     aria-label="Select buy token"
-                  >
-                    {/* Left logo */}
-                    <span className="absolute left-3 flex items-center gap-2 pointer-events-none">
-                      <TokenAvatar
-                        symbol={buyToken}
-                        address={selectedBuyToken?.address as `0x${string}` | undefined}
-                        size={24}
-                        title={selectedBuyToken?.name || buyToken}
-                      />
-                    </span>
-                    {/* Label */}
-                    <span className="absolute inset-y-0 left-[2.75rem] right-[2.5rem] flex items-center justify-center pointer-events-none truncate">
-                      {buyToken}
-                    </span>
-                    {/* Right chevron */}
-                    <ChevronDown className="absolute right-2 h-3.5 w-3.5 pointer-events-none" />
+                >
+                {/* Left logo (same as SELL) */}
+                <span className="absolute left-3 flex items-center gap-2 pointer-events-none">
+                  <TokenAvatar
+                    symbol={buyToken}
+                    address={selectedBuyToken?.address as `0x${string}` | undefined}
+                    size={24}
+                    title={selectedBuyToken?.name || buyToken}
+                  />
+                </span>
+
+                {/* Label centered exactly between logo and chevron (same as SELL) */}
+                <span
+                  className="absolute inset-y-0 left-[2.75rem] right-[2.5rem] flex items-center justify-center pointer-events-none truncate"
+                >
+                 {buyToken}
+                </span>
+
+                {/* Right chevron (same as SELL) */}
+                     <ChevronDown className="absolute right-2 h-3.5 w-3.5 pointer-events-none" />
                   </Button>
 
                   <Input
@@ -649,7 +605,7 @@ try {
                   />
                 </div>
                 <div className="text-right text-sm text-muted-foreground pr-3 pb-3">
-                  {calculateUSDValue(buyAmountDisplay, buyToken)}
+                  {calculateUSDValue(buyAmountDerived, buyToken)}
                 </div>
               </div>
 
@@ -676,36 +632,35 @@ try {
         </Tabs>
 
         {/* Connect/Swap Button */}
-        {activeTab === "instant" && (
-          <div className="w-full mt-4">
-            <Button
-              className="w-full"
-              disabled={
-                (!isConnected && !openConnectModal) ||
-                !sellAmount ||
-                sellAmount === "0" ||
-                sellAmount === "0.0" ||
-                isExceeding ||
-                !hasBestRoute
-              }
-              onClick={() => {
-                if (!isConnected) return openConnectModal?.();
-                onClickSwap();
-              }}
-            >
-              {!isConnected
-                ? "Connect Wallet"
-                : isExceeding
-                ? "Amount exceeds balance"
-                : !sellAmount || sellAmount === "0" || sellAmount === "0.0"
-                ? "Enter an amount"
-                : !hasBestRoute
-                ? "No route"
-                : bestIsSplit
-                ? "Swap (Split)"
-                : "Swap"}
-            </Button>
-          </div>
+      {activeTab === "instant" && (
+        <div className="w-full mt-4">
+          <Button
+            className="w-full"
+            disabled={
+              (!isConnected && !openConnectModal) ||
+              !sellAmount ||
+              sellAmount === "0" ||
+              sellAmount === "0.0" ||
+              isExceeding ||
+              !quote ||
+              quote.minOutRaw === 0n
+            }
+            onClick={() => {
+              if (!isConnected) return openConnectModal?.();
+              onClickSwap();
+            }}
+          >
+            {!isConnected
+              ? "Connect Wallet"
+              : isExceeding
+              ? "Amount exceeds balance"
+              : !sellAmount || sellAmount === "0" || sellAmount === "0.0"
+              ? "Enter an amount"
+              : !quote || quote.minOutRaw === 0n
+              ? "No route"
+              : "Swap"}
+          </Button>
+        </div>
         )}
       </div>
 
@@ -739,6 +694,7 @@ try {
                   variant="ghost"
                   className="w-full justify-between py-3 px-3 rounded-xl border border-white/10 hover:bg-white/5"
                   onClick={() => selectToken(token)}
+
                 >
                   <div className="flex items-center">
                     <div className="w-9 h-9 rounded-full bg-white/10 flex items-center justify-center">
@@ -763,3 +719,5 @@ try {
 };
 
 export default SwapInterface;
+
+
