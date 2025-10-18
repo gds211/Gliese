@@ -59,16 +59,23 @@ export function useYakSplitQuote(params: {
 
       const gasPrice = fees.effectiveGasPriceWei ?? 0n;
 
-      async function quote(amount: bigint): Promise<{ offer: FormattedOffer; out: bigint }> {
-        const offer = await (client as any).readContract({
-          address: router,
-          abi: YAK_ROUTER_ABI,
-          functionName: "findBestPathWithGas",
-          args: [amount, tokenIn, tokenOut, BigInt(maxSteps), gasPrice],
-        });
-        const out = offer.path.length > 0 ? BigInt(last(offer.amounts)) : 0n;
-        return { offer, out };
-      }
+     async function quote(amount: bigint): Promise<{ offer: FormattedOffer; out: bigint }> {
+  let offer: any;
+  try {
+    offer = await (client as any).readContract({
+      address: router, abi: YAK_ROUTER_ABI, functionName: "findBestPathWithGas",
+      args: [ amount, tokenIn, tokenOut, BigInt(maxSteps), gasPrice ],
+    });
+  } catch {
+    offer = await (client as any).readContract({
+      address: router, abi: YAK_ROUTER_ABI, functionName: "findBestPath",
+      args: [ amount, tokenIn, tokenOut, BigInt(maxSteps) ],
+    });
+  }
+  const out = (offer?.path?.length ? BigInt(offer.amounts[offer.amounts.length - 1]) : 0n);
+  return { offer, out };
+}
+
 
       try {
         // 1) Best single-route
