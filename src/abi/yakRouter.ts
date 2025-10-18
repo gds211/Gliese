@@ -129,19 +129,135 @@ export const YAK_ROUTER_ABI = [
     ],
     outputs: [],
   },
+  // === Split swappers (matches your YakRouter.sol) ===
+{
+  type: "function",
+  name: "swapSplit",
+  stateMutability: "nonpayable",
+  inputs: [
+    { name: "a", type: "tuple", components: [
+      { name: "amountIn",  type: "uint256" },
+      { name: "amountOut", type: "uint256" },
+      { name: "path",      type: "address[]" },
+      { name: "adapters",  type: "address[]" },
+    ]},
+    { name: "b", type: "tuple", components: [
+      { name: "amountIn",  type: "uint256" },
+      { name: "amountOut", type: "uint256" },
+      { name: "path",      type: "address[]" },
+      { name: "adapters",  type: "address[]" },
+    ]},
+    { name: "_to",          type: "address"  },
+    { name: "_minTotalOut", type: "uint256"  },
+    { name: "_fee",         type: "uint256"  },
+  ],
+  outputs: [],
+},
+{
+  type: "function",
+  name: "swapSplitFromAVAX",
+  stateMutability: "payable",
+  inputs: [
+    { name: "a", type: "tuple", components: [
+      { name: "amountIn",  type: "uint256" },
+      { name: "amountOut", type: "uint256" },
+      { name: "path",      type: "address[]" },
+      { name: "adapters",  type: "address[]" },
+    ]},
+    { name: "b", type: "tuple", components: [
+      { name: "amountIn",  type: "uint256" },
+      { name: "amountOut", type: "uint256" },
+      { name: "path",      type: "address[]" },
+      { name: "adapters",  type: "address[]" },
+    ]},
+    { name: "_to",          type: "address"  },
+    { name: "_minTotalOut", type: "uint256"  },
+    { name: "_fee",         type: "uint256"  },
+  ],
+  outputs: [],
+},
+{
+  type: "function",
+  name: "swapSplitToAVAX",
+  stateMutability: "nonpayable",
+  inputs: [
+    { name: "a", type: "tuple", components: [
+      { name: "amountIn",  type: "uint256" },
+      { name: "amountOut", type: "uint256" },
+      { name: "path",      type: "address[]" },
+      { name: "adapters",  type: "address[]" },
+    ]},
+    { name: "b", type: "tuple", components: [
+      { name: "amountIn",  type: "uint256" },
+      { name: "amountOut", type: "uint256" },
+      { name: "path",      type: "address[]" },
+      { name: "adapters",  type: "address[]" },
+    ]},
+    { name: "_to",          type: "address"  },
+    { name: "_minTotalOut", type: "uint256"  },
+    { name: "_fee",         type: "uint256"  },
+  ],
+  outputs: [],
+},
+
+// === Split + PERMIT (optional at call time) ===
+{
+  type: "function",
+  name: "swapSplitWithPermit",
+  stateMutability: "nonpayable",
+  inputs: [
+    { name: "a", type: "tuple", components: [
+      { name: "amountIn",  type: "uint256" },
+      { name: "amountOut", type: "uint256" },
+      { name: "path",      type: "address[]" },
+      { name: "adapters",  type: "address[]" },
+    ]},
+    { name: "b", type: "tuple", components: [
+      { name: "amountIn",  type: "uint256" },
+      { name: "amountOut", type: "uint256" },
+      { name: "path",      type: "address[]" },
+      { name: "adapters",  type: "address[]" },
+    ]},
+    { name: "_to",          type: "address"  },
+    { name: "_minTotalOut", type: "uint256"  },
+    { name: "_fee",         type: "uint256"  },
+    { name: "_deadline",    type: "uint256"  },
+    { name: "_v",           type: "uint8"    },
+    { name: "_r",           type: "bytes32"  },
+    { name: "_s",           type: "bytes32"  },
+  ],
+  outputs: [],
+},
+{
+  type: "function",
+  name: "swapSplitToAVAXWithPermit",
+  stateMutability: "nonpayable",
+  inputs: [
+    { name: "a", type: "tuple", components: [
+      { name: "amountIn",  type: "uint256" },
+      { name: "amountOut", type: "uint256" },
+      { name: "path",      type: "address[]" },
+      { name: "adapters",  type: "address[]" },
+    ]},
+    { name: "b", type: "tuple", components: [
+      { name: "amountIn",  type: "uint256" },
+      { name: "amountOut", type: "uint256" },
+      { name: "path",      type: "address[]" },
+      { name: "adapters",  type: "address[]" },
+    ]},
+    { name: "_to",          type: "address"  },
+    { name: "_minTotalOut", type: "uint256"  },
+    { name: "_fee",         type: "uint256"  },
+    { name: "_deadline",    type: "uint256"  },
+    { name: "_v",           type: "uint8"    },
+    { name: "_r",           type: "bytes32"  },
+    { name: "_s",           type: "bytes32"  },
+  ],
+  outputs: [],
+},
+
 
   // Optional helper reads if you want:
   { type: "function", name: "WNATIVE", stateMutability: "view", inputs: [], outputs: [{ type: "address" }] },
   { type: "function", name: "MIN_FEE", stateMutability: "view", inputs: [], outputs: [{ type: "uint256" }] },
 ] as const;
-
-
-
-
-
-
-
-
-
-
-
