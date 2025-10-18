@@ -185,12 +185,19 @@ const SwapInterface = () => {
       if (amtIn === 0n) return null;
       const gasWei  = effectiveGasPriceWei ?? PUBLIC_CONFIG.GAS_PRICE_WEI_FALLBACK;
 
-      const formatted: any = await (publicClient as any).readContract({
-        address: router,
-        abi: YAK_ROUTER_ABI,
-        functionName: "findBestPathWithGas",
-        args: [amtIn, inAddr, outAddr, BigInt(PUBLIC_CONFIG.MAX_STEPS), gasWei],
-      });
+      let formatted: any;
+try {
+  formatted = await (publicClient as any).readContract({
+    address: router, abi: YAK_ROUTER_ABI, functionName: "findBestPathWithGas",
+    args: [ amtIn, inAddr, outAddr, BigInt(PUBLIC_CONFIG.MAX_STEPS), gasWei ],
+  });
+} catch {
+  formatted = await (publicClient as any).readContract({
+    address: router, abi: YAK_ROUTER_ABI, functionName: "findBestPath",
+    args: [ amtIn, inAddr, outAddr, BigInt(PUBLIC_CONFIG.MAX_STEPS) ],
+  });
+}
+
       const amounts: bigint[] = formatted?.amounts ?? formatted?.[0] ?? [];
       const outRaw = amounts.length ? amounts[amounts.length - 1] : 0n;
       if (outRaw === 0n) return null;
