@@ -415,14 +415,33 @@ const selectToken = (picked: string | TokenObj) => {
       toast({ title: "Preparing swap...", description: "Checking allowance & building txn" });
 
       const receipt = await performSwap({
-        router,
-        tokenIn: selectedSellToken.address ?? selectedSellToken.symbol, // "MON" is fine here for native detection
-        tokenOut: selectedBuyToken.address ?? selectedBuyToken.symbol,
-        amountIn,
-        amountOutMin: minOutRawDynamic, // dynamic, size-aware (hard-capped) slippage
-        path: quote.path,
-        adapters: quote.adapters,
-      });
+  router,
+  tokenIn: selectedSellToken.address ?? selectedSellToken.symbol,
+  tokenOut: selectedBuyToken.address ?? selectedBuyToken.symbol,
+  amountIn,
+  amountOutMin: minOutRawDynamic,      // single-route min; ignored if split provided
+  path: quote.path,
+  adapters: quote.adapters,
+  split: quote.split
+    ? {
+        isSplit: true,
+        legA: {
+          amountIn: quote.split.legA.amountIn,
+          minOut:   quote.split.legA.minOut,
+          path:     quote.split.legA.path,
+          adapters: quote.split.legA.adapters,
+        },
+        legB: {
+          amountIn: quote.split.legB.amountIn,
+          minOut:   quote.split.legB.minOut,
+          path:     quote.split.legB.path,
+          adapters: quote.split.legB.adapters,
+        },
+        minTotalOut: quote.split.minTotalOut, // router enforces this aggregate min
+      }
+    : undefined,
+});
+
 
       toast({
         title: "Swap confirmed ✅",
