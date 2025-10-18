@@ -82,21 +82,23 @@ export function useYakQuote({ router, tokenIn, tokenOut, amountInHuman, enabled 
     }
 
     async function priceGasInTokenOut(): Promise<bigint> {
-      // Cache per tokenOut
-      if (outPer1NativeRef.current.tokenOut?.toLowerCase() === (tokenOutAddr || ZERO).toLowerCase() && outPer1NativeRef.current.value) {
-        return outPer1NativeRef.current.value!;
-      }
-      const WNATIVE = await ensureWNATIVE();
-      // 1e18 WNATIVE -> tokenOut via findBestPath (maxSteps 2)
-      const formatted = await (client as any).readContract({
-        address: router, abi: YAK_ROUTER_ABI, functionName: "findBestPath",
-        args: [ 10n ** 18n, WNATIVE, tokenOutAddr || ZERO, 2n ]
-      });
-      const amounts: bigint[] = formatted?.amounts ?? formatted?.[0] ?? [];
-      const v = amounts.length ? (amounts[amounts.length - 1]) : 0n;
-      outPer1NativeRef.current = { tokenOut: tokenOutAddr, value: v };
-      return v;
-    }
+  // Reuse cache by tokenOut addr (normalized)
+  const normOut = (isNative(tokenOut) ? (await ensureWNATIVE()) : (tokenOut as Address)) as Address;
+  if (outPer1NativeRef.current.tokenOut?.toLowerCase() === normOut.toLowerCase() &&
+      typeof outPer1NativeRef.current.value === "bigint") {
+    return outPer1NativeRef.current.value!;
+  }
+  // 1e18 WNATIVE -> tokenOut (maxSteps 2)
+  const formatted = await (client as any).readContract({
+    address: router, abi: YAK_ROUTER_ABI, functionName: "findBestPath",
+    args: [ 10n ** 18n, normOut === (await ensureWNATIVE()) ? (await ensureWNATIVE()) : (await ensureWNATIVE()), /* WNATIVE in */ normOut, 2n ]
+  });
+  const amounts: bigint[] = formatted?.amounts ?? formatted?.[0] ?? [];
+  const v = amounts.length ? amounts[amounts.length - 1] : 0n;
+  outPer1NativeRef.current = { tokenOut: normOut, value: v };
+  return v;
+}
+
 
     async function tick() {
       try {
@@ -113,11 +115,22 @@ export function useYakQuote({ router, tokenIn, tokenOut, amountInHuman, enabled 
         const tokenInAddr  = (isNative(tokenIn)  ? (await ensureWNATIVE()) : (tokenIn as Address)) as Address;
         const tokenOutAddr = (isNative(tokenOut) ? (await ensureWNATIVE()) : (tokenOut as Address)) as Address;
 
-        // --- Baseline (no split) ---
-        const base = await (client as any).readContract({
-          address: router, abi: YAK_ROUTER_ABI, functionName: "findBestPathWithGas",
-          args: [ amountIn, tokenInAddr, tokenOutAddr, maxSteps, gasWei ],
-        });
+        let base: any;
+try {
+  base = await (client as any).readContract({
+    address: router, abi: YAK_ROUTER_ABI, functionName: "findBestPathWithGas",
+    args: [ amountIn, tokenInAddr, tokenOutAddr, maxSteps, gasWei ],
+  });
+} catch {
+  base = await (client as any).readContract({
+    address: router, abi: YAK_ROUTER_ABI, functionName: "findBestPath",
+    args: [ amountIn, tokenInAddr, tokenOutAddr, maxSteps ],
+  });
+}
+
+
+
+
         const baseAmounts: bigint[]   = base?.amounts ?? base?.[0] ?? [];
         const baseAdapters: Address[] = base?.adapters ?? base?.[1] ?? [];
         const basePath: Address[]     = base?.path ?? base?.[2] ?? [];
@@ -155,16 +168,22 @@ export function useYakQuote({ router, tokenIn, tokenOut, amountInHuman, enabled 
             : 0n;
 
           for (const p of probes) {
-            const [A, B] = await Promise.all([
-              (client as any).readContract({
-                address: router, abi: YAK_ROUTER_ABI, functionName: "findBestPathWithGas",
-                args: [ p.aIn, tokenInAddr, tokenOutAddr, maxSteps, gasWei ],
-              }),
-              (client as any).readContract({
-                address: router, abi: YAK_ROUTER_ABI, functionName: "findBestPathWithGas",
-                args: [ p.bIn, tokenInAddr, tokenOutAddr, maxSteps, gasWei ],
-              }),
-            ]);
+            async function quoteLeg(amt: bigint) {
+  try {
+    return await (client as any).readContract({
+      address: router, abi: YAK_ROUTER_ABI, functionName: "findBestPathWithGas",
+      args: [ amt, tokenInAddr, tokenOutAddr, maxSteps, gasWei ],
+    });
+  } catch {
+    return await (client as any).readContract({
+      address: router, abi: YAK_ROUTER_ABI, functionName: "findBestPath",
+      args: [ amt, tokenInAddr, tokenOutAddr, maxSteps ],
+    });
+  }
+}
+
+const [A, B] = await Promise.all([ quoteLeg(p.aIn), quoteLeg(p.bIn) ]);
+
 
             const aAmounts: bigint[] = A?.amounts ?? A?.[0] ?? [];
             const bAmounts: bigint[] = B?.amounts ?? B?.[0] ?? [];
