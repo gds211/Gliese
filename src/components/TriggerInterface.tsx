@@ -9,9 +9,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { ChevronDown, Wallet } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogOverlay } from "@/components/ui/dialog";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { ChevronDown, Wallet, Search } from "lucide-react";
 import TokenAvatar from "@/components/TokenAvatar";
 import { useAccount, useBalance } from "wagmi";
+import glieseLogo from "@/assets/gliese-logo.png";
 
 interface Token {
   symbol: string;
@@ -31,6 +34,9 @@ const TriggerInterface = ({ tokens }: TriggerInterfaceProps) => {
   const [payAmount, setPayAmount] = useState("");
   const [rate, setRate] = useState("");
   const [expiry, setExpiry] = useState("7");
+  const [showTokenModal, setShowTokenModal] = useState(false);
+  const [tokenSelectionType, setTokenSelectionType] = useState<"pay" | "receive">("pay");
+  const [searchTerm, setSearchTerm] = useState("");
 
   const selectedPayToken = useMemo(
     () => tokens.find((t) => t.symbol === payToken),
@@ -64,6 +70,16 @@ const TriggerInterface = ({ tokens }: TriggerInterfaceProps) => {
     query: { enabled: Boolean(isConnected && address && selectedReceiveToken) },
   });
 
+  const filteredTokens = tokens.filter(
+    (t) =>
+      t.symbol.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      t.name.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  function formatAddress(addr: string): string {
+    return `${addr.slice(0, 6)}...${addr.slice(-6)}`;
+  }
+
   const handleSwapTokens = () => {
     const temp = payToken;
     setPayToken(receiveToken);
@@ -83,6 +99,22 @@ const TriggerInterface = ({ tokens }: TriggerInterfaceProps) => {
       const half = (Number(payBalance.formatted) / 2).toString();
       setPayAmount(half);
     }
+  };
+
+  const openTokenModal = (type: "pay" | "receive") => {
+    setTokenSelectionType(type);
+    setShowTokenModal(true);
+    setSearchTerm("");
+  };
+
+  const selectToken = (token: Token) => {
+    if (tokenSelectionType === "pay") {
+      setPayToken(token.symbol);
+      setPayAmount("");
+    } else {
+      setReceiveToken(token.symbol);
+    }
+    setShowTokenModal(false);
   };
 
   const calculateReceiveAmount = () => {
@@ -137,7 +169,7 @@ const TriggerInterface = ({ tokens }: TriggerInterfaceProps) => {
           <div className="flex items-center justify-between gap-3">
             <Button
               variant="ghost"
-              onClick={() => {/* TODO: Add token selection modal */}}
+              onClick={() => openTokenModal("pay")}
               className="relative w-32 h-10 bg-muted/60 rounded-full text-foreground border border-white/10 hover:border-white hover:bg-muted/80 hover:text-white flex items-center"
               aria-label="Select pay token"
             >
@@ -190,7 +222,7 @@ const TriggerInterface = ({ tokens }: TriggerInterfaceProps) => {
           <div className="flex items-center justify-between gap-3">
             <Button
               variant="ghost"
-              onClick={() => {/* TODO: Add token selection modal */}}
+              onClick={() => openTokenModal("receive")}
               className="relative w-32 h-10 bg-muted/60 rounded-full text-foreground border border-white/10 hover:border-white hover:bg-muted/80 hover:text-white flex items-center"
               aria-label="Select receive token"
             >
@@ -282,6 +314,56 @@ const TriggerInterface = ({ tokens }: TriggerInterfaceProps) => {
       >
         {getButtonText()}
       </Button>
+
+      {/* Token Selection Modal */}
+      <Dialog open={showTokenModal} onOpenChange={setShowTokenModal}>
+        <DialogOverlay />
+        <DialogContent className="sm:max-w-[420px] bg-[#0b0f17]/95 border border-white/10 text-white">
+          <DialogHeader>
+            <DialogTitle className="text-white">
+              Select a token to {tokenSelectionType === "pay" ? "pay" : "receive"}
+            </DialogTitle>
+          </DialogHeader>
+
+          {/* Search */}
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-white/50" />
+            <Input
+              placeholder="Search any token. Include '0x' for exact match."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="pl-10 bg-white/5 border border-white/10 text-white placeholder:text-white/40 focus:border-white/40 focus:bg-white/10"
+            />
+          </div>
+
+          {/* Token List */}
+          <ScrollArea className="h-[26rem] w-full pr-4">
+            <div className="space-y-2">
+              {filteredTokens.map((token) => (
+                <Button
+                  key={token.address ? token.address.toLowerCase() : `symbol:${token.symbol}`}
+                  variant="ghost"
+                  className="w-full justify-between py-3 px-3 rounded-xl border border-white/10 hover:bg-white/5"
+                  onClick={() => selectToken(token)}
+                >
+                  <div className="flex items-center">
+                    <div className="w-9 h-9 rounded-full bg-white/10 flex items-center justify-center">
+                      <img src={glieseLogo} alt={token.symbol} className="w-6 h-6" />
+                    </div>
+                    <div className="ml-3 text-left">
+                      <div className="font-medium text-white">{token.symbol}</div>
+                      <div className="text-xs text-white/60">{token.name}</div>
+                    </div>
+                  </div>
+                  <div className="text-right text-xs text-white/60">
+                    {token.address ? formatAddress(token.address) : "Native coin"}
+                  </div>
+                </Button>
+              ))}
+            </div>
+          </ScrollArea>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
