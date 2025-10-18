@@ -16,7 +16,7 @@ export const PUBLIC_CONFIG = {
 
   // --- Yak integration ---
   // TODO: put your deployed YakRouter address here
-  YAK_ROUTER: "0xb6732D24E8C3e5E67D8d18265EfeDfb2a1149d5F",
+  YAK_ROUTER: "0x1460378be68bbea04a6b21271a3850229e6d087d",
 
   // Wrapped native (WMON) address on Monad testnet (from your notes)
   WRAPPED_NATIVE: "0x760AfE86e5de5fa0Ee542fc7B7B713e1c5425701",
