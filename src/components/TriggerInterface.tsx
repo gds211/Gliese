@@ -165,7 +165,7 @@ const TriggerInterface = ({ tokens }: TriggerInterfaceProps) => {
           </div>
         </div>
 
-        <Card className="p-4 bg-card/50 border-border">
+          <div className="relative bg-background/60 rounded-2xl border border-white/10 focus-within:border-primary/60 transition-colors duration-200 p-3">
           <div className="flex items-center justify-between gap-3">
             <Button
               variant="ghost"
@@ -197,15 +197,15 @@ const TriggerInterface = ({ tokens }: TriggerInterfaceProps) => {
                 type="text"
                 value={payAmount}
                 onChange={(e) => setPayAmount(e.target.value)}
-                placeholder="0"
-                className="text-right text-2xl font-semibold bg-transparent border-none focus-visible:ring-0 p-0 h-auto"
+              placeholder="0.00"
+                className="!border-none !bg-transparent text-right flex-1 !text-24 font-medium tracking-tight pr-2 h-auto text-foreground !shadow-none !ring-0 !ring-offset-0"
               />
             </div>
           </div>
           <div className="flex justify-end items-center mt-2">
             <span className="text-xs text-muted-foreground">{payUsdValue}</span>
           </div>
-        </Card>
+          </div>
       </div>
 
       {/* You receive section */}
