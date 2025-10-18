@@ -135,26 +135,30 @@ const TriggerInterface = ({ tokens }: TriggerInterfaceProps) => {
 
         <Card className="p-4 bg-card/50 border-border">
           <div className="flex items-center justify-between gap-3">
-            <Select value={payToken} onValueChange={setPayToken}>
-              <SelectTrigger className="w-[140px] bg-muted/50 border-border">
-                <SelectValue>
-                  <div className="flex items-center gap-2">
-                    <TokenAvatar symbol={payToken} size={20} />
-                    <span>{payToken}</span>
-                  </div>
-                </SelectValue>
-              </SelectTrigger>
-              <SelectContent className="bg-popover border-border">
-                {tokens.map((token) => (
-                  <SelectItem key={token.symbol} value={token.symbol}>
-                    <div className="flex items-center gap-2">
-                      <TokenAvatar symbol={token.symbol} size={20} />
-                      <span>{token.symbol}</span>
-                    </div>
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <Button
+              variant="ghost"
+              onClick={() => {/* TODO: Add token selection modal */}}
+              className="relative w-32 h-10 bg-muted/60 rounded-full text-foreground border border-white/10 hover:border-white hover:bg-muted/80 hover:text-white flex items-center"
+              aria-label="Select pay token"
+            >
+              {/* Left logo */}
+              <span className="absolute left-3 flex items-center gap-2 pointer-events-none">
+                <TokenAvatar
+                  symbol={payToken}
+                  address={selectedPayToken?.address as `0x${string}` | undefined}
+                  size={24}
+                  title={selectedPayToken?.name || payToken}
+                />
+              </span>
+
+              {/* Label centered between logo and chevron */}
+              <span className="absolute inset-y-0 left-[2.75rem] right-[2.5rem] flex items-center justify-center pointer-events-none truncate">
+                {payToken}
+              </span>
+
+              {/* Right chevron */}
+              <ChevronDown className="absolute right-2 h-3.5 w-3.5 pointer-events-none" />
+            </Button>
 
             <div className="flex-1 text-right">
               <Input
@@ -166,10 +170,7 @@ const TriggerInterface = ({ tokens }: TriggerInterfaceProps) => {
               />
             </div>
           </div>
-          <div className="flex justify-between items-center mt-2">
-            <span className="text-xs text-muted-foreground">
-              {selectedPayToken?.name || ""}
-            </span>
+          <div className="flex justify-end items-center mt-2">
             <span className="text-xs text-muted-foreground">{payUsdValue}</span>
           </div>
         </Card>
@@ -187,26 +188,30 @@ const TriggerInterface = ({ tokens }: TriggerInterfaceProps) => {
 
         <Card className="p-4 bg-card/50 border-border">
           <div className="flex items-center justify-between gap-3">
-            <Select value={receiveToken} onValueChange={setReceiveToken}>
-              <SelectTrigger className="w-[140px] bg-muted/50 border-border">
-                <SelectValue>
-                  <div className="flex items-center gap-2">
-                    <TokenAvatar symbol={receiveToken} size={20} />
-                    <span>{receiveToken}</span>
-                  </div>
-                </SelectValue>
-              </SelectTrigger>
-              <SelectContent className="bg-popover border-border">
-                {tokens.map((token) => (
-                  <SelectItem key={token.symbol} value={token.symbol}>
-                    <div className="flex items-center gap-2">
-                      <TokenAvatar symbol={token.symbol} size={20} />
-                      <span>{token.symbol}</span>
-                    </div>
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <Button
+              variant="ghost"
+              onClick={() => {/* TODO: Add token selection modal */}}
+              className="relative w-32 h-10 bg-muted/60 rounded-full text-foreground border border-white/10 hover:border-white hover:bg-muted/80 hover:text-white flex items-center"
+              aria-label="Select receive token"
+            >
+              {/* Left logo */}
+              <span className="absolute left-3 flex items-center gap-2 pointer-events-none">
+                <TokenAvatar
+                  symbol={receiveToken}
+                  address={selectedReceiveToken?.address as `0x${string}` | undefined}
+                  size={24}
+                  title={selectedReceiveToken?.name || receiveToken}
+                />
+              </span>
+
+              {/* Label centered between logo and chevron */}
+              <span className="absolute inset-y-0 left-[2.75rem] right-[2.5rem] flex items-center justify-center pointer-events-none truncate">
+                {receiveToken}
+              </span>
+
+              {/* Right chevron */}
+              <ChevronDown className="absolute right-2 h-3.5 w-3.5 pointer-events-none" />
+            </Button>
 
             <div className="flex-1 text-right">
               <div className="text-2xl font-semibold">
@@ -214,10 +219,7 @@ const TriggerInterface = ({ tokens }: TriggerInterfaceProps) => {
               </div>
             </div>
           </div>
-          <div className="flex justify-between items-center mt-2">
-            <span className="text-xs text-muted-foreground">
-              {selectedReceiveToken?.name || ""}
-            </span>
+          <div className="flex justify-end items-center mt-2">
             <span className="text-xs text-muted-foreground">{receiveUsdValue}</span>
           </div>
         </Card>
