@@ -15,6 +15,7 @@ import { ChevronDown, Wallet, Search } from "lucide-react";
 import TokenAvatar from "@/components/TokenAvatar";
 import { useAccount, useBalance } from "wagmi";
 import glieseLogo from "@/assets/gliese-logo.png";
+import { cn } from "@/lib/utils";
 
 interface Token {
   symbol: string;
@@ -37,6 +38,7 @@ const TriggerInterface = ({ tokens }: TriggerInterfaceProps) => {
   const [showTokenModal, setShowTokenModal] = useState(false);
   const [tokenSelectionType, setTokenSelectionType] = useState<"pay" | "receive">("pay");
   const [searchTerm, setSearchTerm] = useState("");
+  const [slippageMode, setSlippageMode] = useState<"optimized" | "custom">("optimized");
 
   const selectedPayToken = useMemo(
     () => tokens.find((t) => t.symbol === payToken),
@@ -142,10 +144,6 @@ const TriggerInterface = ({ tokens }: TriggerInterfaceProps) => {
         <div className="flex justify-between items-center text-sm">
           <span className="text-muted-foreground">Selling</span>
           <div className="flex items-center gap-2 text-xs text-muted-foreground">
-            <span className="flex items-center gap-1">
-              <Wallet className="h-3 w-3" />
-              {payBalance ? `${Number(payBalance.formatted).toFixed(4)} ${payToken}` : `0.0000 ${payToken}`}
-            </span>
             <Button
               variant="ghost"
               size="sm"
@@ -206,6 +204,41 @@ const TriggerInterface = ({ tokens }: TriggerInterfaceProps) => {
             <span className="text-xs text-muted-foreground">{payUsdValue}</span>
           </div>
           </div>
+      </div>
+
+      {/* Slippage Mode Toggle */}
+      <div className="flex items-center justify-center py-2">
+        <div className="relative inline-flex items-center bg-background/60 rounded-full p-1 border border-white/10">
+          <button
+            onClick={() => setSlippageMode("optimized")}
+            className={cn(
+              "relative z-10 px-4 py-1.5 text-xs font-medium rounded-full transition-all duration-200",
+              slippageMode === "optimized"
+                ? "text-white"
+                : "text-muted-foreground hover:text-white"
+            )}
+          >
+            OPTIMIZED
+          </button>
+          <button
+            onClick={() => setSlippageMode("custom")}
+            className={cn(
+              "relative z-10 px-4 py-1.5 text-xs font-medium rounded-full transition-all duration-200",
+              slippageMode === "custom"
+                ? "text-white"
+                : "text-muted-foreground hover:text-white"
+            )}
+          >
+            CUSTOM
+          </button>
+          {/* Sliding orange indicator */}
+          <div
+            className={cn(
+              "absolute top-1 bottom-1 w-[calc(50%-4px)] bg-orange-500/20 border border-orange-500 rounded-full transition-all duration-200 ease-out",
+              slippageMode === "optimized" ? "left-1" : "left-[calc(50%+2px)]"
+            )}
+          />
+        </div>
       </div>
 
       {/* You receive section */}
@@ -293,17 +326,17 @@ const TriggerInterface = ({ tokens }: TriggerInterfaceProps) => {
         <div className="flex items-center gap-2">
           <span className="text-sm text-muted-foreground">Expires in</span>
           <Select value={expiry} onValueChange={setExpiry}>
-            <SelectTrigger className="w-[120px] bg-muted/50 border-border transition-colors duration-200 focus:ring-0 focus:ring-offset-0">
+            <SelectTrigger className="w-[120px] bg-muted/50 border-border hover:border-primary/60 transition-colors duration-200 focus:ring-0 focus:ring-offset-0">
               <SelectValue>
                 {expiry === "1h" ? "1 Hour" : expiry === "1" ? "1 Day" : `${expiry} Days`}
               </SelectValue>
             </SelectTrigger>
             <SelectContent className="bg-popover border-border" side="top">
-              <SelectItem value="1h" className="focus:bg-transparent">1 Hour</SelectItem>
-              <SelectItem value="1" className="focus:bg-transparent">1 Day</SelectItem>
-              <SelectItem value="3" className="focus:bg-transparent">3 Days</SelectItem>
-              <SelectItem value="7" className="focus:bg-transparent">7 Days</SelectItem>
-              <SelectItem value="30" className="focus:bg-transparent">30 Days</SelectItem>
+              <SelectItem value="1h" className="focus:bg-transparent hover:bg-transparent">1 Hour</SelectItem>
+              <SelectItem value="1" className="focus:bg-transparent hover:bg-transparent">1 Day</SelectItem>
+              <SelectItem value="3" className="focus:bg-transparent hover:bg-transparent">3 Days</SelectItem>
+              <SelectItem value="7" className="focus:bg-transparent hover:bg-transparent">7 Days</SelectItem>
+              <SelectItem value="30" className="focus:bg-transparent hover:bg-transparent">30 Days</SelectItem>
             </SelectContent>
           </Select>
         </div>
