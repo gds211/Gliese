@@ -14,6 +14,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { ChevronDown, Wallet, Search } from "lucide-react";
 import TokenAvatar from "@/components/TokenAvatar";
 import { useAccount, useBalance } from "wagmi";
+import { parseUnits } from "viem";
 import glieseLogo from "@/assets/gliese-logo.png";
 
 interface Token {
@@ -70,6 +71,16 @@ const TriggerInterface = ({ tokens }: TriggerInterfaceProps) => {
     query: { enabled: Boolean(isConnected && address && selectedReceiveToken) },
   });
 
+  const isExceeding = useMemo(() => {
+    if (!isConnected || !payBalance || !payAmount) return false;
+    try {
+      const wantRaw = parseUnits(payAmount, payBalance.decimals);
+      return wantRaw > payBalance.value;
+    } catch {
+      return false; // while typing invalid formats
+    }
+  }, [isConnected, payBalance?.value, payBalance?.decimals, payAmount]);
+
   const filteredTokens = tokens.filter(
     (t) =>
       t.symbol.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -120,7 +131,9 @@ const TriggerInterface = ({ tokens }: TriggerInterfaceProps) => {
   const calculateReceiveAmount = () => {
     if (!payAmount || !rate) return "0.00";
     const amount = Number(payAmount) * Number(rate);
-    return amount.toFixed(6);
+    if (amount === 0) return "0.00";
+    // Show up to 6 decimals, but remove trailing zeros
+    return amount.toFixed(6).replace(/\.?0+$/, '');
   };
 
   const payUsdValue = payAmount ? `~$${(Number(payAmount) * 1).toFixed(2)}` : "~$0.00";
@@ -130,6 +143,7 @@ const TriggerInterface = ({ tokens }: TriggerInterfaceProps) => {
 
   const getButtonText = () => {
     if (!isConnected) return "Connect Wallet";
+    if (isExceeding) return "Amount exceeds balance";
     if (!payAmount || payAmount === "0" || Number(payAmount) === 0) return "Enter an amount";
     if (!rate || rate === "0" || Number(rate) === 0) return "Enter an amount";
     return "Place trigger order";
@@ -199,6 +213,7 @@ const TriggerInterface = ({ tokens }: TriggerInterfaceProps) => {
                 onChange={(e) => setPayAmount(e.target.value)}
               placeholder="0.00"
                 className="!border-none !bg-transparent text-right flex-1 !text-24 font-medium tracking-tight pr-2 h-auto text-foreground !shadow-none !ring-0 !ring-offset-0"
+                style={{ color: isExceeding ? "#ef4444" : undefined }}
               />
             </div>
           </div>
@@ -312,7 +327,7 @@ const TriggerInterface = ({ tokens }: TriggerInterfaceProps) => {
       {/* Create order button */}
       <Button
         className="w-full"
-        disabled={!isConnected || !payAmount || !rate}
+        disabled={!isConnected || !payAmount || !rate || isExceeding}
       >
         {getButtonText()}
       </Button>
