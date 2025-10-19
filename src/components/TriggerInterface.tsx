@@ -140,7 +140,7 @@ const TriggerInterface = ({ tokens }: TriggerInterfaceProps) => {
       {/* You pay section */}
       <div className="space-y-2">
         <div className="flex justify-between items-center text-sm">
-          <span className="text-muted-foreground">Paying</span>
+          <span className="text-muted-foreground">Selling</span>
           <div className="flex items-center gap-2 text-xs text-muted-foreground">
             <span className="flex items-center gap-1">
               <Wallet className="h-3 w-3" />
@@ -211,7 +211,7 @@ const TriggerInterface = ({ tokens }: TriggerInterfaceProps) => {
       {/* You receive section */}
       <div className="space-y-2">
         <div className="flex justify-between items-center text-sm">
-          <span className="text-muted-foreground">Receiving</span>
+          <span className="text-muted-foreground">Buying</span>
           <span className="flex items-center gap-1 text-xs text-muted-foreground">
             <Wallet className="h-3 w-3" />
             {receiveBalance ? `${Number(receiveBalance.formatted).toFixed(4)} ${receiveToken}` : `0.0000 ${receiveToken}`}
@@ -293,7 +293,7 @@ const TriggerInterface = ({ tokens }: TriggerInterfaceProps) => {
         <div className="flex items-center gap-2">
           <span className="text-sm text-muted-foreground">Expires in</span>
           <Select value={expiry} onValueChange={setExpiry}>
-            <SelectTrigger className="w-[120px] bg-muted/50 border-border hover:border-primary/60 focus-within:border-primary/60 transition-colors duration-200">
+            <SelectTrigger className="w-[120px] bg-muted/50 border-border hover:border-primary/60 transition-colors duration-200">
               <SelectValue>
                 {expiry === "1" ? "1 Day" : `${expiry} Days`}
               </SelectValue>
