@@ -8,7 +8,7 @@ export type SimpleQuote = {
   outFormatted?: string | number | null;
   // optional: updatedAtMs?: number;
 };
-//probably sta
+//probably stab
 
 export type UseDynamicSlippageArgs = {
   enabled: boolean;
