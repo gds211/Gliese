@@ -314,6 +314,30 @@ const buyAmountDerived = (() => {
     return () => clearInterval(interval);
   }, [sellToken, buyToken]);
 
+  // Reset input values when switching tabs
+  useEffect(() => {
+    setSellAmount("");
+    setSearchTerm("");
+    setShowTokenModal(false);
+  }, [activeTab]);
+
+  // Validate numeric input (allow only numbers and one decimal point)
+  const handleNumericInput = (value: string): string => {
+    // Allow empty string
+    if (value === "") return "";
+    
+    // Remove all non-numeric characters except decimal point
+    let cleaned = value.replace(/[^\d.]/g, "");
+    
+    // Ensure only one decimal point
+    const parts = cleaned.split(".");
+    if (parts.length > 2) {
+      cleaned = parts[0] + "." + parts.slice(1).join("");
+    }
+    
+    return cleaned;
+  };
+
   // USD helpers (for your current UI)
   const calculateUSDValue = (amount: string, token: string): string => {
     const numAmount = parseFloat(amount) || 0;
@@ -532,7 +556,7 @@ const selectToken = (picked: string | TokenObj) => {
                   </Button>
                   <Input
                     value={sellAmount}
-                    onChange={(e) => setSellAmount(e.target.value)}
+                    onChange={(e) => setSellAmount(handleNumericInput(e.target.value))}
                     className="!border-none !bg-transparent text-right flex-1 !text-24 font-medium tracking-tight pr-2 h-auto text-foreground !shadow-none !ring-0 !ring-offset-0"
                     style={{ color: isExceeding ? "#ef4444" : undefined }}
                     placeholder="0.00"
