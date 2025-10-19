@@ -278,14 +278,16 @@ const TriggerInterface = ({ tokens }: TriggerInterfaceProps) => {
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <span className="text-sm text-muted-foreground">
-                Pay {payToken} at rate
+                Buy {receiveToken} at rate
               </span>
-              <span className="text-xs text-green-500">(+0.03%)</span>
             </div>
               <Button
                 variant="ghost"
                 size="sm"
-                className="h-7 px-2 text-xs text-primary pointer-events-none"
+                className="h-7 px-2 text-xs text-primary hover:text-white transition-colors duration-200"
+                onClick={() => {
+                  console.log("Set to market clicked");
+                }}
               >
                 Set to market
               </Button>
@@ -328,7 +330,7 @@ const TriggerInterface = ({ tokens }: TriggerInterfaceProps) => {
               <img src={glieseLogo} alt="Gliese" className="w-4 h-4 rounded-lg" />
               <span>Wrapdrive v1.1</span>
             </div>
-            <span>0.02% FEE</span>
+            <span>0.1% FEE</span>
           </div>
         </div>
       </Card>
