@@ -553,7 +553,7 @@ const selectToken = (picked: string | TokenObj) => {
                 variant="ghost"
                 size="sm"
                 onClick={handleSwapTokens}
-                className="h-8 w-8 p-0 bg-background/60 hover:bg-background rounded-md border border-border/40 transition-colors duration-200"
+                className="h-8 w-8 p-0 bg-background/60 hover:bg-white rounded-md border border-border/40 hover:border-blue-600 transition-colors duration-200"
               >
                 <ArrowUpDown className="h-4 w-4 text-blue-600" />
               </Button>
