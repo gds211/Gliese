@@ -243,11 +243,11 @@ const TriggerInterface = ({ tokens }: TriggerInterfaceProps) => {
       <div className="space-y-2">
         <div className="flex justify-between items-center text-sm">
           <span className="text-muted-foreground">Buying</span>
-          <div className="flex items-center gap-2">
-            <span className={`text-xs transition-colors ${tradeMode === "optimized" ? "text-orange-500 font-semibold" : "text-muted-foreground"}`}>
+          <div className="flex items-center gap-1.5 bg-gray-900/50 rounded-full px-2 py-1">
+            <span className="text-[10px] text-muted-foreground">
               OPTIMIZED
             </span>
-            <div className="relative w-16">
+            <div className="relative w-12">
               <Slider
                 value={[tradeMode === "optimized" ? 0 : 100]}
                 onValueChange={(values) => {
@@ -255,10 +255,10 @@ const TriggerInterface = ({ tokens }: TriggerInterfaceProps) => {
                 }}
                 max={100}
                 step={50}
-                className="[&>span>span]:bg-orange-500 [&>span>span:last-child]:border-orange-500"
+                className="[&>span]:h-1 [&>span]:bg-gray-700 [&>span>span]:bg-orange-500 [&>span>span:last-child]:h-3 [&>span>span:last-child]:w-3 [&>span>span:last-child]:border-orange-500"
               />
             </div>
-            <span className={`text-xs transition-colors ${tradeMode === "exact" ? "text-orange-500 font-semibold" : "text-muted-foreground"}`}>
+            <span className="text-[10px] text-muted-foreground">
               EXACT
             </span>
           </div>
