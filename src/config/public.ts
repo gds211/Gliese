@@ -24,8 +24,8 @@ export const PUBLIC_CONFIG = {
   // --- Quote behaviour (UI polling, slippage, thresholds) ---
   MAX_STEPS: 4,
   GAS_PRICE_WEI_FALLBACK: 60_000_000_000n, // used ONLY if RPC fee query fails
-  FEE_REFRESH_MS: 200,                    // refresh on-chain fee estimates every 0.8s
-  QUOTE_POLL_MS: 400,                     // poll quotes every 1s
+  FEE_REFRESH_MS: 400,                    // refresh on-chain fee estimates every 0.8s
+  QUOTE_POLL_MS: 600,                     // poll quotes every 1s
   UPDATE_THRESHOLD_BPS: 0n,               // 0 bps
   SLIPPAGE_BPS: 500n,                      // 5%
 
@@ -59,7 +59,7 @@ export const PUBLIC_CONFIG = {
     // --- Optional: local elasticity probe (extra quotes; leave false to avoid extra RPCs) ---
     ELASTICITY_PROBE: true,    // true → use tiny +ε size bump to estimate curvature on CLMM paths
     PROBE_EPS: 0.02,            // +2% input bump
-    PROBE_MIN_INTERVAL_MS: 2500 // min spacing between probes
+    PROBE_MIN_INTERVAL_MS: 1000 // min spacing between probes
   },
 
 } as const;
