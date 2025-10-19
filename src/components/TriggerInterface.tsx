@@ -11,6 +11,7 @@ import {
 } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogOverlay } from "@/components/ui/dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { Slider } from "@/components/ui/slider";
 import { ChevronDown, Wallet, Search } from "lucide-react";
 import TokenAvatar from "@/components/TokenAvatar";
 import { useAccount, useBalance } from "wagmi";
@@ -38,6 +39,7 @@ const TriggerInterface = ({ tokens }: TriggerInterfaceProps) => {
   const [showTokenModal, setShowTokenModal] = useState(false);
   const [tokenSelectionType, setTokenSelectionType] = useState<"pay" | "receive">("pay");
   const [searchTerm, setSearchTerm] = useState("");
+  const [tradeMode, setTradeMode] = useState<"optimized" | "exact">("optimized");
 
   const selectedPayToken = useMemo(
     () => tokens.find((t) => t.symbol === payToken),
@@ -241,10 +243,25 @@ const TriggerInterface = ({ tokens }: TriggerInterfaceProps) => {
       <div className="space-y-2">
         <div className="flex justify-between items-center text-sm">
           <span className="text-muted-foreground">Buying</span>
-          <span className="flex items-center gap-1 text-xs text-muted-foreground">
-            <Wallet className="h-3 w-3" />
-            {receiveBalance ? `${Number(receiveBalance.formatted).toFixed(4)} ${receiveToken}` : `0.0000 ${receiveToken}`}
-          </span>
+          <div className="flex items-center gap-2">
+            <span className={`text-xs transition-colors ${tradeMode === "optimized" ? "text-orange-500 font-semibold" : "text-muted-foreground"}`}>
+              OPTIMIZED
+            </span>
+            <div className="relative w-16">
+              <Slider
+                value={[tradeMode === "optimized" ? 0 : 100]}
+                onValueChange={(values) => {
+                  setTradeMode(values[0] < 50 ? "optimized" : "exact");
+                }}
+                max={100}
+                step={50}
+                className="[&>span>span]:bg-orange-500 [&>span>span:last-child]:border-orange-500"
+              />
+            </div>
+            <span className={`text-xs transition-colors ${tradeMode === "exact" ? "text-orange-500 font-semibold" : "text-muted-foreground"}`}>
+              EXACT
+            </span>
+          </div>
         </div>
 
         <Card className="p-3 bg-card/50 border-border">
@@ -313,7 +330,7 @@ const TriggerInterface = ({ tokens }: TriggerInterfaceProps) => {
                 type="text"
                 value={rate}
                 onChange={(e) => setRate(e.target.value)}
-                placeholder="0"
+                placeholder="0.00"
                 className="!border-none !bg-transparent w-full !text-base font-medium text-foreground !shadow-none !ring-0 !ring-offset-0 p-0"
               />
             </div>
