@@ -11,7 +11,7 @@ import {
 } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogOverlay } from "@/components/ui/dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Slider } from "@/components/ui/slider";
+
 import { ChevronDown, Wallet, Search } from "lucide-react";
 import TokenAvatar from "@/components/TokenAvatar";
 import { useAccount, useBalance } from "wagmi";
@@ -247,17 +247,23 @@ const TriggerInterface = ({ tokens }: TriggerInterfaceProps) => {
             <span className="text-[10px] text-muted-foreground">
               OPTIMIZED
             </span>
-            <div className="relative w-16">
-              <Slider
-                value={[tradeMode === "optimized" ? 0 : 100]}
-                onValueChange={(values) => {
-                  setTradeMode(values[0] < 50 ? "optimized" : "exact");
+            <button
+              type="button"
+              onClick={() => setTradeMode(tradeMode === "optimized" ? "exact" : "optimized")}
+              className="relative w-16 h-3 bg-white/20 rounded-full cursor-pointer transition-all duration-200 hover:bg-white/30"
+              aria-label={`Toggle trade mode. Currently: ${tradeMode}`}
+            >
+              <span
+                className={`absolute top-1/2 -translate-y-1/2 h-5 w-5 bg-[#1a2332] rounded-full transition-all duration-200 ease-in-out shadow-lg ${
+                  tradeMode === "optimized" 
+                    ? "left-0 -translate-x-1" 
+                    : "right-0 translate-x-1"
+                }`}
+                style={{
+                  border: "2px solid #f97316"
                 }}
-                max={100}
-                step={50}
-                className="[&>span]:h-3 [&>span]:bg-white/20 [&>span]:rounded-full [&>span>span]:bg-orange-500 [&>span>span]:rounded-full [&>span>span:last-child]:h-5 [&>span>span:last-child]:w-5 [&>span>span:last-child]:bg-[#1a2332] [&>span>span:last-child]:border-0"
               />
-            </div>
+            </button>
             <span className="text-[10px] text-muted-foreground">
               EXACT
             </span>
