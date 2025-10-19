@@ -6,7 +6,7 @@ export const PUBLIC_CONFIG = {
   APP_NAME: "Gliese",
   APP_VERSION: "1.0.0",
 
-  // --- Chain target (Monad Testnet) ----
+  // --- Chain target (Monad Testnet) ---
   CHAIN_ID: 10143,
   RPC_URL: "https://testnet-rpc.monad.xyz",
   EXPLORER_NAME: "SocialScan",
@@ -24,9 +24,9 @@ export const PUBLIC_CONFIG = {
   // --- Quote behaviour (UI polling, slippage, thresholds) ---
   MAX_STEPS: 4,
   GAS_PRICE_WEI_FALLBACK: 60_000_000_000n, // used ONLY if RPC fee query fails
-  FEE_REFRESH_MS: 750,                    // refresh on-chain fee estimates every 0.8s
+  FEE_REFRESH_MS: 800,                    // refresh on-chain fee estimates every 0.8s
   QUOTE_POLL_MS: 1000,                     // poll quotes every 1s
-  UPDATE_THRESHOLD_BPS: 1n,               // 1 bps
+  UPDATE_THRESHOLD_BPS: 0n,               // 0 bps
   SLIPPAGE_BPS: 500n,                      // 5%
 
   // --- Dynamic (auto) slippage config: adaptive + EWMA
