@@ -119,6 +119,20 @@ const TriggerInterface = ({ tokens }: TriggerInterfaceProps) => {
   };
 
   const selectToken = (token: Token) => {
+    // Get the other token for comparison
+    const otherToken = tokenSelectionType === "pay" ? selectedReceiveToken : selectedPayToken;
+    
+    // Check if user selected the same token as the other side
+    const isSameToken = token.symbol === otherToken?.symbol;
+    
+    // If same token selected, swap them instead
+    if (isSameToken) {
+      handleSwapTokens();
+      setShowTokenModal(false);
+      return;
+    }
+    
+    // Normal assignment
     if (tokenSelectionType === "pay") {
       setPayToken(token.symbol);
       setPayAmount("");
@@ -284,7 +298,7 @@ const TriggerInterface = ({ tokens }: TriggerInterfaceProps) => {
               <Button
                 variant="ghost"
                 size="sm"
-                className="h-7 px-2 text-xs text-primary hover:text-white transition-colors duration-200"
+                className="h-7 px-2 text-xs text-primary hover:bg-white transition-colors duration-200"
                 onClick={() => {
                   console.log("Set to market clicked");
                 }}
