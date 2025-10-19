@@ -33,7 +33,7 @@ const TriggerInterface = ({ tokens }: TriggerInterfaceProps) => {
   const [receiveToken, setReceiveToken] = useState("USDC");
   const [payAmount, setPayAmount] = useState("");
   const [rate, setRate] = useState("");
-  const [expiry, setExpiry] = useState("7");
+  const [expiry, setExpiry] = useState("1h");
   const [showTokenModal, setShowTokenModal] = useState(false);
   const [tokenSelectionType, setTokenSelectionType] = useState<"pay" | "receive">("pay");
   const [searchTerm, setSearchTerm] = useState("");
@@ -293,17 +293,17 @@ const TriggerInterface = ({ tokens }: TriggerInterfaceProps) => {
         <div className="flex items-center gap-2">
           <span className="text-sm text-muted-foreground">Expires in</span>
           <Select value={expiry} onValueChange={setExpiry}>
-            <SelectTrigger className="w-[120px] bg-muted/50 border-border hover:border-primary/60 transition-colors duration-200">
+            <SelectTrigger className="w-[120px] bg-muted/50 border-border transition-colors duration-200 focus:ring-0 focus:ring-offset-0">
               <SelectValue>
-                {expiry === "1" ? "1 Day" : `${expiry} Days`}
+                {expiry === "1h" ? "1 Hour" : expiry === "1" ? "1 Day" : `${expiry} Days`}
               </SelectValue>
             </SelectTrigger>
-            <SelectContent className="bg-popover border-border">
-              <SelectItem value="1">1 Day</SelectItem>
-              <SelectItem value="3">3 Days</SelectItem>
-              <SelectItem value="7">7 Days</SelectItem>
-              <SelectItem value="14">14 Days</SelectItem>
-              <SelectItem value="30">30 Days</SelectItem>
+            <SelectContent className="bg-popover border-border" side="top">
+              <SelectItem value="1h" className="focus:bg-transparent">1 Hour</SelectItem>
+              <SelectItem value="1" className="focus:bg-transparent">1 Day</SelectItem>
+              <SelectItem value="3" className="focus:bg-transparent">3 Days</SelectItem>
+              <SelectItem value="7" className="focus:bg-transparent">7 Days</SelectItem>
+              <SelectItem value="30" className="focus:bg-transparent">30 Days</SelectItem>
             </SelectContent>
           </Select>
         </div>
