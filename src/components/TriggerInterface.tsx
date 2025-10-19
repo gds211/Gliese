@@ -243,11 +243,11 @@ const TriggerInterface = ({ tokens }: TriggerInterfaceProps) => {
       <div className="space-y-2">
         <div className="flex justify-between items-center text-sm">
           <span className="text-muted-foreground">Buying</span>
-          <div className="flex items-center gap-1.5 bg-gray-900/50 rounded-full px-2 py-1">
+          <div className="flex items-center gap-2">
             <span className="text-[10px] text-muted-foreground">
               OPTIMIZED
             </span>
-            <div className="relative w-12">
+            <div className="relative w-16">
               <Slider
                 value={[tradeMode === "optimized" ? 0 : 100]}
                 onValueChange={(values) => {
@@ -255,7 +255,7 @@ const TriggerInterface = ({ tokens }: TriggerInterfaceProps) => {
                 }}
                 max={100}
                 step={50}
-                className="[&>span]:h-1 [&>span]:bg-gray-700 [&>span>span]:bg-orange-500 [&>span>span:last-child]:h-3 [&>span>span:last-child]:w-3 [&>span>span:last-child]:border-orange-500"
+                className="[&>span]:h-3 [&>span]:bg-white/20 [&>span]:rounded-full [&>span>span]:bg-orange-500 [&>span>span]:rounded-full [&>span>span:last-child]:h-5 [&>span>span:last-child]:w-5 [&>span>span:last-child]:bg-[#1a2332] [&>span>span:last-child]:border-0"
               />
             </div>
             <span className="text-[10px] text-muted-foreground">
