@@ -24,8 +24,8 @@ export const PUBLIC_CONFIG = {
   // --- Quote behaviour (UI polling, slippage, thresholds) ---
   MAX_STEPS: 4,
   GAS_PRICE_WEI_FALLBACK: 60_000_000_000n, // used ONLY if RPC fee query fails
-  FEE_REFRESH_MS: 600,                    // refresh on-chain fee estimates every 0.8s
-  QUOTE_POLL_MS: 800,                     // poll quotes every 1s
+  FEE_REFRESH_MS: 200,                    // refresh on-chain fee estimates every 0.8s
+  QUOTE_POLL_MS: 400,                     // poll quotes every 1s
   UPDATE_THRESHOLD_BPS: 0n,               // 0 bps
   SLIPPAGE_BPS: 500n,                      // 5%
 
