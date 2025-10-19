@@ -305,22 +305,31 @@ const TriggerInterface = ({ tokens }: TriggerInterfaceProps) => {
           </div>
         </div>
 
-        <div className="flex items-center gap-2">
-          <span className="text-sm text-muted-foreground">Expires in</span>
-          <Select value={expiry} onValueChange={setExpiry}>
-            <SelectTrigger className="w-[120px] bg-muted/50 border-border transition-colors duration-200 focus:ring-0 focus:ring-offset-0">
+        <div className="flex items-center justify-between text-xs text-muted-foreground">
+          <div className="flex items-center gap-2">
+            <span className="text-sm text-muted-foreground">Expires in</span>
+            <Select value={expiry} onValueChange={setExpiry}>
+            <SelectTrigger className="w-[120px] bg-muted/50 border-border hover:border-primary/60 transition-colors duration-200 focus:ring-0 focus:ring-offset-0">
               <SelectValue>
                 {expiry === "1h" ? "1 Hour" : expiry === "1" ? "1 Day" : `${expiry} Days`}
               </SelectValue>
             </SelectTrigger>
             <SelectContent className="bg-popover border-border" side="top">
-              <SelectItem value="1h" className="focus:bg-transparent">1 Hour</SelectItem>
-              <SelectItem value="1" className="focus:bg-transparent">1 Day</SelectItem>
-              <SelectItem value="3" className="focus:bg-transparent">3 Days</SelectItem>
-              <SelectItem value="7" className="focus:bg-transparent">7 Days</SelectItem>
-              <SelectItem value="30" className="focus:bg-transparent">30 Days</SelectItem>
+              <SelectItem value="1h" className="focus:bg-transparent focus:text-white hover:text-white">1 Hour</SelectItem>
+              <SelectItem value="1" className="focus:bg-transparent focus:text-white hover:text-white">1 Day</SelectItem>
+              <SelectItem value="3" className="focus:bg-transparent focus:text-white hover:text-white">3 Days</SelectItem>
+              <SelectItem value="7" className="focus:bg-transparent focus:text-white hover:text-white">7 Days</SelectItem>
+              <SelectItem value="30" className="focus:bg-transparent focus:text-white hover:text-white">30 Days</SelectItem>
             </SelectContent>
-          </Select>
+            </Select>
+          </div>
+          <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1 border-2 border-border px-2 py-1 rounded-lg">
+              <img src={glieseLogo} alt="Gliese" className="w-4 h-4 rounded-lg" />
+              <span>Wrapdrive v1.1</span>
+            </div>
+            <span>0.02% FEE</span>
+          </div>
         </div>
       </Card>
 
