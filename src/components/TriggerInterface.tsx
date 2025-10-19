@@ -270,15 +270,14 @@ const TriggerInterface = ({ tokens }: TriggerInterfaceProps) => {
               <Button
                 variant="ghost"
                 size="sm"
-                className="h-7 px-2 text-xs text-primary cursor-pointer"
-                onClick={(e) => e.preventDefault()}
+                className="h-7 px-2 text-xs text-primary pointer-events-none"
               >
                 Set to market
               </Button>
           </div>
           
           <div className="flex items-center gap-2">
-            <div className="relative bg-background/60 rounded-md border border-white/10 hover:border-primary/60 focus-within:border-primary/60 transition-colors duration-200 px-3 py-2 w-32">
+            <div className="relative bg-background/60 rounded-md border border-white/10 hover:border-primary/60 focus-within:border-primary/60 transition-colors duration-200 px-3 py-2 flex-1">
               <Input
                 type="text"
                 value={rate}
@@ -294,7 +293,7 @@ const TriggerInterface = ({ tokens }: TriggerInterfaceProps) => {
         <div className="flex items-center gap-2">
           <span className="text-sm text-muted-foreground">Expires in</span>
           <Select value={expiry} onValueChange={setExpiry}>
-            <SelectTrigger className="w-[120px] bg-muted/50 border-border hover:border-primary/60 transition-colors duration-200">
+            <SelectTrigger className="w-[120px] bg-muted/50 border-border hover:border-primary/60 focus-within:border-primary/60 transition-colors duration-200">
               <SelectValue>
                 {expiry === "1" ? "1 Day" : `${expiry} Days`}
               </SelectValue>
