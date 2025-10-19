@@ -114,6 +114,23 @@ const TriggerInterface = ({ tokens }: TriggerInterfaceProps) => {
     }
   };
 
+  // Validate numeric input (allow only numbers and one decimal point)
+  const handleNumericInput = (value: string): string => {
+    // Allow empty string
+    if (value === "") return "";
+    
+    // Remove all non-numeric characters except decimal point
+    let cleaned = value.replace(/[^\d.]/g, "");
+    
+    // Ensure only one decimal point
+    const parts = cleaned.split(".");
+    if (parts.length > 2) {
+      cleaned = parts[0] + "." + parts.slice(1).join("");
+    }
+    
+    return cleaned;
+  };
+
   const openTokenModal = (type: "pay" | "receive") => {
     setTokenSelectionType(type);
     setShowTokenModal(true);
@@ -226,7 +243,7 @@ const TriggerInterface = ({ tokens }: TriggerInterfaceProps) => {
               <Input
                 type="text"
                 value={payAmount}
-                onChange={(e) => setPayAmount(e.target.value)}
+                onChange={(e) => setPayAmount(handleNumericInput(e.target.value))}
               placeholder="0.00"
                 className="!border-none !bg-transparent text-right flex-1 !text-24 font-medium tracking-tight pr-2 h-auto text-foreground !shadow-none !ring-0 !ring-offset-0"
                 style={{ color: isExceeding ? "#ef4444" : undefined }}
@@ -335,7 +352,7 @@ const TriggerInterface = ({ tokens }: TriggerInterfaceProps) => {
               <Input
                 type="text"
                 value={rate}
-                onChange={(e) => setRate(e.target.value)}
+                onChange={(e) => setRate(handleNumericInput(e.target.value))}
                 placeholder="0.00"
                 className="!border-none !bg-transparent w-full !text-base font-medium text-foreground !shadow-none !ring-0 !ring-offset-0 p-0"
               />
