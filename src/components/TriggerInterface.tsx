@@ -118,7 +118,7 @@ const TriggerInterface = ({ tokens }: TriggerInterfaceProps) => {
   };
 
   const calculateReceiveAmount = () => {
-    if (!payAmount || !rate) return "0";
+    if (!payAmount || !rate) return "0.00";
     const amount = Number(payAmount) * Number(rate);
     return amount.toFixed(6);
   };
@@ -267,23 +267,25 @@ const TriggerInterface = ({ tokens }: TriggerInterfaceProps) => {
               </span>
               <span className="text-xs text-green-500">(+0.03%)</span>
             </div>
-            <Button
-              variant="ghost"
-              size="sm"
-              className="h-7 px-2 text-xs text-primary hover:text-primary"
-            >
-              Set to market
-            </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-7 px-2 text-xs text-primary pointer-events-none"
+              >
+                Set to market
+              </Button>
           </div>
           
           <div className="flex items-center gap-2">
-            <Input
-              type="text"
-              value={rate}
-              onChange={(e) => setRate(e.target.value)}
-              placeholder="0"
-              className="flex-1 bg-muted/50 border-border"
-            />
+            <div className="relative bg-background/60 rounded-md border border-white/10 hover:border-primary/60 focus-within:border-primary/60 transition-colors duration-200 px-3 py-2 flex-1">
+              <Input
+                type="text"
+                value={rate}
+                onChange={(e) => setRate(e.target.value)}
+                placeholder="0"
+                className="!border-none !bg-transparent w-full !text-base font-medium text-foreground !shadow-none !ring-0 !ring-offset-0 p-0"
+              />
+            </div>
             <span className="text-sm text-muted-foreground">{receiveToken}</span>
           </div>
         </div>
@@ -291,7 +293,7 @@ const TriggerInterface = ({ tokens }: TriggerInterfaceProps) => {
         <div className="flex items-center gap-2">
           <span className="text-sm text-muted-foreground">Expires in</span>
           <Select value={expiry} onValueChange={setExpiry}>
-            <SelectTrigger className="w-[120px] bg-muted/50 border-border">
+            <SelectTrigger className="w-[120px] bg-muted/50 border-border hover:border-primary/60 focus-within:border-primary/60 transition-colors duration-200">
               <SelectValue>
                 {expiry === "1" ? "1 Day" : `${expiry} Days`}
               </SelectValue>
