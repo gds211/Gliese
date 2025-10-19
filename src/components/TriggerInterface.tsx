@@ -218,7 +218,7 @@ const TriggerInterface = ({ tokens }: TriggerInterfaceProps) => {
           </span>
         </div>
 
-        <Card className="p-4 bg-card/50 border-border">
+        <Card className="p-3 bg-card/50 border-border">
           <div className="flex items-center justify-between gap-3">
             <Button
               variant="ghost"
