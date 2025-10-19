@@ -6,7 +6,7 @@ export const PUBLIC_CONFIG = {
   APP_NAME: "Gliese",
   APP_VERSION: "1.0.0",
 
-  // --- Chain target (Monad Testnet) ---
+  // --- Chain target (Monad Testnet) ----
   CHAIN_ID: 10143,
   RPC_URL: "https://testnet-rpc.monad.xyz",
   EXPLORER_NAME: "SocialScan",
