@@ -250,7 +250,7 @@ const TriggerInterface = ({ tokens }: TriggerInterfaceProps) => {
             <button
               type="button"
               onClick={() => setTradeMode(tradeMode === "optimized" ? "exact" : "optimized")}
-              className="relative w-16 h-3 bg-white/20 rounded-full cursor-pointer transition-all duration-200 hover:bg-white/30"
+              className="relative w-12 h-3 bg-white/20 rounded-full cursor-pointer transition-all duration-200 hover:bg-white/30"
               aria-label={`Toggle trade mode. Currently: ${tradeMode}`}
             >
               <span
