@@ -254,7 +254,7 @@ const TriggerInterface = ({ tokens }: TriggerInterfaceProps) => {
               aria-label={`Toggle trade mode. Currently: ${tradeMode}`}
             >
               <span
-                className={`absolute top-1/2 -translate-y-1/2 h-5 w-5 bg-[#1a2332] rounded-full transition-all duration-200 ease-in-out shadow-lg ${
+                className={`absolute top-1/2 -translate-y-1/2 h-4 w-4 bg-[#1a2332] rounded-full transition-all duration-200 ease-in-out shadow-lg ${
                   tradeMode === "optimized" 
                     ? "left-0 -translate-x-1" 
                     : "right-0 translate-x-1"
