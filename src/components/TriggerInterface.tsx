@@ -293,7 +293,7 @@ const TriggerInterface = ({ tokens }: TriggerInterfaceProps) => {
         <div className="flex items-center gap-2">
           <span className="text-sm text-muted-foreground">Expires in</span>
           <Select value={expiry} onValueChange={setExpiry}>
-            <SelectTrigger className="w-[120px] bg-muted/50 border-border hover:border-primary/60 transition-colors duration-200">
+            <SelectTrigger className="w-[120px] bg-muted/50 border-border hover:border-primary/60 focus-within:border-primary/60 transition-colors duration-200">
               <SelectValue>
                 {expiry === "1" ? "1 Day" : `${expiry} Days`}
               </SelectValue>
