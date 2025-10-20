@@ -384,8 +384,13 @@ const buyAmountDerived = (() => {
     const t = sellToken;
     setSellToken(buyToken);
     setBuyToken(t);
-    // Clear the amount when swapping to prevent stale quote issues
-    setSellAmount("");
+    const hasValue = sellAmount && sellAmount !== "0" && sellAmount !== "0.0" && sellAmount !== "0.00";
+    setSellAmount(hasValue ? (() => {
+      const num = Number(buyAmountDerived);
+      if (isNaN(num) || num === 0) return "0";
+      // Limit to 6 decimals and remove trailing zeros
+      return num.toFixed(6).replace(/\.?0+$/, '');
+    })() : "");
   };
 
   const openTokenModal = (type: "sell" | "buy") => {
