@@ -14,7 +14,6 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { useToast } from "@/components/ui/use-toast";
 import { usePublicClient } from "wagmi";
 import { useNetworkFees } from "@/hooks/useNetworkFees";
-import type { FeeOverrides } from "@/lib/swap";
 import { getDecimals } from "@/lib/decimals";
 import { YAK_ROUTER_ABI } from "@/abi/yakRouter";
 import { useDynamicSlippageBps } from "@/hooks/useDynamicSlippage";
@@ -67,7 +66,7 @@ const SwapInterface = () => {
   const { toast } = useToast();
   const queryClient = useQueryClient(); // <-- ADDED
   const publicClient = usePublicClient();
-  const fees = useNetworkFees(PUBLIC_CONFIG.FEE_REFRESH_MS);
+  const { effectiveGasPriceWei } = useNetworkFees(PUBLIC_CONFIG.FEE_REFRESH_MS);
 
   // Which tab is active: controls when the bottom swap button shows
   type TabKey = "instant" | "trigger" | "recurring";
@@ -454,20 +453,6 @@ const selectToken = (picked: string | TokenObj) => {
 
       toast({ title: "Preparing swap...", description: "Checking allowance & building txn" });
 
-      // Build fee overrides just-in-time (no new RPC; uses polled state)
-      let fee: FeeOverrides | undefined;
-      if (fees?.type === "eip1559" && fees.maxFeePerGasWei && fees.maxPriorityFeePerGasWei) {
-        fee = {
-          type: "eip1559",
-          maxFeePerGasWei: fees.maxFeePerGasWei,
-          maxPriorityFeePerGasWei: fees.maxPriorityFeePerGasWei,
-        };
-      } else if (fees?.gasPriceWei) {
-        // Legacy fallback (acceptable on EIP-1559 chains too; node maps it internally)
-        fee = { type: "legacy", gasPriceWei: fees.gasPriceWei };
-      }
-
-
       const receipt = await performSwap({
         router,
         tokenIn: selectedSellToken.address ?? selectedSellToken.symbol, // "MON" is fine here for native detection
@@ -476,7 +461,6 @@ const selectToken = (picked: string | TokenObj) => {
         amountOutMin: minOutRawDynamic, // dynamic, size-aware (hard-capped) slippage
         path: quote.path,
         adapters: quote.adapters,
-        fee, // <— ensures wallet sees the current fee values
       });
 
       toast({

@@ -11,12 +11,6 @@ import { ERC20_ABI } from "@/abi/erc20";
 import { YAK_ROUTER_ABI } from "@/abi/yakRouter";
 import { PUBLIC_CONFIG } from "@/config/public";
 
-// -------- Fee override types (no extra RPC; values come from UI hook) --------
-export type FeeOverrides =
-  | { type: "eip1559"; maxFeePerGasWei: bigint; maxPriorityFeePerGasWei: bigint }
-  | { type: "legacy";  gasPriceWei: bigint };
-
-
 // ===== Types =====
 
 export type SwapArgs = {
@@ -27,7 +21,6 @@ export type SwapArgs = {
   amountOutMin: bigint;
   path: Address[];
   adapters: Address[];
-  fee?: FeeOverrides; // <— fresh fees from useNetworkFees()
 };
 
 // ===== Internals =====
@@ -170,22 +163,13 @@ export async function performSwap(args: SwapArgs) {
   }
 
   // ----- Actual write -----
-  const txOpts: Record<string, any> = {};
-  if (args.fee?.type === "eip1559") {
-    txOpts.maxFeePerGas = args.fee.maxFeePerGasWei;
-    txOpts.maxPriorityFeePerGas = args.fee.maxPriorityFeePerGasWei;
-  } else if (args.fee?.type === "legacy") {
-    txOpts.gasPrice = args.fee.gasPriceWei;
-  }
-
   const txHash: Hash = await writeContract(config, {
-     account: address,
-     address: router,
-     abi: YAK_ROUTER_ABI,
-     functionName,
-     args: [trade, address, FEE_BPS],
-     value,
-    ...txOpts, // <— use the already-polled fee values
+    account: address,
+    address: router,
+    abi: YAK_ROUTER_ABI,
+    functionName,
+    args: [trade, address, FEE_BPS],
+    value,
   });
 
   const receipt = await waitForTransactionReceipt(config, { hash: txHash });
