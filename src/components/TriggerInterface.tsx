@@ -26,21 +26,13 @@ interface Token {
 
 interface TriggerInterfaceProps {
   tokens: Token[];
-  payToken: string | null;
-  setPayToken: (token: string | null) => void;
-  receiveToken: string | null;
-  setReceiveToken: (token: string | null) => void;
 }
 
-const TriggerInterface = ({ 
-  tokens,
-  payToken,
-  setPayToken,
-  receiveToken,
-  setReceiveToken
-}: TriggerInterfaceProps) => {
+const TriggerInterface = ({ tokens }: TriggerInterfaceProps) => {
   const { address, isConnected } = useAccount();
   
+  const [payToken, setPayToken] = useState("MON");
+  const [receiveToken, setReceiveToken] = useState("USDC");
   const [payAmount, setPayAmount] = useState("");
   const [rate, setRate] = useState("");
   const [expiry, setExpiry] = useState("1h");
@@ -49,15 +41,15 @@ const TriggerInterface = ({
   const [searchTerm, setSearchTerm] = useState("");
   const [tradeMode, setTradeMode] = useState<"optimized" | "exact">("optimized");
 
-  const selectedPayToken = useMemo(() => {
-    if (payToken === null) return tokens.find(t => !t.address); // find native MON
-    return tokens.find(t => t.address?.toLowerCase() === payToken.toLowerCase());
-  }, [tokens, payToken]);
+  const selectedPayToken = useMemo(
+    () => tokens.find((t) => t.symbol === payToken),
+    [tokens, payToken]
+  );
   
-  const selectedReceiveToken = useMemo(() => {
-    if (receiveToken === null) return tokens.find(t => !t.address); // find native MON
-    return tokens.find(t => t.address?.toLowerCase() === receiveToken.toLowerCase());
-  }, [tokens, receiveToken]);
+  const selectedReceiveToken = useMemo(
+    () => tokens.find((t) => t.symbol === receiveToken),
+    [tokens, receiveToken]
+  );
 
   const isNativePay = useMemo(
     () => !!selectedPayToken && (selectedPayToken.symbol === "MON" || !selectedPayToken.address),
@@ -149,10 +141,8 @@ const TriggerInterface = ({
     // Get the other token for comparison
     const otherToken = tokenSelectionType === "pay" ? selectedReceiveToken : selectedPayToken;
     
-    // Check if user selected the same token as the other side (by address)
-    const isSameToken = token.address 
-      ? token.address.toLowerCase() === otherToken?.address?.toLowerCase()
-      : !otherToken?.address && token.symbol === otherToken?.symbol; // native tokens
+    // Check if user selected the same token as the other side
+    const isSameToken = token.symbol === otherToken?.symbol;
     
     // If same token selected, swap them instead
     if (isSameToken) {
@@ -161,12 +151,12 @@ const TriggerInterface = ({
       return;
     }
     
-    // Normal assignment - store address or null for native
+    // Normal assignment
     if (tokenSelectionType === "pay") {
-      setPayToken(token.address ?? null);
+      setPayToken(token.symbol);
       setPayAmount("");
     } else {
-      setReceiveToken(token.address ?? null);
+      setReceiveToken(token.symbol);
     }
     setShowTokenModal(false);
   };
@@ -201,7 +191,7 @@ const TriggerInterface = ({
           <div className="flex items-center gap-2 text-xs text-muted-foreground">
             <span className="flex items-center gap-1">
               <Wallet className="h-3 w-3" />
-              {payBalance ? `${Number(payBalance.formatted).toFixed(4)} ${selectedPayToken?.symbol}` : `0.0000 ${selectedPayToken?.symbol}`}
+              {payBalance ? `${Number(payBalance.formatted).toFixed(4)} ${payToken}` : `0.0000 ${payToken}`}
             </span>
             <Button
               variant="ghost"
@@ -233,16 +223,16 @@ const TriggerInterface = ({
               {/* Left logo */}
               <span className="absolute left-3 flex items-center gap-2 pointer-events-none">
                 <TokenAvatar
-                  symbol={selectedPayToken?.symbol}
+                  symbol={payToken}
                   address={selectedPayToken?.address as `0x${string}` | undefined}
                   size={24}
-                  title={selectedPayToken?.name || selectedPayToken?.symbol}
+                  title={selectedPayToken?.name || payToken}
                 />
               </span>
 
               {/* Label centered between logo and chevron */}
               <span className="absolute inset-y-0 left-[2.75rem] right-[2.5rem] flex items-center justify-center pointer-events-none truncate">
-                {selectedPayToken?.symbol}
+                {payToken}
               </span>
 
               {/* Right chevron */}
@@ -308,16 +298,16 @@ const TriggerInterface = ({
               {/* Left logo */}
               <span className="absolute left-3 flex items-center gap-2 pointer-events-none">
                 <TokenAvatar
-                  symbol={selectedReceiveToken?.symbol}
+                  symbol={receiveToken}
                   address={selectedReceiveToken?.address as `0x${string}` | undefined}
                   size={24}
-                  title={selectedReceiveToken?.name || selectedReceiveToken?.symbol}
+                  title={selectedReceiveToken?.name || receiveToken}
                 />
               </span>
 
               {/* Label centered between logo and chevron */}
               <span className="absolute inset-y-0 left-[2.75rem] right-[2.5rem] flex items-center justify-center pointer-events-none truncate">
-                {selectedReceiveToken?.symbol}
+                {receiveToken}
               </span>
 
               {/* Right chevron */}
@@ -342,7 +332,7 @@ const TriggerInterface = ({
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <span className="text-sm text-muted-foreground">
-                Buy {selectedReceiveToken?.symbol} at rate
+                Buy {receiveToken} at rate
               </span>
             </div>
               <Button
@@ -367,7 +357,7 @@ const TriggerInterface = ({
                 className="!border-none !bg-transparent w-full !text-base font-medium text-foreground !shadow-none !ring-0 !ring-offset-0 p-0"
               />
             </div>
-            <span className="text-sm text-muted-foreground">{selectedReceiveToken?.symbol}</span>
+            <span className="text-sm text-muted-foreground">{receiveToken}</span>
           </div>
         </div>
 
