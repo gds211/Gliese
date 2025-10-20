@@ -672,7 +672,8 @@ const selectToken = (picked: string | TokenObj) => {
       {activeTab === "instant" && (
         <div className="w-full mt-4">
           <Button
-            className="w-full"
+            size="lg"
+            className="w-full text-base font-semibold tracking-wide"
             disabled={
               (!isConnected && !openConnectModal) ||
               !sellAmount ||
