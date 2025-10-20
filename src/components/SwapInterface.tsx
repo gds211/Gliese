@@ -333,6 +333,9 @@ const buyAmountDerived = (() => {
     // Allow empty string
     if (value === "") return "";
     
+    // Replace comma with period for decimal separator
+    value = value.replace(/,/g, ".");
+    
     // Remove all non-numeric characters except decimal point
     let cleaned = value.replace(/[^\d.]/g, "");
     
@@ -382,7 +385,12 @@ const buyAmountDerived = (() => {
     setSellToken(buyToken);
     setBuyToken(t);
     const hasValue = sellAmount && sellAmount !== "0" && sellAmount !== "0.0" && sellAmount !== "0.00";
-    setSellAmount(hasValue ? buyAmountDerived : "");
+    setSellAmount(hasValue ? (() => {
+      const num = Number(buyAmountDerived);
+      if (isNaN(num) || num === 0) return "0";
+      // Limit to 6 decimals and remove trailing zeros
+      return num.toFixed(6).replace(/\.?0+$/, '');
+    })() : "");
   };
 
   const openTokenModal = (type: "sell" | "buy") => {

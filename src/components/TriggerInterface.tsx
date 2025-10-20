@@ -127,6 +127,9 @@ const TriggerInterface = ({
     // Allow empty string
     if (value === "") return "";
     
+    // Replace comma with period for decimal separator
+    value = value.replace(/,/g, ".");
+    
     // Remove all non-numeric characters except decimal point
     let cleaned = value.replace(/[^\d.]/g, "");
     
@@ -401,7 +404,8 @@ const TriggerInterface = ({
 
       {/* Create order button */}
       <Button
-        className="w-full"
+        size="lg"
+        className="w-full text-base font-semibold tracking-wide"
         disabled={!isConnected || !payAmount || !rate || isExceeding}
       >
         {getButtonText()}
