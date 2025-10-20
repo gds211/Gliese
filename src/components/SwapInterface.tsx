@@ -96,8 +96,8 @@ const SwapInterface = () => {
 
   // --- UI State ---
   const [sellAmount, setSellAmount] = useState("");
-  const [sellToken, setSellToken] = useState("MON");
-  const [buyToken, setBuyToken] = useState("USDC");
+  const [sellToken, setSellToken] = useState<string | null>(null); // null = native MON
+  const [buyToken, setBuyToken] = useState<string | null>("0xf817257fed379853cDe0fa4F97AB987181B1E5Ea"); // USDC address
   const [priceRate, setPriceRate] = useState("1 MON = 0.00215 USDC");
 
   const [showTokenModal, setShowTokenModal] = useState(false);
@@ -107,8 +107,15 @@ const SwapInterface = () => {
     Boolean((PUBLIC_CONFIG as any).AUTO_SLIPPAGE?.ENABLED_BY_DEFAULT ?? true)
   );
 
-  const selectedSellToken = useMemo(() => tokens.find((t) => t.symbol === sellToken), [tokens, sellToken]);
-  const selectedBuyToken = useMemo(() => tokens.find((t) => t.symbol === buyToken), [tokens, buyToken]);
+  const selectedSellToken = useMemo(() => {
+    if (sellToken === null) return tokens.find(t => !t.address); // find native MON
+    return tokens.find(t => t.address?.toLowerCase() === sellToken.toLowerCase());
+  }, [tokens, sellToken]);
+  
+  const selectedBuyToken = useMemo(() => {
+    if (buyToken === null) return tokens.find(t => !t.address); // find native MON
+    return tokens.find(t => t.address?.toLowerCase() === buyToken.toLowerCase());
+  }, [tokens, buyToken]);
 
   // Treat MON as native when it has no address
   const isNativeSell = useMemo(
@@ -208,10 +215,10 @@ const SwapInterface = () => {
 
 const notionalUsd = useMemo(() => {
   const amt = Number(sellAmount);
-  const p = (cryptoPrices as any)[sellToken];
+  const p = (cryptoPrices as any)[selectedSellToken?.symbol];
   if (!Number.isFinite(amt) || !Number.isFinite(p)) return null;
   return amt * p;
-}, [sellAmount, sellToken]);
+}, [sellAmount, selectedSellToken?.symbol]);
 
 const dynamicSlippage = useDynamicSlippageBps({
   enabled: autoSlippage,
@@ -270,7 +277,7 @@ const buyAmountDerived = (() => {
   // Rate display: accurate even before typing (uses a 1-unit on-chain quote)
   const rateDisplay = useMemo(() => {
     if (selectedSellToken && selectedBuyToken && selectedSellToken.symbol === selectedBuyToken.symbol) {
-      return `1 ${sellToken} = 1 ${buyToken}`;
+      return `1 ${selectedSellToken.symbol} = 1 ${selectedBuyToken.symbol}`;
     }
 
     const amt = Number(sellAmount);
@@ -279,7 +286,7 @@ const buyAmountDerived = (() => {
     if (quote && Number.isFinite(amt) && amt > 0) {
       const r = Number(buyAmountDerived) / amt;
       if (Number.isFinite(r) && r > 0) {
-        return `1 ${sellToken} = ${r.toFixed(6).replace(/\.?0+$/, "")} ${buyToken}`;
+        return `1 ${selectedSellToken?.symbol} = ${r.toFixed(6).replace(/\.?0+$/, "")} ${selectedBuyToken?.symbol}`;
       }
     }
 
@@ -289,30 +296,30 @@ const buyAmountDerived = (() => {
       if (Number.isFinite(uRaw) && uRaw > 0) {
         const s = Number(SLIP) / 10_000;
         const u = uRaw * (1 - s);
-        return `1 ${sellToken} = ${u.toFixed(6).replace(/\.?0+$/, "")} ${buyToken}`;
+        return `1 ${selectedSellToken?.symbol} = ${u.toFixed(6).replace(/\.?0+$/, "")} ${selectedBuyToken?.symbol}`;
       }
     }
 
     // Fallback to your mock when no on-chain path yet
     return priceRate;
-  }, [quote, unitQuote, buyAmountDerived, sellAmount, sellToken, buyToken, selectedSellToken, selectedBuyToken, priceRate]);
+  }, [quote, unitQuote, buyAmountDerived, sellAmount, selectedSellToken, selectedBuyToken, priceRate, SLIP]);
 
   // Keep your existing mock updater as a fallback when no quote yet
   useEffect(() => {
     const updatePriceRate = () => {
-      const sellPrice = (cryptoPrices as any)[sellToken] || 0;
-      const buyPrice = (cryptoPrices as any)[buyToken] || 0;
+      const sellPrice = (cryptoPrices as any)[selectedSellToken?.symbol] || 0;
+      const buyPrice = (cryptoPrices as any)[selectedBuyToken?.symbol] || 0;
       if (sellPrice > 0 && buyPrice > 0) {
         const exchangeRate = sellPrice / buyPrice;
         const variation = (Math.random() - 0.5) * (exchangeRate * 0.001);
         const newRate = (exchangeRate + variation).toFixed(5);
-        setPriceRate(`1 ${sellToken} = ${newRate} ${buyToken}`);
+        setPriceRate(`1 ${selectedSellToken?.symbol} = ${newRate} ${selectedBuyToken?.symbol}`);
       }
     };
     updatePriceRate();
     const interval = setInterval(updatePriceRate, 20000);
     return () => clearInterval(interval);
-  }, [sellToken, buyToken]);
+  }, [selectedSellToken?.symbol, selectedBuyToken?.symbol]);
 
   // Reset input values when switching tabs
   useEffect(() => {
@@ -408,12 +415,12 @@ const selectToken = (picked: string | TokenObj) => {
     return;
   }
 
-  // Normal assignment
+  // Normal assignment - store address or null for native
   if (tokenSelectionType === "sell") {
-    setSellToken(tokenObj.symbol);
+    setSellToken(tokenObj.address ?? null);
     setSellAmount("");        // keep your reset
   } else {
-    setBuyToken(tokenObj.symbol);
+    setBuyToken(tokenObj.address ?? null);
   }
 
   setShowTokenModal(false);
@@ -489,7 +496,7 @@ const selectToken = (picked: string | TokenObj) => {
                 <div className="flex items-center gap-2 text-xs text-muted-foreground">
                   <span className="flex items-center gap-1">
                     <Wallet className="h-3 w-3" />
-                    {sellBalLoading ? "…" : sellBal ? `${Number(sellBal.formatted).toFixed(4)} ${sellToken}` : `0.00 ${sellToken}`}
+                    {sellBalLoading ? "…" : sellBal ? `${Number(sellBal.formatted).toFixed(4)} ${selectedSellToken?.symbol}` : `0.00 ${selectedSellToken?.symbol}`}
                   </span>
                   <Button
                     variant="ghost"
@@ -533,10 +540,10 @@ const selectToken = (picked: string | TokenObj) => {
                       {/* Left logo (shifted slightly right) */}
                   <span className="absolute left-3 flex items-center gap-2 pointer-events-none">
                     <TokenAvatar
-                      symbol={sellToken}
+                      symbol={selectedSellToken?.symbol}
                       address={selectedSellToken?.address as `0x${string}` | undefined}
                       size={24}
-                      title={selectedSellToken?.name || sellToken}
+                      title={selectedSellToken?.name || selectedSellToken?.symbol}
                     />
                   </span>
 
@@ -545,7 +552,7 @@ const selectToken = (picked: string | TokenObj) => {
                   <span
                     className="absolute inset-y-0 left-[2.75rem] right-[2.5rem] flex items-center justify-center pointer-events-none truncate"
                   >
-                    {sellToken}
+                    {selectedSellToken?.symbol}
                   </span>
 
 
@@ -565,7 +572,7 @@ const selectToken = (picked: string | TokenObj) => {
                 <div className="text-right text-sm text-muted-foreground pr-3 pb-3">
                   {(() => {
                     const num = sellAmount || "0";
-                    return calculateUSDValue(num, sellToken);
+                    return calculateUSDValue(num, selectedSellToken?.symbol || "");
                   })()}
                 </div>
               </div>
@@ -603,10 +610,10 @@ const selectToken = (picked: string | TokenObj) => {
                 {/* Left logo (same as SELL) */}
                 <span className="absolute left-3 flex items-center gap-2 pointer-events-none">
                   <TokenAvatar
-                    symbol={buyToken}
+                    symbol={selectedBuyToken?.symbol}
                     address={selectedBuyToken?.address as `0x${string}` | undefined}
                     size={24}
-                    title={selectedBuyToken?.name || buyToken}
+                    title={selectedBuyToken?.name || selectedBuyToken?.symbol}
                   />
                 </span>
 
@@ -614,7 +621,7 @@ const selectToken = (picked: string | TokenObj) => {
                 <span
                   className="absolute inset-y-0 left-[2.75rem] right-[2.5rem] flex items-center justify-center pointer-events-none truncate"
                 >
-                 {buyToken}
+                 {selectedBuyToken?.symbol}
                 </span>
 
                 {/* Right chevron (same as SELL) */}
@@ -629,7 +636,7 @@ const selectToken = (picked: string | TokenObj) => {
                   />
                 </div>
                 <div className="text-right text-sm text-muted-foreground pr-3 pb-3">
-                  {calculateUSDValue(buyAmountDerived, buyToken)}
+                  {calculateUSDValue(buyAmountDerived, selectedBuyToken?.symbol || "")}
                 </div>
               </div>
 
@@ -647,7 +654,13 @@ const selectToken = (picked: string | TokenObj) => {
           </TabsContent>
 
           <TabsContent value="trigger" className="mt-4">
-            <TriggerInterface tokens={tokens} />
+            <TriggerInterface 
+              tokens={tokens}
+              payToken={sellToken}
+              setPayToken={setSellToken}
+              receiveToken={buyToken}
+              setReceiveToken={setBuyToken}
+            />
           </TabsContent>
 
           <TabsContent value="recurring">
