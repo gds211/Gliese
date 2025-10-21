@@ -9,14 +9,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogOverlay } from "@/components/ui/dialog";
-import { ScrollArea } from "@/components/ui/scroll-area";
-
-import { ChevronDown, Wallet, Search } from "lucide-react";
+import { ChevronDown, Wallet } from "lucide-react";
 import TokenAvatar from "@/components/TokenAvatar";
 import { useAccount, useBalance } from "wagmi";
-import { parseUnits } from "viem";
-import glieseLogo from "@/assets/gliese-logo.png";
 
 interface Token {
   symbol: string;
@@ -26,38 +21,26 @@ interface Token {
 
 interface TriggerInterfaceProps {
   tokens: Token[];
-  payToken: string | null;
-  setPayToken: (token: string | null) => void;
-  receiveToken: string | null;
-  setReceiveToken: (token: string | null) => void;
 }
 
-const TriggerInterface = ({ 
-  tokens,
-  payToken,
-  setPayToken,
-  receiveToken,
-  setReceiveToken
-}: TriggerInterfaceProps) => {
+const TriggerInterface = ({ tokens }: TriggerInterfaceProps) => {
   const { address, isConnected } = useAccount();
   
+  const [payToken, setPayToken] = useState("MON");
+  const [receiveToken, setReceiveToken] = useState("USDC");
   const [payAmount, setPayAmount] = useState("");
   const [rate, setRate] = useState("");
-  const [expiry, setExpiry] = useState("1h");
-  const [showTokenModal, setShowTokenModal] = useState(false);
-  const [tokenSelectionType, setTokenSelectionType] = useState<"pay" | "receive">("pay");
-  const [searchTerm, setSearchTerm] = useState("");
-  const [tradeMode, setTradeMode] = useState<"optimized" | "exact">("optimized");
+  const [expiry, setExpiry] = useState("7");
 
-  const selectedPayToken = useMemo(() => {
-    if (payToken === null) return tokens.find(t => !t.address); // find native MON
-    return tokens.find(t => t.address?.toLowerCase() === payToken.toLowerCase());
-  }, [tokens, payToken]);
+  const selectedPayToken = useMemo(
+    () => tokens.find((t) => t.symbol === payToken),
+    [tokens, payToken]
+  );
   
-  const selectedReceiveToken = useMemo(() => {
-    if (receiveToken === null) return tokens.find(t => !t.address); // find native MON
-    return tokens.find(t => t.address?.toLowerCase() === receiveToken.toLowerCase());
-  }, [tokens, receiveToken]);
+  const selectedReceiveToken = useMemo(
+    () => tokens.find((t) => t.symbol === receiveToken),
+    [tokens, receiveToken]
+  );
 
   const isNativePay = useMemo(
     () => !!selectedPayToken && (selectedPayToken.symbol === "MON" || !selectedPayToken.address),
@@ -81,26 +64,6 @@ const TriggerInterface = ({
     query: { enabled: Boolean(isConnected && address && selectedReceiveToken) },
   });
 
-  const isExceeding = useMemo(() => {
-    if (!isConnected || !payBalance || !payAmount) return false;
-    try {
-      const wantRaw = parseUnits(payAmount, payBalance.decimals);
-      return wantRaw > payBalance.value;
-    } catch {
-      return false; // while typing invalid formats
-    }
-  }, [isConnected, payBalance?.value, payBalance?.decimals, payAmount]);
-
-  const filteredTokens = tokens.filter(
-    (t) =>
-      t.symbol.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      t.name.toLowerCase().includes(searchTerm.toLowerCase())
-  );
-
-  function formatAddress(addr: string): string {
-    return `${addr.slice(0, 6)}...${addr.slice(-6)}`;
-  }
-
   const handleSwapTokens = () => {
     const temp = payToken;
     setPayToken(receiveToken);
@@ -122,64 +85,10 @@ const TriggerInterface = ({
     }
   };
 
-  // Validate numeric input (allow only numbers and one decimal point)
-  const handleNumericInput = (value: string): string => {
-    // Allow empty string
-    if (value === "") return "";
-    
-    // Replace comma with period for decimal separator
-    value = value.replace(/,/g, ".");
-    
-    // Remove all non-numeric characters except decimal point
-    let cleaned = value.replace(/[^\d.]/g, "");
-    
-    // Ensure only one decimal point
-    const parts = cleaned.split(".");
-    if (parts.length > 2) {
-      cleaned = parts[0] + "." + parts.slice(1).join("");
-    }
-    
-    return cleaned;
-  };
-
-  const openTokenModal = (type: "pay" | "receive") => {
-    setTokenSelectionType(type);
-    setShowTokenModal(true);
-    setSearchTerm("");
-  };
-
-  const selectToken = (token: Token) => {
-    // Get the other token for comparison
-    const otherToken = tokenSelectionType === "pay" ? selectedReceiveToken : selectedPayToken;
-    
-    // Check if user selected the same token as the other side (by address)
-    const isSameToken = token.address 
-      ? token.address.toLowerCase() === otherToken?.address?.toLowerCase()
-      : !otherToken?.address && token.symbol === otherToken?.symbol; // native tokens
-    
-    // If same token selected, swap them instead
-    if (isSameToken) {
-      handleSwapTokens();
-      setShowTokenModal(false);
-      return;
-    }
-    
-    // Normal assignment - store address or null for native
-    if (tokenSelectionType === "pay") {
-      setPayToken(token.address ?? null);
-      setPayAmount("");
-    } else {
-      setReceiveToken(token.address ?? null);
-    }
-    setShowTokenModal(false);
-  };
-
   const calculateReceiveAmount = () => {
-    if (!payAmount || !rate) return "0.00";
+    if (!payAmount || !rate) return "0";
     const amount = Number(payAmount) * Number(rate);
-    if (amount === 0) return "0.00";
-    // Show up to 6 decimals, but remove trailing zeros
-    return amount.toFixed(6).replace(/\.?0+$/, '');
+    return amount.toFixed(6);
   };
 
   const payUsdValue = payAmount ? `~$${(Number(payAmount) * 1).toFixed(2)}` : "~$0.00";
@@ -189,7 +98,6 @@ const TriggerInterface = ({
 
   const getButtonText = () => {
     if (!isConnected) return "Connect Wallet";
-    if (isExceeding) return "Amount exceeds balance";
     if (!payAmount || payAmount === "0" || Number(payAmount) === 0) return "Enter an amount";
     if (!rate || rate === "0" || Number(rate) === 0) return "Enter an amount";
     return "Place trigger order";
@@ -200,11 +108,11 @@ const TriggerInterface = ({
       {/* You pay section */}
       <div className="space-y-2">
         <div className="flex justify-between items-center text-sm">
-          <span className="text-muted-foreground">Selling</span>
+          <span className="text-muted-foreground">Paying</span>
           <div className="flex items-center gap-2 text-xs text-muted-foreground">
             <span className="flex items-center gap-1">
               <Wallet className="h-3 w-3" />
-              {payBalance ? `${Number(payBalance.formatted).toFixed(4)} ${selectedPayToken?.symbol}` : `0.0000 ${selectedPayToken?.symbol}`}
+              {payBalance ? `${Number(payBalance.formatted).toFixed(4)} ${payToken}` : `0.0000 ${payToken}`}
             </span>
             <Button
               variant="ghost"
@@ -225,107 +133,80 @@ const TriggerInterface = ({
           </div>
         </div>
 
-          <div className="relative bg-background/60 rounded-2xl border border-white/10 focus-within:border-primary/60 transition-colors duration-200 p-3">
+        <Card className="p-4 bg-card/50 border-border">
           <div className="flex items-center justify-between gap-3">
-            <Button
-              variant="ghost"
-              onClick={() => openTokenModal("pay")}
-              className="relative w-32 h-10 bg-muted/60 rounded-full text-foreground border border-white/10 hover:border-white hover:bg-muted/80 hover:text-white flex items-center"
-              aria-label="Select pay token"
-            >
-              {/* Left logo */}
-              <span className="absolute left-3 flex items-center gap-2 pointer-events-none">
-                <TokenAvatar
-                  symbol={selectedPayToken?.symbol}
-                  address={selectedPayToken?.address as `0x${string}` | undefined}
-                  size={24}
-                  title={selectedPayToken?.name || selectedPayToken?.symbol}
-                />
-              </span>
-
-              {/* Label centered between logo and chevron */}
-              <span className="absolute inset-y-0 left-[2.75rem] right-[2.5rem] flex items-center justify-center pointer-events-none truncate">
-                {selectedPayToken?.symbol}
-              </span>
-
-              {/* Right chevron */}
-              <ChevronDown className="absolute right-2 h-3.5 w-3.5 pointer-events-none" />
-            </Button>
+            <Select value={payToken} onValueChange={setPayToken}>
+              <SelectTrigger className="w-[140px] bg-muted/50 border-border">
+                <SelectValue>
+                  <div className="flex items-center gap-2">
+                    <TokenAvatar symbol={payToken} size={20} />
+                    <span>{payToken}</span>
+                  </div>
+                </SelectValue>
+              </SelectTrigger>
+              <SelectContent className="bg-popover border-border">
+                {tokens.map((token) => (
+                  <SelectItem key={token.symbol} value={token.symbol}>
+                    <div className="flex items-center gap-2">
+                      <TokenAvatar symbol={token.symbol} size={20} />
+                      <span>{token.symbol}</span>
+                    </div>
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
 
             <div className="flex-1 text-right">
               <Input
                 type="text"
                 value={payAmount}
-                onChange={(e) => setPayAmount(handleNumericInput(e.target.value))}
-              placeholder="0.00"
-                className="!border-none !bg-transparent text-right flex-1 !text-24 font-medium tracking-tight pr-2 h-auto text-foreground !shadow-none !ring-0 !ring-offset-0"
-                style={{ color: isExceeding ? "#ef4444" : undefined }}
+                onChange={(e) => setPayAmount(e.target.value)}
+                placeholder="0"
+                className="text-right text-2xl font-semibold bg-transparent border-none focus-visible:ring-0 p-0 h-auto"
               />
             </div>
           </div>
-          <div className="flex justify-end items-center mt-2">
+          <div className="flex justify-between items-center mt-2">
+            <span className="text-xs text-muted-foreground">
+              {selectedPayToken?.name || ""}
+            </span>
             <span className="text-xs text-muted-foreground">{payUsdValue}</span>
           </div>
-          </div>
+        </Card>
       </div>
 
       {/* You receive section */}
       <div className="space-y-2">
         <div className="flex justify-between items-center text-sm">
-          <span className="text-muted-foreground">Buying</span>
-          <div className="flex items-center gap-2">
-            <span className="text-[10px] text-muted-foreground">
-              OPTIMIZED
-            </span>
-            <button
-              type="button"
-              onClick={() => setTradeMode(tradeMode === "optimized" ? "exact" : "optimized")}
-              className="relative w-12 h-3 bg-white/20 rounded-full cursor-pointer transition-all duration-200 hover:bg-white/30"
-              aria-label={`Toggle trade mode. Currently: ${tradeMode}`}
-            >
-              <span
-                className={`absolute top-1/2 -translate-y-1/2 h-4 w-4 bg-[#1a2332] rounded-full transition-all duration-200 ease-in-out shadow-lg ${
-                  tradeMode === "optimized" 
-                    ? "left-0 -translate-x-1" 
-                    : "right-0 translate-x-1"
-                }`}
-                style={{
-                  border: "2px solid #f97316"
-                }}
-              />
-            </button>
-            <span className="text-[10px] text-muted-foreground">
-              EXACT
-            </span>
-          </div>
+          <span className="text-muted-foreground">Receiving</span>
+          <span className="flex items-center gap-1 text-xs text-muted-foreground">
+            <Wallet className="h-3 w-3" />
+            {receiveBalance ? `${Number(receiveBalance.formatted).toFixed(4)} ${receiveToken}` : `0.0000 ${receiveToken}`}
+          </span>
         </div>
 
-        <Card className="p-3 bg-card/50 border-border">
+        <Card className="p-4 bg-card/50 border-border">
           <div className="flex items-center justify-between gap-3">
-            <Button
-              variant="ghost"
-              onClick={() => openTokenModal("receive")}
-              className="relative w-32 h-10 bg-muted/60 rounded-full text-foreground border border-white/10 hover:border-white hover:bg-muted/80 hover:text-white flex items-center"
-              aria-label="Select receive token"
-            >
-              {/* Left logo */}
-              <span className="absolute left-3 flex items-center gap-2 pointer-events-none">
-                <TokenAvatar
-                  symbol={selectedReceiveToken?.symbol}
-                  address={selectedReceiveToken?.address as `0x${string}` | undefined}
-                  size={24}
-                  title={selectedReceiveToken?.name || selectedReceiveToken?.symbol}
-                />
-              </span>
-
-              {/* Label centered between logo and chevron */}
-              <span className="absolute inset-y-0 left-[2.75rem] right-[2.5rem] flex items-center justify-center pointer-events-none truncate">
-                {selectedReceiveToken?.symbol}
-              </span>
-
-              {/* Right chevron */}
-              <ChevronDown className="absolute right-2 h-3.5 w-3.5 pointer-events-none" />
-            </Button>
+            <Select value={receiveToken} onValueChange={setReceiveToken}>
+              <SelectTrigger className="w-[140px] bg-muted/50 border-border">
+                <SelectValue>
+                  <div className="flex items-center gap-2">
+                    <TokenAvatar symbol={receiveToken} size={20} />
+                    <span>{receiveToken}</span>
+                  </div>
+                </SelectValue>
+              </SelectTrigger>
+              <SelectContent className="bg-popover border-border">
+                {tokens.map((token) => (
+                  <SelectItem key={token.symbol} value={token.symbol}>
+                    <div className="flex items-center gap-2">
+                      <TokenAvatar symbol={token.symbol} size={20} />
+                      <span>{token.symbol}</span>
+                    </div>
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
 
             <div className="flex-1 text-right">
               <div className="text-2xl font-semibold">
@@ -333,7 +214,10 @@ const TriggerInterface = ({
               </div>
             </div>
           </div>
-          <div className="flex justify-end items-center mt-2">
+          <div className="flex justify-between items-center mt-2">
+            <span className="text-xs text-muted-foreground">
+              {selectedReceiveToken?.name || ""}
+            </span>
             <span className="text-xs text-muted-foreground">{receiveUsdValue}</span>
           </div>
         </Card>
@@ -345,121 +229,57 @@ const TriggerInterface = ({
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <span className="text-sm text-muted-foreground">
-                Buy {selectedReceiveToken?.symbol} at rate
+                Pay {payToken} at rate
               </span>
+              <span className="text-xs text-green-500">(+0.03%)</span>
             </div>
-              <Button
-                variant="ghost"
-                size="sm"
-                className="h-7 px-2 text-xs text-primary hover:bg-white transition-colors duration-200"
-                onClick={() => {
-                  console.log("Set to market clicked");
-                }}
-              >
-                Set to market
-              </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-7 px-2 text-xs text-primary hover:text-primary"
+            >
+              Set to market
+            </Button>
           </div>
           
           <div className="flex items-center gap-2">
-            <div className="relative bg-background/60 rounded-md border border-white/10 hover:border-primary/60 focus-within:border-primary/60 transition-colors duration-200 px-3 py-2 flex-1">
-              <Input
-                type="text"
-                value={rate}
-                onChange={(e) => setRate(handleNumericInput(e.target.value))}
-                placeholder="0.00"
-                className="!border-none !bg-transparent w-full !text-base font-medium text-foreground !shadow-none !ring-0 !ring-offset-0 p-0"
-              />
-            </div>
-            <span className="text-sm text-muted-foreground">{selectedReceiveToken?.symbol}</span>
+            <Input
+              type="text"
+              value={rate}
+              onChange={(e) => setRate(e.target.value)}
+              placeholder="0"
+              className="flex-1 bg-muted/50 border-border"
+            />
+            <span className="text-sm text-muted-foreground">{receiveToken}</span>
           </div>
         </div>
 
-        <div className="flex items-center justify-between text-xs text-muted-foreground">
-          <div className="flex items-center gap-2">
-            <span className="text-sm text-muted-foreground">Expires in</span>
-            <Select value={expiry} onValueChange={setExpiry}>
-            <SelectTrigger className="w-[120px] bg-muted/50 border-border hover:border-primary/60 transition-colors duration-200 focus:ring-0 focus:ring-offset-0">
+        <div className="flex items-center gap-2">
+          <span className="text-sm text-muted-foreground">Expires in</span>
+          <Select value={expiry} onValueChange={setExpiry}>
+            <SelectTrigger className="w-[120px] bg-muted/50 border-border">
               <SelectValue>
-                {expiry === "1h" ? "1 Hour" : expiry === "1" ? "1 Day" : `${expiry} Days`}
+                {expiry === "1" ? "1 Day" : `${expiry} Days`}
               </SelectValue>
             </SelectTrigger>
-            <SelectContent className="bg-popover border-border" side="top">
-              <SelectItem value="1h" className="focus:bg-transparent focus:text-white hover:text-white">1 Hour</SelectItem>
-              <SelectItem value="1" className="focus:bg-transparent focus:text-white hover:text-white">1 Day</SelectItem>
-              <SelectItem value="3" className="focus:bg-transparent focus:text-white hover:text-white">3 Days</SelectItem>
-              <SelectItem value="7" className="focus:bg-transparent focus:text-white hover:text-white">7 Days</SelectItem>
-              <SelectItem value="30" className="focus:bg-transparent focus:text-white hover:text-white">30 Days</SelectItem>
+            <SelectContent className="bg-popover border-border">
+              <SelectItem value="1">1 Day</SelectItem>
+              <SelectItem value="3">3 Days</SelectItem>
+              <SelectItem value="7">7 Days</SelectItem>
+              <SelectItem value="14">14 Days</SelectItem>
+              <SelectItem value="30">30 Days</SelectItem>
             </SelectContent>
-            </Select>
-          </div>
-          <div className="flex items-center gap-2">
-            <div className="flex items-center gap-1 border-2 border-border px-2 py-1 rounded-lg">
-              <img src={glieseLogo} alt="Gliese" className="w-4 h-4 rounded-lg" />
-              <span>Wrapdrive v1.1</span>
-            </div>
-            <span>0.1% FEE</span>
-          </div>
+          </Select>
         </div>
       </Card>
 
       {/* Create order button */}
       <Button
-        size="lg"
-        className="w-full text-base font-semibold tracking-wide"
-        disabled={!isConnected || !payAmount || !rate || isExceeding}
+        className="w-full"
+        disabled={!isConnected || !payAmount || !rate}
       >
         {getButtonText()}
       </Button>
-
-      {/* Token Selection Modal */}
-      <Dialog open={showTokenModal} onOpenChange={setShowTokenModal}>
-        <DialogOverlay />
-        <DialogContent className="sm:max-w-[420px] bg-[#0b0f17]/95 border border-white/10 text-white">
-          <DialogHeader>
-            <DialogTitle className="text-white">
-              Select a token to {tokenSelectionType === "pay" ? "pay" : "receive"}
-            </DialogTitle>
-          </DialogHeader>
-
-          {/* Search */}
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-white/50" />
-            <Input
-              placeholder="Search any token. Include '0x' for exact match."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-10 bg-white/5 border border-white/10 text-white placeholder:text-white/40 focus:border-white/40 focus:bg-white/10"
-            />
-          </div>
-
-          {/* Token List */}
-          <ScrollArea className="h-[26rem] w-full pr-4">
-            <div className="space-y-2">
-              {filteredTokens.map((token) => (
-                <Button
-                  key={token.address ? token.address.toLowerCase() : `symbol:${token.symbol}`}
-                  variant="ghost"
-                  className="w-full justify-between py-3 px-3 rounded-xl border border-white/10 hover:bg-white/5"
-                  onClick={() => selectToken(token)}
-                >
-                  <div className="flex items-center">
-                    <div className="w-9 h-9 rounded-full bg-white/10 flex items-center justify-center">
-                      <img src={glieseLogo} alt={token.symbol} className="w-6 h-6" />
-                    </div>
-                    <div className="ml-3 text-left">
-                      <div className="font-medium text-white">{token.symbol}</div>
-                      <div className="text-xs text-white/60">{token.name}</div>
-                    </div>
-                  </div>
-                  <div className="text-right text-xs text-white/60">
-                    {token.address ? formatAddress(token.address) : "Native coin"}
-                  </div>
-                </Button>
-              ))}
-            </div>
-          </ScrollArea>
-        </DialogContent>
-      </Dialog>
     </div>
   );
 };
