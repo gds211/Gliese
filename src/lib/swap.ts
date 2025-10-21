@@ -162,8 +162,15 @@ export async function performSwap(args: SwapArgs) {
     throw e;
   }
 
-  // ----- Actual write -----
-  const txHash: Hash = await writeContract(config, {
+  // ----- Gas & fee preflight (robust on EIP-1559 and legacy) -----
+let gasOverride: bigint | undefined;
+let maxFeePerGas: bigint | undefined;
+let maxPriorityFeePerGas: bigint | undefined;
+let gasPriceLegacy: bigint | undefined;
+
+try {
+  // Gas limit for this exact call; add a +25% buffer
+  const estGas = await client.estimateContractGas({
     account: address,
     address: router,
     abi: YAK_ROUTER_ABI,
@@ -171,7 +178,45 @@ export async function performSwap(args: SwapArgs) {
     args: [trade, address, FEE_BPS],
     value,
   });
+  gasOverride = (estGas * 125n) / 100n;
+} catch (e) {
+  // If estimation fails we let the wallet (or RPC) fill gas
+  gasOverride = undefined;
+}
 
-  const receipt = await waitForTransactionReceipt(config, { hash: txHash });
-  return receipt;
+try {
+  // Prefer EIP-1559 caps if the chain/wallet supports it
+  const fees: any = await (client as any).estimateFeesPerGas?.();
+  if (fees?.maxFeePerGas && fees?.maxPriorityFeePerGas) {
+    // Small buffers so minor baseFee movements won’t underprice
+    maxPriorityFeePerGas = (fees.maxPriorityFeePerGas * 120n) / 100n; // +20%
+    maxFeePerGas        = (fees.maxFeePerGas        * 120n) / 100n;   // +20%
+  } else {
+    // Legacy (no EIP-1559): fall back to gasPrice and add a buffer
+    const gp = await client.getGasPrice();
+    gasPriceLegacy = (gp * 120n) / 100n; // +20%
+  }
+} catch {
+  // No fee overrides → wallet will fill; still okay with gasOverride
+}
+
+// ----- Actual write (with explicit overrides when we have them) -----
+const txHash: Hash = await writeContract(config, {
+  account: address,
+  address: router,
+  abi: YAK_ROUTER_ABI,
+  functionName,
+  args: [trade, address, FEE_BPS],
+  value,
+  // Gas limit override if we have it
+  ...(gasOverride ? { gas: gasOverride } : {}),
+  // EIP-1559 or legacy — never both
+  ...(maxFeePerGas && maxPriorityFeePerGas
+    ? { maxFeePerGas, maxPriorityFeePerGas }
+    : (gasPriceLegacy ? { gasPrice: gasPriceLegacy } : {})),
+});
+
+const receipt = await waitForTransactionReceipt(config, { hash: txHash });
+return receipt;
+
 }
