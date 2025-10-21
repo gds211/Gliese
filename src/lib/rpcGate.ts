@@ -1,5 +1,4 @@
-* The task is awaited exclusively; any error is rethrown after releasing the gate.
- */
+
 export async function withRpcGate<T>(task: () => Promise<T>, _label: string = "rpc"): Promise<T> {
   // Chain a void promise to the tail. Each task waits for the previous to finish.
   let release: () => void;
