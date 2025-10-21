@@ -85,7 +85,8 @@ async function getDecimalsCached(addr: Address, native: boolean): Promise<number
   const lastMinOutRef = useRef<bigint | null>(null);
   const reqCounter = useRef(0);
 
-  const polling = enabled && !!router && !!tokenOut && !!amountInHuman && +amountInHuman > 0;
+  // Poll based on effective inputs, not the raw tokenOut prop (which can be null for native)
+  const polling = enabled && !!router && !!amountInHuman && +amountInHuman > 0;
 
   const tokenInAddr  = toQuoteAddr(tokenIn);
   const tokenOutAddr = toQuoteAddr(tokenOut);
@@ -105,7 +106,15 @@ async function getDecimalsCached(addr: Address, native: boolean): Promise<number
   }, [tokenInAddr, tokenOutAddr, tokenIn, tokenOut, chainId]);
 
   useEffect(() => {
-    if (!polling) { setQuote(null); lastMinOutRef.current = null; return; }
+      // Only clear when the hook is actually disabled or amount is non-positive.
+  // During token flips/decimals warmup we keep last good quote to avoid 0.00 flashes.
+  if (!polling) {
+    if (!enabled || !(+amountInHuman > 0)) {
+      setQuote(null);
+      lastMinOutRef.current = null;
+    }
+    return;
+  }
 
     let timer: any;
     let cancelled = false;
@@ -171,7 +180,7 @@ async function getDecimalsCached(addr: Address, native: boolean): Promise<number
     tick();
     return () => { cancelled = true; clearTimeout(timer); };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [polling, router, tokenInAddr, tokenOutAddr, amountInHuman]);
+  }, [polling, enabled, router, tokenInAddr, tokenOutAddr, amountInHuman]);
 
   return quote;
 }
