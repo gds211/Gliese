@@ -57,6 +57,12 @@ const tokensEqual = (a?: TokenPick | null, b?: TokenPick | null) => {
   return aSym !== "" && aSym === bSym;        // fallback for native/no-address
 };
 
+// Get dynamic button width based on symbol length
+const getButtonWidth = (symbol?: string) => {
+  if (!symbol) return "w-32";
+  return symbol.length > 4 ? "w-36" : "w-32";
+};
+
 
 
 // -------------------- Component --------------------
@@ -542,7 +548,7 @@ const selectToken = (picked: string | TokenObj) => {
                   <Button
                       variant="ghost"
                       onClick={() => openTokenModal("sell")}
-                      className="relative w-32 h-10 bg-muted/60 rounded-full text-foreground border border-white/10 hover:border-white hover:bg-muted/80 hover:text-white flex items-center"
+                      className={`relative ${getButtonWidth(selectedSellToken?.symbol)} h-10 bg-muted/60 rounded-full text-foreground border border-white/10 hover:border-white hover:bg-muted/80 hover:text-white flex items-center`}
                       aria-label="Select sell token"
                   >
                       {/* Left logo (shifted slightly right) */}
@@ -612,7 +618,7 @@ const selectToken = (picked: string | TokenObj) => {
                   <Button
                     variant="ghost"
                     onClick={() => openTokenModal("buy")}
-                    className="relative w-32 h-10 bg-muted/60 rounded-full text-foreground border border-white/10 hover:border-white hover:bg-muted/80 hover:text-white flex items-center"
+                    className={`relative ${getButtonWidth(selectedBuyToken?.symbol)} h-10 bg-muted/60 rounded-full text-foreground border border-white/10 hover:border-white hover:bg-muted/80 hover:text-white flex items-center`}
                     aria-label="Select buy token"
                 >
                 {/* Left logo (same as SELL) */}
