@@ -1,7 +1,6 @@
 // src/lib/decimals.ts
 import { Address, PublicClient } from "viem";
 import { ERC20_ABI } from "@/abi/erc20";
-import { readContractWithGate } from "@/lib/rpcGate";
 
 const decimalsCache = new Map<string, number>();
 
@@ -11,11 +10,11 @@ export async function getDecimals(client: PublicClient, token?: string): Promise
   const key = token.toLowerCase();
   if (decimalsCache.has(key)) return decimalsCache.get(key)!;
 
-  // Native coin  18 (for MON)
+  // Native coin → 18 (for MON)
   if (token === "0x0000000000000000000000000000000000000000") return 18;
 
   try {
-    const d = await readContractWithGate(client as any, {
+    const d = await client.readContract({
       abi: ERC20_ABI,
       address: token as Address,
       functionName: "decimals",

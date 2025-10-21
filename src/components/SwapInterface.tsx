@@ -13,7 +13,6 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogOverlay } from 
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useToast } from "@/components/ui/use-toast";
 import { usePublicClient } from "wagmi";
-import { readContractWithGate } from "@/lib/rpcGate";
 import { useNetworkFees } from "@/hooks/useNetworkFees";
 import { getDecimals } from "@/lib/decimals";
 import { YAK_ROUTER_ABI } from "@/abi/yakRouter";
@@ -175,7 +174,7 @@ const SwapInterface = () => {
       if (amtIn === 0n) return null;
       const gasWei  = effectiveGasPriceWei ?? PUBLIC_CONFIG.GAS_PRICE_WEI_FALLBACK;
 
-      const formatted: any = await readContractWithGate(publicClient as any, {
+      const formatted: any = await (publicClient as any).readContract({
         address: router,
         abi: YAK_ROUTER_ABI,
         functionName: "findBestPathWithGas",
