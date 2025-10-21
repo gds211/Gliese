@@ -91,12 +91,6 @@ const TriggerInterface = ({
     }
   }, [isConnected, payBalance?.value, payBalance?.decimals, payAmount]);
 
-  // Get dynamic button height based on symbol length
-  const getButtonHeight = (symbol?: string) => {
-    if (!symbol) return "h-10";
-    return symbol.length > 4 ? "h-12" : "h-10";
-  };
-
   const filteredTokens = tokens.filter(
     (t) =>
       t.symbol.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -236,7 +230,7 @@ const TriggerInterface = ({
             <Button
               variant="ghost"
               onClick={() => openTokenModal("pay")}
-              className={`relative w-32 ${getButtonHeight(selectedPayToken?.symbol)} bg-muted/60 rounded-full text-foreground border border-white/10 hover:border-white hover:bg-muted/80 hover:text-white flex items-center`}
+              className="relative w-32 h-10 bg-muted/60 rounded-full text-foreground border border-white/10 hover:border-white hover:bg-muted/80 hover:text-white flex items-center"
               aria-label="Select pay token"
             >
               {/* Left logo */}
@@ -311,7 +305,7 @@ const TriggerInterface = ({
             <Button
               variant="ghost"
               onClick={() => openTokenModal("receive")}
-              className={`relative w-32 ${getButtonHeight(selectedReceiveToken?.symbol)} bg-muted/60 rounded-full text-foreground border border-white/10 hover:border-white hover:bg-muted/80 hover:text-white flex items-center`}
+              className="relative w-32 h-10 bg-muted/60 rounded-full text-foreground border border-white/10 hover:border-white hover:bg-muted/80 hover:text-white flex items-center"
               aria-label="Select receive token"
             >
               {/* Left logo */}
