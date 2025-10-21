@@ -1,6 +1,6 @@
 // src/components/SwapInterface.tsx
 import { useState, useMemo, useEffect } from "react";
-import { Address, parseUnits, formatUnits } from "viem";
+import { Address, parseUnits } from "viem";
 import { useAccount, useBalance } from "wagmi";
 import { useConnectModal } from "@rainbow-me/rainbowkit";
 import { useQueryClient } from "@tanstack/react-query"; // <-- ADDED
@@ -12,11 +12,6 @@ import { Card } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogOverlay } from "@/components/ui/dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useToast } from "@/components/ui/use-toast";
-import { usePublicClient } from "wagmi";
-import { useNetworkFees } from "@/hooks/useNetworkFees";
-import { getDecimals } from "@/lib/decimals";
-import { YAK_ROUTER_ABI } from "@/abi/yakRouter";
-import { useDynamicSlippageBps } from "@/hooks/useDynamicSlippage";
 
 import { ArrowUpDown, Wallet, Search, ChevronDown } from "lucide-react";
 import glieseLogo from "@/assets/gliese-logo.png";
@@ -26,8 +21,6 @@ import { useYakQuote } from "@/hooks/useYakQuote";
 import { performSwap } from "@/lib/swap";
 
 import TokenAvatar from "@/components/TokenAvatar";
-import SlippageIcon from "@/assets/slippage.png";
-import TriggerInterface from "@/components/TriggerInterface";
 
 
 
@@ -65,13 +58,6 @@ const SwapInterface = () => {
   const { openConnectModal } = useConnectModal();
   const { toast } = useToast();
   const queryClient = useQueryClient(); // <-- ADDED
-  const publicClient = usePublicClient();
-  const { effectiveGasPriceWei } = useNetworkFees(PUBLIC_CONFIG.FEE_REFRESH_MS);
-
-  // Which tab is active: controls when the bottom swap button shows
-  type TabKey = "instant" | "trigger" | "recurring";
-  const [activeTab, setActiveTab] = useState<TabKey>("instant");
-
 
   // --- Token list (your current list) ---
   const cryptoPrices = {
@@ -92,8 +78,6 @@ const SwapInterface = () => {
     { symbol: "aprMON", name: "apriori MON", address: "0xb2f82D0f38dc453D596Ad40A37799446Cc89274A" as `0x${string}` },
   ];
 
-  
-
   // --- UI State ---
   const [sellAmount, setSellAmount] = useState("");
   const [sellToken, setSellToken] = useState("MON");
@@ -103,9 +87,6 @@ const SwapInterface = () => {
   const [showTokenModal, setShowTokenModal] = useState(false);
   const [tokenSelectionType, setTokenSelectionType] = useState<"sell" | "buy">("sell");
   const [searchTerm, setSearchTerm] = useState("");
-  const [autoSlippage, setAutoSlippage] = useState(
-    Boolean((PUBLIC_CONFIG as any).AUTO_SLIPPAGE?.ENABLED_BY_DEFAULT ?? true)
-  );
 
   const selectedSellToken = useMemo(() => tokens.find((t) => t.symbol === sellToken), [tokens, sellToken]);
   const selectedBuyToken = useMemo(() => tokens.find((t) => t.symbol === buyToken), [tokens, buyToken]);
@@ -150,41 +131,6 @@ const SwapInterface = () => {
   const tokenInArg = selectedSellToken?.address ?? sellToken; // pass address if exists; otherwise symbol "MON"
   const tokenOutArg = selectedBuyToken?.address ?? buyToken;
 
-  // --- Helper: quote per-unit OUT for an arbitrary human input amount
-  const ZERO = "0x0000000000000000000000000000000000000000";
-  const isNativeSymbol = (v?: string) =>
-    !v || v.toUpperCase() === PUBLIC_CONFIG.NATIVE_SYMBOL || v === ZERO;
-  const toQuoteAddr = (v?: string) =>
-    (isNativeSymbol(v) ? (PUBLIC_CONFIG.WRAPPED_NATIVE as Address) : (v as Address));
-
-  async function getYakQuotePerUnit(amountHuman: number | string): Promise<{ perUnitOut: number } | null> {
-    try {
-      const inAddr  = toQuoteAddr(tokenInArg);
-      const outAddr = toQuoteAddr(tokenOutArg);
-      const inDec   = await getDecimals(publicClient as any, isNativeSymbol(tokenInArg) ? ZERO : inAddr);
-      const outDec  = await getDecimals(publicClient as any, isNativeSymbol(tokenOutArg) ? ZERO : outAddr);
-      const amtIn   = parseUnits(String(amountHuman), inDec);
-      if (amtIn === 0n) return null;
-      const gasWei  = effectiveGasPriceWei ?? PUBLIC_CONFIG.GAS_PRICE_WEI_FALLBACK;
-
-      const formatted: any = await (publicClient as any).readContract({
-        address: router,
-        abi: YAK_ROUTER_ABI,
-        functionName: "findBestPathWithGas",
-        args: [amtIn, inAddr, outAddr, BigInt(PUBLIC_CONFIG.MAX_STEPS), gasWei],
-      });
-      const amounts: bigint[] = formatted?.amounts ?? formatted?.[0] ?? [];
-      const outRaw = amounts.length ? amounts[amounts.length - 1] : 0n;
-      if (outRaw === 0n) return null;
-      const outHuman = Number(formatUnits(outRaw, outDec));
-      const baseIn   = Number(amountHuman);
-      if (!Number.isFinite(outHuman) || !Number.isFinite(baseIn) || baseIn <= 0) return null;
-      return { perUnitOut: outHuman / baseIn };
-    } catch {
-      return null;
-    }
-  }
-
   const quote = useYakQuote({
     router,
     tokenIn: tokenInArg,
@@ -193,71 +139,27 @@ const SwapInterface = () => {
     enabled: Boolean(sellAmount && selectedSellToken && selectedBuyToken),
   });
 
-  
+  // NEW: when user hasn't typed a positive amount, fetch a 1-unit quote for an accurate rate
+  const hasPositiveSell = useMemo(() => {
+    const n = Number(sellAmount);
+    return Number.isFinite(n) && n > 0;
+  }, [sellAmount]);
+
   const unitQuote = useYakQuote({
     router,
     tokenIn: tokenInArg,
     tokenOut: tokenOutArg,
     amountInHuman: "1", // 1 whole unit of the SELL token
     enabled: Boolean(
+      !hasPositiveSell &&
       selectedSellToken &&
       selectedBuyToken &&
       selectedSellToken.symbol !== selectedBuyToken.symbol
     ),
   });
 
-const notionalUsd = useMemo(() => {
-  const amt = Number(sellAmount);
-  const p = (cryptoPrices as any)[sellToken];
-  if (!Number.isFinite(amt) || !Number.isFinite(p)) return null;
-  return amt * p;
-}, [sellAmount, sellToken]);
-
-const dynamicSlippage = useDynamicSlippageBps({
-  enabled: autoSlippage,
-  unitQuote,                                      // volatility source
-  userOutFormatted: quote?.outFormatted ?? null,  // size-aware top-up
-  userInHuman: sellAmount || null,                // <<< critical for size awareness
-  pathLength: quote?.path?.length ?? 1,
-  notionalUsd,                                    // MEV cushion calibration
-  probePerUnit: async (amountHuman) => {
-    const q = await getYakQuotePerUnit(amountHuman);
-    return q?.perUnitOut ?? null;
-  },
-  // reset when the trading context changes (address if available, else symbol)
-  resetKey: `${selectedSellToken?.address ?? sellToken}->${selectedBuyToken?.address ?? buyToken}`,
-});
-
-
-// Clamp chosen slippage to global cap (covers both auto/manual)
-const capBps = BigInt(
-  (PUBLIC_CONFIG as any).AUTO_SLIPPAGE?.MAX_BPS ?? Number(PUBLIC_CONFIG.SLIPPAGE_BPS)
-);
-const slipRaw = autoSlippage ? (dynamicSlippage.bps ?? 0n) : PUBLIC_CONFIG.SLIPPAGE_BPS;
-const SLIP = slipRaw > capBps ? capBps : slipRaw;
-// --- UI: formatted slippage for the indicator (one decimal, rounds) ---
-const slippageDisplay = useMemo(() => {
-  const bps = Number(SLIP ?? 0n);           // bigint -> number (safe; bps is small)
-  const pctOneDec = Math.round(bps / 10) / 10;
-  return `${pctOneDec.toFixed(1)}%`;
-}, [SLIP]);
-
-// Precompute a minOut **raw** using the live (no-slippage) outRaw
-const minOutRawDynamic =
-  quote?.outRaw != null ? (quote.outRaw * (10_000n - SLIP)) / 10_000n : 0n;
-
-
-  // Derived buy amount (minOut) using dynamic slippage (size-aware)
-const buyAmountDerived = (() => {
-  // For display we can scale the formatted out by (1 - SLIP/10000)
-  const baseOut = Number(quote?.outFormatted ?? NaN);
-  if (!Number.isFinite(baseOut)) return "0.00";
-  const s = Number(SLIP) / 10_000;
-  const v = baseOut * (1 - s);
-  if (!Number.isFinite(v) || v <= 0) return "0.00";
-  return v.toString();
-})();
-
+  // Derived buy amount shown to the user (minOut, already 5% slippage)
+  const buyAmountDerived = quote?.minOutFormatted ?? "0.00";
   
   // Display version limited to 6 decimals for UI
   const buyAmountDisplay = useMemo(() => {
@@ -283,12 +185,10 @@ const buyAmountDerived = (() => {
       }
     }
 
-    // Before typing: use the 1-unit *raw* quote, but apply *dynamic* slippage (SLIP)
-    if (unitQuote && unitQuote.outFormatted) {
-      const uRaw = Number(unitQuote.outFormatted);
-      if (Number.isFinite(uRaw) && uRaw > 0) {
-        const s = Number(SLIP) / 10_000;
-        const u = uRaw * (1 - s);
+    // Before typing: use the 1-unit quote
+    if (unitQuote && unitQuote.minOutRaw && unitQuote.minOutRaw > 0n) {
+      const u = Number(unitQuote.minOutFormatted);
+      if (Number.isFinite(u) && u > 0) {
         return `1 ${sellToken} = ${u.toFixed(6).replace(/\.?0+$/, "")} ${buyToken}`;
       }
     }
@@ -313,30 +213,6 @@ const buyAmountDerived = (() => {
     const interval = setInterval(updatePriceRate, 20000);
     return () => clearInterval(interval);
   }, [sellToken, buyToken]);
-
-  // Reset input values when switching tabs
-  useEffect(() => {
-    setSellAmount("");
-    setSearchTerm("");
-    setShowTokenModal(false);
-  }, [activeTab]);
-
-  // Validate numeric input (allow only numbers and one decimal point)
-  const handleNumericInput = (value: string): string => {
-    // Allow empty string
-    if (value === "") return "";
-    
-    // Remove all non-numeric characters except decimal point
-    let cleaned = value.replace(/[^\d.]/g, "");
-    
-    // Ensure only one decimal point
-    const parts = cleaned.split(".");
-    if (parts.length > 2) {
-      cleaned = parts[0] + "." + parts.slice(1).join("");
-    }
-    
-    return cleaned;
-  };
 
   // USD helpers (for your current UI)
   const calculateUSDValue = (amount: string, token: string): string => {
@@ -443,7 +319,7 @@ const selectToken = (picked: string | TokenObj) => {
         tokenIn: selectedSellToken.address ?? selectedSellToken.symbol, // "MON" is fine here for native detection
         tokenOut: selectedBuyToken.address ?? selectedBuyToken.symbol,
         amountIn,
-        amountOutMin: minOutRawDynamic, // dynamic, size-aware (hard-capped) slippage
+        amountOutMin: quote.minOutRaw, // 5% slippage already applied by the hook
         path: quote.path,
         adapters: quote.adapters,
       });
@@ -468,7 +344,7 @@ const selectToken = (picked: string | TokenObj) => {
     <Card className="w-full max-w-md mx-auto bg-muted/40 backdrop-blur-md border border-muted/60 shadow-2xl">
       <div className="p-4 space-y-4">
         {/* Tabs */}
-        <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as TabKey)} className="w-full">
+        <Tabs defaultValue="instant" className="w-full">
           <TabsList className="grid w-full grid-cols-3 bg-muted/40 h-10">
             <TabsTrigger value="instant" className="text-sm flex items-center gap-2 h-8 data-[state=active]:text-primary data-[state=inactive]:text-muted-foreground">
               <span>⚡</span> Instant
@@ -494,7 +370,7 @@ const selectToken = (picked: string | TokenObj) => {
                   <Button
                     variant="ghost"
                     size="sm"
-                    className="h-5 px-2 text-xs text-muted-foreground bg-background/40 hover:bg-background/40 border border-border/40 hover:border-orange-500 hover:text-orange-500 transition-all duration-200 rounded"
+                    className="h-5 px-2 text-xs text-muted-foreground bg-background/40 border border-border/40 hover:border-orange-500 hover:shadow-[0_0_8px_rgba(249,115,22,0.5)] hover:text-orange-500 transition-all duration-200"
                     onClick={() => {
                       if (!sellBal) return;
                       const halfRaw = sellBal.value / 2n;
@@ -507,7 +383,7 @@ const selectToken = (picked: string | TokenObj) => {
                   <Button
                     variant="ghost"
                     size="sm"
-                    className="h-5 px-2 text-xs text-muted-foreground bg-background/40 hover:bg-background/40 border border-border/40 hover:border-orange-500 hover:text-orange-500 transition-all duration-200 rounded"
+                    className="h-5 px-2 text-xs text-muted-foreground bg-background/40 border border-border/40 hover:border-orange-500 hover:shadow-[0_0_8px_rgba(249,115,22,0.5)] hover:text-orange-500 transition-all duration-200"
                     onClick={() => {
                       if (!sellBal) return;
                       // keep small MON buffer for gas when selling native
@@ -556,7 +432,7 @@ const selectToken = (picked: string | TokenObj) => {
                   </Button>
                   <Input
                     value={sellAmount}
-                    onChange={(e) => setSellAmount(handleNumericInput(e.target.value))}
+                    onChange={(e) => setSellAmount(e.target.value)}
                     className="!border-none !bg-transparent text-right flex-1 !text-24 font-medium tracking-tight pr-2 h-auto text-foreground !shadow-none !ring-0 !ring-offset-0"
                     style={{ color: isExceeding ? "#ef4444" : undefined }}
                     placeholder="0.00"
@@ -577,7 +453,7 @@ const selectToken = (picked: string | TokenObj) => {
                 variant="ghost"
                 size="sm"
                 onClick={handleSwapTokens}
-                className="h-8 w-8 p-0 bg-background/60 hover:bg-white rounded-md border border-border/40 hover:border-blue-600 transition-colors duration-200"
+                className="h-8 w-8 p-0 bg-background/60 hover:bg-background rounded-md border border-border/40 transition-colors duration-200"
               >
                 <ArrowUpDown className="h-4 w-4 text-blue-600" />
               </Button>
@@ -588,11 +464,7 @@ const selectToken = (picked: string | TokenObj) => {
               <div className="relative bg-background/60 rounded-2xl border border-white/10 focus-within:border-primary/60 transition-colors duration-200">
                 <span className="absolute left-0 bottom-full mb-3 text-sm text-muted-foreground pointer-events-none select-none">
                   Buying
-                </span>
-                <div className="absolute right-0 bottom-full mb-3 flex items-center gap-1.5 text-sm text-muted-foreground select-none">
-                     <img src={SlippageIcon} alt="Slippage" className="w-3.5 h-3.5 shrink-0" />
-                     <span className="leading-none tabular-nums">{slippageDisplay}</span>
-                </div>
+                </span>               
                 <div className="flex items-center justify-between p-3">
                   <Button
                     variant="ghost"
@@ -646,8 +518,8 @@ const selectToken = (picked: string | TokenObj) => {
             </div>
           </TabsContent>
 
-          <TabsContent value="trigger" className="mt-4">
-            <TriggerInterface tokens={tokens} />
+          <TabsContent value="trigger">
+            <div className="text-center text-muted-foreground py-8">Trigger orders coming soon</div>
           </TabsContent>
 
           <TabsContent value="recurring">
@@ -656,7 +528,6 @@ const selectToken = (picked: string | TokenObj) => {
         </Tabs>
 
         {/* Connect/Swap Button */}
-      {activeTab === "instant" && (
         <div className="w-full mt-4">
           <Button
             className="w-full"
@@ -685,7 +556,6 @@ const selectToken = (picked: string | TokenObj) => {
               : "Swap"}
           </Button>
         </div>
-        )}
       </div>
 
       {/* Token Selection Modal */}

@@ -33,11 +33,9 @@ type Params = {
   tokenOut?: string;
   amountInHuman: string;
   enabled?: boolean;
-  /** Optional override for slippage (in bps). If omitted, falls back to PUBLIC_CONFIG.SLIPPAGE_BPS. */
-  slippageBpsOverride?: bigint;
 };
 
-export function useYakQuote({ router, tokenIn, tokenOut, amountInHuman, enabled = true, slippageBpsOverride  }: Params) {
+export function useYakQuote({ router, tokenIn, tokenOut, amountInHuman, enabled = true }: Params) {
   const client = usePublicClient();
   const { effectiveGasPriceWei } = useNetworkFees(PUBLIC_CONFIG.FEE_REFRESH_MS);
   const FALLBACK = PUBLIC_CONFIG.GAS_PRICE_WEI_FALLBACK;
@@ -145,8 +143,7 @@ async function getDecimalsCached(addr: Address, native: boolean): Promise<number
         const gasEstimate: bigint = formatted?.gasEstimate ?? formatted?.[3] ?? 0n;
 
         const outRaw = amounts.length ? amounts[amounts.length - 1] : 0n;
-        const SLIP = (slippageBpsOverride ?? PUBLIC_CONFIG.SLIPPAGE_BPS);
-        const minOutRaw = (outRaw * (10_000n - SLIP)) / 10_000n;
+        const minOutRaw = (outRaw * (10_000n - PUBLIC_CONFIG.SLIPPAGE_BPS)) / 10_000n;
 
         if (!changedByAtLeastBps(lastMinOutRef.current, minOutRaw, PUBLIC_CONFIG.UPDATE_THRESHOLD_BPS)) {
           // skip UI update
