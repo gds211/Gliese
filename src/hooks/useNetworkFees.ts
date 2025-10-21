@@ -1,6 +1,7 @@
 // src/hooks/useNetworkFees.ts
 import { useEffect, useMemo, useState } from "react";
 import { usePublicClient } from "wagmi";
+import { estimateFeesPerGasWithGate, getGasPriceWithGate, getBlockWithGate } from "@/lib/rpcGate";
 import { PUBLIC_CONFIG } from "@/config/public";
 
 type FeeState = {
@@ -37,7 +38,7 @@ export function useNetworkFees(refreshMs = PUBLIC_CONFIG.FEE_REFRESH_MS) {
           const maxPrio = BigInt(e.maxPriorityFeePerGas ?? 0n);
 
           // Base fee from latest block (if available)
-          const block = await client.getBlock({ blockTag: "latest" }).catch(() => null as any);
+          const block = await getBlockWithGate(client, { blockTag: "latest" }).catch(() => null as any);
           const base = BigInt(block?.baseFeePerGas ?? 0n);
 
           // Effective = min(maxFeePerGas, baseFee + maxPriority)
@@ -58,7 +59,7 @@ export function useNetworkFees(refreshMs = PUBLIC_CONFIG.FEE_REFRESH_MS) {
         }
 
         // Fallback to legacy getGasPrice
-        const gp = await client.getGasPrice();
+        const gp = await getGasPriceWithGate(client);
         if (!dead) {
           setFees({
             type: "legacy",
