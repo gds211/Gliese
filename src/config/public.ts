@@ -8,7 +8,7 @@ export const PUBLIC_CONFIG = {
 
   // --- Chain target (Monad Testnet) ---
   CHAIN_ID: 10143,
-  RPC_URL: "https://testnet-rpc.monad.xyz",
+  RPC_URL: https://rpc.ankr.com/monad_testnet,
   EXPLORER_NAME: "SocialScan",
   EXPLORER_URL: "https://monad-testnet.socialscan.io",
   NATIVE_SYMBOL: "MON",
