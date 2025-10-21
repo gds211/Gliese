@@ -162,92 +162,16 @@ export async function performSwap(args: SwapArgs) {
     throw e;
   }
 
-  // ----- Simulate to pre-fill gas & compute next-block-safe fees -----
-const client = getPublicClient(config);
-
-// 1) Simulate to get accurate gas usage for THIS call
-const sim = await client.simulateContract({
-  account: address,
-  address: router,
-  abi: YAK_ROUTER_ABI,
-  functionName,
-  args: [trade, address, FEE_BPS],
-  value,
-});
-
-// Gas limit with +25% headroom for longer Yak paths
-const baseGas =
-  sim.request.gas ??
-  (await client.estimateContractGas({
+  // ----- Actual write -----
+  const txHash: Hash = await writeContract(config, {
     account: address,
     address: router,
     abi: YAK_ROUTER_ABI,
     functionName,
     args: [trade, address, FEE_BPS],
     value,
-  }));
-const gas: bigint = (baseGas * 125n) / 100n;
+  });
 
-// 2) Build fee overrides that mirror MetaMask "Minimum": base*2 + tip
-let feeOverrides:
-  | { maxFeePerGas: bigint; maxPriorityFeePerGas: bigint }
-  | { gasPrice: bigint };
-
-try {
-  const block = await client.getBlock(); // has baseFeePerGas on EIP-1559 chains
-  // Get a tip; prefer node suggestion from estimateFeesPerGas
-  const nodeFees: any = await (client as any).estimateFeesPerGas?.();
-  const tip: bigint =
-    (nodeFees?.maxPriorityFeePerGas as bigint | undefined) ?? 1_500_000_000n; // ~1.5 gwei floor
-
-  if (block.baseFeePerGas != null) {
-    // Next-block safe: base*2 + tip, then a small buffer (+5%) since Monad testnet gas is stable
-    const nextBlockSafe = block.baseFeePerGas * 2n + tip;
-    // If node suggested a cap, keep the max of (node cap, nextBlockSafe)
-    let cap =
-      (nodeFees?.maxFeePerGas as bigint | undefined) ??
-      (block.baseFeePerGas + tip);
-    if (cap < nextBlockSafe) cap = nextBlockSafe;
-    const maxFeePerGas = (cap * 105n) / 100n; // +5% headroom
-    const maxPriorityFeePerGas = tip;
-
-    feeOverrides = { maxFeePerGas, maxPriorityFeePerGas };
-  } else {
-    // Legacy fallback (no baseFeePerGas): mirror wallet minimum as ~2.1x gasPrice
-    const gp =
-      sim.request.gasPrice ??
-      (await client.getGasPrice());
-    feeOverrides = { gasPrice: (gp * 210n) / 100n }; // ≈2.1x
-  }
-} catch {
-  // Last-resort: use what simulate suggested (if present), else let wallet fill
-  if (sim.request.maxFeePerGas && sim.request.maxPriorityFeePerGas) {
-    feeOverrides = {
-      maxFeePerGas: sim.request.maxFeePerGas,
-      maxPriorityFeePerGas: sim.request.maxPriorityFeePerGas,
-    };
-  } else if (sim.request.gasPrice) {
-    feeOverrides = { gasPrice: sim.request.gasPrice };
-  } else {
-    // no override – rare, but safe
-    // @ts-expect-error - keep type happy
-    feeOverrides = {};
-  }
-}
-
-// ----- Actual write (deterministic fees & gas) -----
-const txHash: Hash = await writeContract(config, {
-  account: address,
-  address: router,
-  abi: YAK_ROUTER_ABI,
-  functionName,
-  args: [trade, address, FEE_BPS],
-  value,
-  gas,
-  ...feeOverrides,
-});
-
-const receipt = await waitForTransactionReceipt(config, { hash: txHash });
-return receipt;
-
+  const receipt = await waitForTransactionReceipt(config, { hash: txHash });
+  return receipt;
 }
