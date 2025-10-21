@@ -8,6 +8,7 @@ import { PUBLIC_CONFIG } from "@/config/public";
 import { getDecimals } from "@/lib/decimals";
 import { changedByAtLeastBps } from "@/lib/math";
 import { useNetworkFees } from "@/hooks/useNetworkFees";
+import { readContractWithGate } from "@/lib/rpcGate";
 
 
 // local helpers (keep types shallow)
@@ -140,7 +141,7 @@ async function getDecimalsCached(addr: Address, native: boolean): Promise<number
         const gasWei = gasRef.current;
 
         // ⚠️ Returns a single tuple struct
-        const formatted = await (client as any).readContract({
+        const formatted = await readContractWithGate(client as any, {
           address: router,
           abi: YAK_ROUTER_ABI,
           functionName: "findBestPathWithGas",
@@ -184,5 +185,3 @@ async function getDecimalsCached(addr: Address, native: boolean): Promise<number
 
   return quote;
 }
-
-
