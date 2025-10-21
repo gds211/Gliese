@@ -33,9 +33,11 @@ type Params = {
   tokenOut?: string;
   amountInHuman: string;
   enabled?: boolean;
+  /** Optional override for slippage (in bps). If omitted, falls back to PUBLIC_CONFIG.SLIPPAGE_BPS. */
+  slippageBpsOverride?: bigint;
 };
 
-export function useYakQuote({ router, tokenIn, tokenOut, amountInHuman, enabled = true }: Params) {
+export function useYakQuote({ router, tokenIn, tokenOut, amountInHuman, enabled = true, slippageBpsOverride  }: Params) {
   const client = usePublicClient();
   const { effectiveGasPriceWei } = useNetworkFees(PUBLIC_CONFIG.FEE_REFRESH_MS);
   const FALLBACK = PUBLIC_CONFIG.GAS_PRICE_WEI_FALLBACK;
@@ -83,7 +85,8 @@ async function getDecimalsCached(addr: Address, native: boolean): Promise<number
   const lastMinOutRef = useRef<bigint | null>(null);
   const reqCounter = useRef(0);
 
-  const polling = enabled && !!router && !!tokenOut && !!amountInHuman && +amountInHuman > 0;
+  // Poll based on effective inputs, not the raw tokenOut prop (which can be null for native)
+  const polling = enabled && !!router && !!amountInHuman && +amountInHuman > 0;
 
   const tokenInAddr  = toQuoteAddr(tokenIn);
   const tokenOutAddr = toQuoteAddr(tokenOut);
@@ -103,7 +106,15 @@ async function getDecimalsCached(addr: Address, native: boolean): Promise<number
   }, [tokenInAddr, tokenOutAddr, tokenIn, tokenOut, chainId]);
 
   useEffect(() => {
-    if (!polling) { setQuote(null); lastMinOutRef.current = null; return; }
+      // Only clear when the hook is actually disabled or amount is non-positive.
+  // During token flips/decimals warmup we keep last good quote to avoid 0.00 flashes.
+  if (!polling) {
+    if (!enabled || !(+amountInHuman > 0)) {
+      setQuote(null);
+      lastMinOutRef.current = null;
+    }
+    return;
+  }
 
     let timer: any;
     let cancelled = false;
@@ -143,7 +154,8 @@ async function getDecimalsCached(addr: Address, native: boolean): Promise<number
         const gasEstimate: bigint = formatted?.gasEstimate ?? formatted?.[3] ?? 0n;
 
         const outRaw = amounts.length ? amounts[amounts.length - 1] : 0n;
-        const minOutRaw = (outRaw * (10_000n - PUBLIC_CONFIG.SLIPPAGE_BPS)) / 10_000n;
+        const SLIP = (slippageBpsOverride ?? PUBLIC_CONFIG.SLIPPAGE_BPS);
+        const minOutRaw = (outRaw * (10_000n - SLIP)) / 10_000n;
 
         if (!changedByAtLeastBps(lastMinOutRef.current, minOutRaw, PUBLIC_CONFIG.UPDATE_THRESHOLD_BPS)) {
           // skip UI update
@@ -168,7 +180,7 @@ async function getDecimalsCached(addr: Address, native: boolean): Promise<number
     tick();
     return () => { cancelled = true; clearTimeout(timer); };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [polling, router, tokenInAddr, tokenOutAddr, amountInHuman]);
+  }, [polling, enabled, router, tokenInAddr, tokenOutAddr, amountInHuman]);
 
   return quote;
 }
