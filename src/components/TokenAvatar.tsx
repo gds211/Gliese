@@ -31,9 +31,8 @@ export default function TokenAvatar({
   title,
 }: Props) {
   const candidates: string[] = [];
-  // Prioritize address first since most icons are named by address
-  if (address) candidates.push(String(address).toLowerCase());
   if (symbol) candidates.push(String(symbol).toLowerCase());
+  if (address) candidates.push(String(address).toLowerCase());
 
   let src: string | undefined;
   for (const key of candidates) {
