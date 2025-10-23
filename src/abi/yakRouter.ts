@@ -133,15 +133,7 @@ export const YAK_ROUTER_ABI = [
   // Optional helper reads if you want:
   { type: "function", name: "WNATIVE", stateMutability: "view", inputs: [], outputs: [{ type: "address" }] },
   { type: "function", name: "MIN_FEE", stateMutability: "view", inputs: [], outputs: [{ type: "uint256" }] },
+  { type: "function", name: "adaptersCount", stateMutability: "view", inputs: [], outputs: [{ type: "uint256" }] },
+  { type: "function", name: "ADAPTERS", stateMutability: "view", inputs: [{ type: "uint256" }], outputs: [{ type: "address" }] },
+
 ] as const;
-
-
-
-
-
-
-
-
-
-
-
