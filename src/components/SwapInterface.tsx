@@ -465,36 +465,33 @@ const selectToken = (picked: string | TokenObj) => {
       if (!quote || quote.minOutRaw === 0n || !quote.path?.length) throw new Error("No route found.");
       if (!selectedSellToken || !selectedBuyToken) throw new Error("Select tokens.");
 
-      // >>> smart split: execute only if net-after-gas beats baseline
-   if (splitPlan?.shouldSplit) {
-     const slippageBps = BigInt(dynamicSlippage?.bps ?? PUBLIC_CONFIG.SLIPPAGE_BPS);
-     const minA = (splitPlan.legs[0].quotedOutWei * (10_000n - slippageBps)) / 10_000n;
-     const minB = (splitPlan.legs[1].quotedOutWei * (10_000n - slippageBps)) / 10_000n;
+       if (!address) { openConnectModal?.(); return; }
+  try {
+    if (splitPlan?.shouldSplit) {
+      const slippageBps = dynamicSlippage?.bps ?? PUBLIC_CONFIG.SLIPPAGE_BPS;
+      const minA = splitPlan.legs[0].quotedOutWei * (10_000n - slippageBps) / 10_000n;
+      const minB = splitPlan.legs[1].quotedOutWei * (10_000n - slippageBps) / 10_000n;
 
-     toast({ title: "Preparing split swap...", description: "Building atomic 2-leg transaction" });
+      const receipt = await performSplitSwap({
+        router: PUBLIC_CONFIG.YAK_ROUTER_ADDRESS as Address,
+        multicall: PUBLIC_CONFIG.SPLIT_TRADES.MULTICALL3_ADDRESS as Address,
+        tokenIn: selectedIn!.address as Address,
+        tokenOut: selectedOut!.address as Address,
+        legs: [
+          { adapter: splitPlan.legs[0].adapter, amountInWei: splitPlan.legs[0].amountInWei, minAmountOutWei: minA },
+          { adapter: splitPlan.legs[1].adapter, amountInWei: splitPlan.legs[1].amountInWei, minAmountOutWei: minB },
+        ],
+      });
 
-     const receipt = await performSplitSwap({
-       router, // same router you already use
-       multicall: PUBLIC_CONFIG.SPLIT_TRADES.MULTICALL3_ADDRESS as Address,
-       tokenIn:  (selectedSellToken.address  ?? selectedSellToken.symbol),
-       tokenOut: (selectedBuyToken.address ?? selectedBuyToken.symbol),
-       legs: [
-         { adapter: splitPlan.legs[0].adapter, amountInWei: splitPlan.legs[0].amountInWei, minAmountOutWei: minA },
-         { adapter: splitPlan.legs[1].adapter, amountInWei: splitPlan.legs[1].amountInWei, minAmountOutWei: minB },
-       ],
-     });
-
-     toast({
-       title: "Split swap confirmed ✅",
-       description: `Tx: ${receipt.transactionHash.slice(0, 10)}…`,
-     });
-
-     const status = (receipt as any)?.status;
-     if (status === "success" || status === 1 || status === "0x1") {
-       await refreshBalances();
-     }
-     return; // don't fall through to single-route path
-   }
+      toast({ title: "Swapped (split)", description: "Transaction confirmed." });
+      // refresh balances, etc…
+    } else {
+      // your existing single-route swap flow
+      await doSingleSwap();
+    }
+  } catch (e: any) {
+    toast({ title: "Swap failed", description: e?.shortMessage ?? e?.message ?? "Unknown error", variant: "destructive" });
+  }
 
       const inDec = sellBal?.decimals ?? 18;
       const amountIn = parseUnits(sellAmount, inDec);
