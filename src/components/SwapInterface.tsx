@@ -24,8 +24,6 @@ import glieseLogo from "@/assets/gliese-logo.png";
 import { PUBLIC_CONFIG } from "@/config/public";
 import { useYakQuote } from "@/hooks/useYakQuote";
 import { performSwap } from "@/lib/swap";
-import { useYakSplitQuote } from "@/hooks/useYakSplitQuote";
-import { performSplitSwap } from "@/lib/swap";
 
 import TokenAvatar from "@/components/TokenAvatar";
 import SlippageIcon from "@/assets/slippage.png";
@@ -207,15 +205,6 @@ const SwapInterface = () => {
     amountInHuman: sellAmount || "0",
     enabled: Boolean(sellAmount && selectedSellToken && selectedBuyToken),
   });
-
-  const splitPlan = useYakSplitQuote({
-  router: PUBLIC_CONFIG.YAK_ROUTER_ADDRESS as Address,
-  tokenIn: selectedIn?.address as Address,
-  tokenOut: selectedOut?.address as Address,
-  amountInHuman,
-  enabled: PUBLIC_CONFIG.SPLIT_TRADES.ENABLED_BY_DEFAULT,
-});
-
 
   
   const unitQuote = useYakQuote({
@@ -464,34 +453,6 @@ const selectToken = (picked: string | TokenObj) => {
       if (!sellAmount || Number(sellAmount) <= 0) throw new Error("Enter an amount.");
       if (!quote || quote.minOutRaw === 0n || !quote.path?.length) throw new Error("No route found.");
       if (!selectedSellToken || !selectedBuyToken) throw new Error("Select tokens.");
-
-       if (!address) { openConnectModal?.(); return; }
-  try {
-    if (splitPlan?.shouldSplit) {
-      const slippageBps = dynamicSlippage?.bps ?? PUBLIC_CONFIG.SLIPPAGE_BPS;
-      const minA = splitPlan.legs[0].quotedOutWei * (10_000n - slippageBps) / 10_000n;
-      const minB = splitPlan.legs[1].quotedOutWei * (10_000n - slippageBps) / 10_000n;
-
-      const receipt = await performSplitSwap({
-        router: PUBLIC_CONFIG.YAK_ROUTER_ADDRESS as Address,
-        multicall: PUBLIC_CONFIG.SPLIT_TRADES.MULTICALL3_ADDRESS as Address,
-        tokenIn: selectedIn!.address as Address,
-        tokenOut: selectedOut!.address as Address,
-        legs: [
-          { adapter: splitPlan.legs[0].adapter, amountInWei: splitPlan.legs[0].amountInWei, minAmountOutWei: minA },
-          { adapter: splitPlan.legs[1].adapter, amountInWei: splitPlan.legs[1].amountInWei, minAmountOutWei: minB },
-        ],
-      });
-
-      toast({ title: "Swapped (split)", description: "Transaction confirmed." });
-      // refresh balances, etc…
-    } else {
-      // your existing single-route swap flow
-      await doSingleSwap();
-    }
-  } catch (e: any) {
-    toast({ title: "Swap failed", description: e?.shortMessage ?? e?.message ?? "Unknown error", variant: "destructive" });
-  }
 
       const inDec = sellBal?.decimals ?? 18;
       const amountIn = parseUnits(sellAmount, inDec);
