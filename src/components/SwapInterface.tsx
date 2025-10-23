@@ -24,6 +24,8 @@ import glieseLogo from "@/assets/gliese-logo.png";
 import { PUBLIC_CONFIG } from "@/config/public";
 import { useYakQuote } from "@/hooks/useYakQuote";
 import { performSwap } from "@/lib/swap";
+import { useYakSplitQuote } from "@/hooks/useYakSplitQuote";
+import { performSplitSwap } from "@/lib/swap";
 
 import TokenAvatar from "@/components/TokenAvatar";
 import SlippageIcon from "@/assets/slippage.png";
@@ -205,6 +207,15 @@ const SwapInterface = () => {
     amountInHuman: sellAmount || "0",
     enabled: Boolean(sellAmount && selectedSellToken && selectedBuyToken),
   });
+
+  const splitPlan = useYakSplitQuote({
+  router: PUBLIC_CONFIG.YAK_ROUTER_ADDRESS as Address,
+  tokenIn: selectedIn?.address as Address,
+  tokenOut: selectedOut?.address as Address,
+  amountInHuman,
+  enabled: PUBLIC_CONFIG.SPLIT_TRADES.ENABLED_BY_DEFAULT,
+});
+
 
   
   const unitQuote = useYakQuote({
@@ -453,6 +464,37 @@ const selectToken = (picked: string | TokenObj) => {
       if (!sellAmount || Number(sellAmount) <= 0) throw new Error("Enter an amount.");
       if (!quote || quote.minOutRaw === 0n || !quote.path?.length) throw new Error("No route found.");
       if (!selectedSellToken || !selectedBuyToken) throw new Error("Select tokens.");
+
+      // >>> smart split: execute only if net-after-gas beats baseline
+   if (splitPlan?.shouldSplit) {
+     const slippageBps = BigInt(dynamicSlippage?.bps ?? PUBLIC_CONFIG.SLIPPAGE_BPS);
+     const minA = (splitPlan.legs[0].quotedOutWei * (10_000n - slippageBps)) / 10_000n;
+     const minB = (splitPlan.legs[1].quotedOutWei * (10_000n - slippageBps)) / 10_000n;
+
+     toast({ title: "Preparing split swap...", description: "Building atomic 2-leg transaction" });
+
+     const receipt = await performSplitSwap({
+       router, // same router you already use
+       multicall: PUBLIC_CONFIG.SPLIT_TRADES.MULTICALL3_ADDRESS as Address,
+       tokenIn:  (selectedSellToken.address  ?? selectedSellToken.symbol),
+       tokenOut: (selectedBuyToken.address ?? selectedBuyToken.symbol),
+       legs: [
+         { adapter: splitPlan.legs[0].adapter, amountInWei: splitPlan.legs[0].amountInWei, minAmountOutWei: minA },
+         { adapter: splitPlan.legs[1].adapter, amountInWei: splitPlan.legs[1].amountInWei, minAmountOutWei: minB },
+       ],
+     });
+
+     toast({
+       title: "Split swap confirmed ✅",
+       description: `Tx: ${receipt.transactionHash.slice(0, 10)}…`,
+     });
+
+     const status = (receipt as any)?.status;
+     if (status === "success" || status === 1 || status === "0x1") {
+       await refreshBalances();
+     }
+     return; // don't fall through to single-route path
+   }
 
       const inDec = sellBal?.decimals ?? 18;
       const amountIn = parseUnits(sellAmount, inDec);
