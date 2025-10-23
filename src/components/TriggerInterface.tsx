@@ -280,7 +280,7 @@ const TriggerInterface = ({
         <div className="flex justify-between items-center text-sm">
           <span className="text-muted-foreground">Buying</span>
           <div className="flex items-center gap-2">
-            <span className="text-[10px] text-muted-foreground">
+            <span className={`text-[10px] ${tradeMode === "optimized" ? "text-white" : "text-muted-foreground"}`}>
               OPTIMIZED
             </span>
             <button
@@ -290,7 +290,7 @@ const TriggerInterface = ({
               aria-label={`Toggle trade mode. Currently: ${tradeMode}`}
             >
               <span
-                className={`absolute top-1/2 -translate-y-1/2 h-4 w-4 bg-[#1a2332] rounded-full transition-all duration-200 ease-in-out shadow-lg ${
+                className={`absolute top-1/2 -translate-y-1/2 h-3 w-3 bg-[#1a2332] rounded-full transition-all duration-200 ease-in-out shadow-lg ${
                   tradeMode === "optimized" 
                     ? "left-0 -translate-x-1" 
                     : "right-0 translate-x-1"
@@ -300,7 +300,7 @@ const TriggerInterface = ({
                 }}
               />
             </button>
-            <span className="text-[10px] text-muted-foreground">
+            <span className={`text-[10px] ${tradeMode === "exact" ? "text-white" : "text-muted-foreground"}`}>
               EXACT
             </span>
           </div>
