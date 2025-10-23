@@ -175,3 +175,120 @@ export async function performSwap(args: SwapArgs) {
   const receipt = await waitForTransactionReceipt(config, { hash: txHash });
   return receipt;
 }
+
+// --- split execution via Multicall3 (atomic) ---
+import type { Address, Hash } from "viem";
+import { encodeFunctionData } from "viem";
+import {
+  getAccount,
+  getPublicClient,
+  writeContract,
+  waitForTransactionReceipt,
+} from "wagmi/actions";
+import { config } from "@/config/wagmi";
+import { ERC20_ABI } from "@/abi/erc20";
+import { YAK_ROUTER_ABI } from "@/abi/yakRouter";
+import { MULTICALL3_ABI } from "@/abi/multicall3";
+import { PUBLIC_CONFIG } from "@/config/public";
+
+export type SplitSwapLegInput = {
+  adapter: Address;
+  amountInWei: bigint;
+  minAmountOutWei: bigint;
+};
+
+export async function performSplitSwap(params: {
+  router: Address;
+  multicall: Address;
+  tokenIn: Address | string;
+  tokenOut: Address | string;
+  legs: [SplitSwapLegInput, SplitSwapLegInput];
+  feeBps?: bigint; // falls back to PUBLIC_CONFIG.AGGREGATOR_FEE_BPS or 0n
+}) {
+  const { address } = getAccount(config);
+  if (!address) throw new Error("Wallet not connected.");
+
+  const client = getPublicClient(config);
+  const router = params.router as Address;
+  const multicallAddr = params.multicall as Address;
+  const FEE_BPS = (params.feeBps ?? (PUBLIC_CONFIG as any).AGGREGATOR_FEE_BPS) ?? 0n;
+
+  const inIsNative  = isNative(params.tokenIn as string);
+  const outIsNative = isNative(params.tokenOut as string);
+
+  const tokenInAddr  = normalizeInput(params.tokenIn as Address);
+  const tokenOutAddr = normalizeOutput(params.tokenOut as Address);
+
+  // Construct trades for each leg (single adapter path)
+  const tradeA = {
+    amountIn: params.legs[0].amountInWei,
+    amountOut: params.legs[0].minAmountOutWei,
+    path: [tokenInAddr, tokenOutAddr],
+    adapters: [params.legs[0].adapter],
+  };
+  const tradeB = {
+    amountIn: params.legs[1].amountInWei,
+    amountOut: params.legs[1].minAmountOutWei,
+    path: [tokenInAddr, tokenOutAddr],
+    adapters: [params.legs[1].adapter],
+  };
+
+  // Approval if ERC20 input
+  if (!inIsNative) {
+    const totalIn = tradeA.amountIn + tradeB.amountIn;
+    await ensureAllowance({ token: tokenInAddr, spender: router, minAllowance: totalIn });
+  }
+
+  // Choose out function
+  const fnName = !outIsNative ? "swapNoSplit" : "swapNoSplitToAVAX";
+
+  const callA = encodeFunctionData({ abi: YAK_ROUTER_ABI, functionName: fnName, args: [tradeA, address, FEE_BPS] });
+  const callB = encodeFunctionData({ abi: YAK_ROUTER_ABI, functionName: fnName, args: [tradeB, address, FEE_BPS] });
+
+  const totalValue = inIsNative ? (tradeA.amountIn + tradeB.amountIn) : 0n;
+
+  const txHash: Hash = await writeContract(config, {
+    account: address,
+    address: multicallAddr,
+    abi: MULTICALL3_ABI,
+    functionName: "aggregate3",
+    args: [[
+      { target: router, allowFailure: false, callData: callA, value: inIsNative ? tradeA.amountIn : 0n },
+      { target: router, allowFailure: false, callData: callB, value: inIsNative ? tradeB.amountIn : 0n },
+    ]],
+    value: totalValue,
+  });
+
+  const receipt = await waitForTransactionReceipt(config, { hash: txHash });
+  return receipt;
+}
+
+// ---- local helpers (keep aligned with your project) ----
+function isNative(v?: string) {
+  return !v || v.toUpperCase() === PUBLIC_CONFIG.NATIVE_SYMBOL || v === "0x0000000000000000000000000000000000000000";
+}
+function normalizeInput(addr: Address): Address {
+  return isNative(String(addr)) ? (PUBLIC_CONFIG.WNATIVE_ADDRESS as Address) : addr;
+}
+function normalizeOutput(addr: Address): Address {
+  return isNative(String(addr)) ? (PUBLIC_CONFIG.WNATIVE_ADDRESS as Address) : addr;
+}
+async function ensureAllowance({ token, spender, minAllowance }: { token: Address; spender: Address; minAllowance: bigint; }) {
+  const { address } = getAccount(config);
+  if (!address) throw new Error("Wallet not connected.");
+
+  const allowance: bigint = await getPublicClient(config).readContract({
+    address: token, abi: ERC20_ABI, functionName: "allowance", args: [address, spender],
+  }) as any;
+
+  if (allowance >= minAllowance) return;
+
+  await writeContract(config, {
+    account: address,
+    address: token,
+    abi: ERC20_ABI,
+    functionName: "approve",
+    args: [spender, minAllowance],
+  });
+}
+
