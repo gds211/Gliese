@@ -170,10 +170,10 @@ export function useYakSplitQuote({ router, tokenIn, tokenOut, amountInHuman, ena
 }
 
 function normalizeInput(addr: string | Address): Address {
-  return isNative(addr as string) ? (PUBLIC_CONFIG.WNATIVE_ADDRESS as Address) : (addr as Address);
+  return isNative(addr as string) ? (PUBLIC_CONFIG.WRAPPED_NATIVE as Address) : (addr as Address);
 }
 function normalizeOutput(addr: string | Address): Address {
-  return isNative(addr as string) ? (PUBLIC_CONFIG.WNATIVE_ADDRESS as Address) : (addr as Address);
+  return isNative(addr as string) ? (PUBLIC_CONFIG.WRAPPED_NATIVE as Address) : (addr as Address);
 }
 
 async function getCandidateAdapters(client: any, router: Address): Promise<Address[]> {
