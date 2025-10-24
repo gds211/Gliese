@@ -90,7 +90,7 @@ export const PUBLIC_CONFIG = {
 
     
     EXECUTION: {
-      ENABLED: false,                 // keep false by default; toggle to true when you’re ready
+      ENABLED: true,                 // keep false by default; toggle to true when you’re ready
       MODE: "multicall3" as const,    // only supported mode for atomic split with current router
     },
 
