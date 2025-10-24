@@ -10,6 +10,8 @@ import { config } from "@/config/wagmi";
 import { ERC20_ABI } from "@/abi/erc20";
 import { YAK_ROUTER_ABI } from "@/abi/yakRouter";
 import { PUBLIC_CONFIG } from "@/config/public";
+import { MULTICALL3_ABI } from "@/abi/multicall3";
+import { encodeFunctionData, Address, Hash } from "viem";
 
 // ===== Types =====
 
@@ -170,6 +172,134 @@ export async function performSwap(args: SwapArgs) {
     functionName,
     args: [trade, address, FEE_BPS],
     value,
+  });
+
+  const receipt = await waitForTransactionReceipt(config, { hash: txHash });
+  return receipt;
+}
+
+export type SplitLegInput = {
+  amountIn: bigint;           // per-leg input
+  minAmountOut: bigint;       // per-leg minOut after slippage
+  adapter: Address;           // direct adapter
+  path: Address[];            // [tokenIn, tokenOut]
+  isNativeIn: boolean;        // true => use swapNoSplitFromAVAX (payable)
+  isNativeOut: boolean;       // true => use swapNoSplitToAVAX
+};
+
+export type SplitMulticallArgs = {
+  router: Address;
+  multicall3: Address;        // PUBLIC_CONFIG.SPLIT_TRADES.MULTICALL3_ADDRESS
+  legs: [SplitLegInput, SplitLegInput];
+  wnative: Address;           // PUBLIC_CONFIG.WRAPPED_NATIVE
+};
+
+/**
+ * Atomic two-leg split using Multicall3.aggregate3Value.
+ * Each leg is a standard Yak swapNoSplit* call; both execute in a single transaction.
+ * NOTE: The router fee is still applied per call (so twice).
+ */
+export async function performSplitSwapMulticall({
+  router,
+  multicall3,
+  legs,
+  wnative,
+}: SplitMulticallArgs) {
+  const { address } = getAccount(config);
+  if (!address) throw new Error("Wallet not connected.");
+
+  // Hard gate via config
+  if (!(PUBLIC_CONFIG as any).SPLIT_TRADES?.EXECUTION?.ENABLED) {
+    throw new Error("Split execution is disabled. Enable PUBLIC_CONFIG.SPLIT_TRADES.EXECUTION.ENABLED first.");
+  }
+
+  const client = getPublicClient(config);
+
+  // Sanity: Router constants
+  const [routerWN, minFee] = await Promise.all([
+    client.readContract({ address: router, abi: YAK_ROUTER_ABI, functionName: "WNATIVE" }) as Promise<Address>,
+    client.readContract({ address: router, abi: YAK_ROUTER_ABI, functionName: "MIN_FEE" }) as Promise<bigint>,
+  ]);
+
+  if (routerWN.toLowerCase() !== wnative.toLowerCase()) {
+    throw new Error(`Router.WNATIVE mismatch: router=${routerWN} app=${wnative}`);
+  }
+  const DEFAULT_FEE_BPS = 2n;
+  const FEE_BPS = minFee > DEFAULT_FEE_BPS ? minFee : DEFAULT_FEE_BPS;
+
+  // If ERC-20 input, approve the sum once
+  const erc20TokenIn =
+    !legs[0].isNativeIn ? legs[0].path[0] :
+    !legs[1].isNativeIn ? legs[1].path[0] : null;
+
+  if (erc20TokenIn) {
+    const totalIn =
+      (legs[0].isNativeIn ? 0n : legs[0].amountIn) +
+      (legs[1].isNativeIn ? 0n : legs[1].amountIn);
+    await ensureAllowance(client, erc20TokenIn as Address, address, router, totalIn);
+  }
+
+  // Build per-leg encoded calls
+  function buildLeg(leg: SplitLegInput) {
+    // Validate native path ends/begins with WNATIVE where applicable
+    if (leg.isNativeIn && leg.path[0].toLowerCase() !== routerWN.toLowerCase()) {
+      throw new Error("Native input leg requires path[0] == WNATIVE.");
+    }
+    if (leg.isNativeOut && leg.path[leg.path.length - 1].toLowerCase() !== routerWN.toLowerCase()) {
+      throw new Error("Native output leg requires last path hop == WNATIVE.");
+    }
+
+    const trade = {
+      amountIn: leg.amountIn,
+      amountOut: leg.minAmountOut,
+      path: leg.path,
+      adapters: [leg.adapter],
+    } as const;
+
+    let fn: "swapNoSplit" | "swapNoSplitFromAVAX" | "swapNoSplitToAVAX";
+    let value: bigint = 0n;
+
+    if (leg.isNativeIn && !leg.isNativeOut) {
+      fn = "swapNoSplitFromAVAX";
+      value = leg.amountIn; // payable value sent to router for this leg
+    } else if (!leg.isNativeIn && leg.isNativeOut) {
+      fn = "swapNoSplitToAVAX";
+    } else {
+      fn = "swapNoSplit";
+    }
+
+    const callData = encodeFunctionData({
+      abi: YAK_ROUTER_ABI,
+      functionName: fn,
+      args: [trade, address, FEE_BPS],
+    });
+
+    return { target: router, allowFailure: false, value, callData };
+  }
+
+  const c1 = buildLeg(legs[0]);
+  const c2 = buildLeg(legs[1]);
+
+  const totalValue = (c1.value ?? 0n) + (c2.value ?? 0n);
+
+  // Simulate the aggregated call (catches reverts from either leg)
+  await client.simulateContract({
+    account: address,
+    address: multicall3,
+    abi: MULTICALL3_ABI,
+    functionName: "aggregate3Value",
+    args: [[c1, c2]],
+    value: totalValue,
+  });
+
+  // Execute the aggregated call
+  const txHash: Hash = await writeContract(config, {
+    account: address,
+    address: multicall3,
+    abi: MULTICALL3_ABI,
+    functionName: "aggregate3Value",
+    args: [[c1, c2]],
+    value: totalValue,
   });
 
   const receipt = await waitForTransactionReceipt(config, { hash: txHash });
