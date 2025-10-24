@@ -116,6 +116,13 @@ const SwapInterface = () => {
     Boolean((PUBLIC_CONFIG as any).AUTO_SLIPPAGE?.ENABLED_BY_DEFAULT ?? true)
   );
 
+  // Split-trade toggle (initialized from config)
+const [useSplit, setUseSplit] = useState(
+  Boolean((PUBLIC_CONFIG as any).SPLIT_TRADES?.ENABLED_BY_DEFAULT ?? false)
+);
+
+  
+
   const selectedSellToken = useMemo(() => {
     if (sellToken === null) return tokens.find(t => !t.address); // find native MON
     return tokens.find(t => t.address?.toLowerCase() === sellToken.toLowerCase());
