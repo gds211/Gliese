@@ -87,7 +87,16 @@ export const PUBLIC_CONFIG = {
     MULTICALL3_ADDRESS: "0xcA11bde05977b3631167028862bE2a173976CA11",
 
     AGGREGATOR_FEE_BPS: 2n,
+
+    
+    EXECUTION: {
+      ENABLED: false,                 // keep false by default; toggle to true when you’re ready
+      MODE: "multicall3" as const,    // only supported mode for atomic split with current router
+    },
+
   },
+
+  
 
 } as const;
 
