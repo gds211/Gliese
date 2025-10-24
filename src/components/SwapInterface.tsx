@@ -118,7 +118,7 @@ const SwapInterface = () => {
 
   // Split-trade toggle (initialized from config)
 const [useSplit, setUseSplit] = useState(
-  Boolean((PUBLIC_CONFIG as any).SPLIT_TRADES?.ENABLED_BY_DEFAULT ?? false)
+  Boolean((PUBLIC_CONFIG as any).SPLIT_TRADES?.ENABLED_BY_DEFAULT ?? true)
 );
 
   
