@@ -1,5 +1,6 @@
 // src/lib/swap.ts
 import type { Address, Hash } from "viem";
+import { encodeFunctionData } from "viem";
 import {
   getAccount,
   getPublicClient,
@@ -11,7 +12,7 @@ import { ERC20_ABI } from "@/abi/erc20";
 import { YAK_ROUTER_ABI } from "@/abi/yakRouter";
 import { PUBLIC_CONFIG } from "@/config/public";
 import { MULTICALL3_ABI } from "@/abi/multicall3";
-import { encodeFunctionData, Address, Hash } from "viem";
+
 
 // ===== Types =====
 
