@@ -24,9 +24,6 @@ import glieseLogo from "@/assets/gliese-logo.png";
 import { PUBLIC_CONFIG } from "@/config/public";
 import { useYakQuote } from "@/hooks/useYakQuote";
 import { performSwap } from "@/lib/swap";
-import { useYakSplitQuote } from "@/hooks/useYakSplitQuote";
-import { performSplitSwapMulticall } from "@/lib/swap";
-
 
 import TokenAvatar from "@/components/TokenAvatar";
 import SlippageIcon from "@/assets/slippage.png";
@@ -115,13 +112,6 @@ const SwapInterface = () => {
   const [autoSlippage, setAutoSlippage] = useState(
     Boolean((PUBLIC_CONFIG as any).AUTO_SLIPPAGE?.ENABLED_BY_DEFAULT ?? true)
   );
-
-  // Split-trade toggle (initialized from config)
-const [useSplit, setUseSplit] = useState(
-  Boolean((PUBLIC_CONFIG as any).SPLIT_TRADES?.ENABLED_BY_DEFAULT ?? true)
-);
-
-  
 
   const selectedSellToken = useMemo(() => {
     if (sellToken === null) return tokens.find(t => !t.address); // find native MON
@@ -216,16 +206,6 @@ const [useSplit, setUseSplit] = useState(
     enabled: Boolean(sellAmount && selectedSellToken && selectedBuyToken),
   });
 
-const splitPlan = useYakSplitQuote({
-  router,
-  tokenIn: tokenInArg,
-  tokenOut: tokenOutArg,
-  amountInHuman: sellAmount || "0",
-  enabled: useSplit && Boolean(sellAmount && selectedSellToken && selectedBuyToken),
-  force: false,
-});
-
-
   
   const unitQuote = useYakQuote({
     router,
@@ -280,40 +260,6 @@ const minOutRawDynamic =
   quote?.outRaw != null ? (quote.outRaw * (10_000n - SLIP)) / 10_000n : 0n;
 
 
-
-// --- Split execution inputs (built only if splitPlan suggests splitting) ---
-const splitExec = useMemo(() => {
-  if (!useSplit || !splitPlan || !splitPlan.shouldSplit || !sellAmount || !selectedSellToken || !selectedBuyToken) return null;
-
-  const inIsNative  = !selectedSellToken.address; // native MON has no address in your token list
-  const outIsNative = !selectedBuyToken.address;
-
-  const tokenInAddr  = inIsNative  ? (PUBLIC_CONFIG.WRAPPED_NATIVE as `0x${string}`) : (selectedSellToken.address as `0x${string}`);
-  const tokenOutAddr = outIsNative ? (PUBLIC_CONFIG.WRAPPED_NATIVE as `0x${string}`) : (selectedBuyToken.address as `0x${string}`);
-
-  const SLIP_BPS = Number(SLIP);
-  const slipFactor = (10_000 - SLIP_BPS) / 10_000;
-
-  const mkLeg = (leg: { adapter: `0x${string}`, amountInWei: bigint, quotedOutWei: bigint }) => {
-    const minOut = BigInt(Math.floor(Number(leg.quotedOutWei) * slipFactor));
-    return {
-      amountIn: leg.amountInWei,
-      minAmountOut: minOut,
-      adapter: leg.adapter,
-      path: [tokenInAddr, tokenOutAddr] as `0x${string}`[],
-      isNativeIn: inIsNative,
-      isNativeOut: outIsNative,
-    };
-  };
-
-  const [a, b] = splitPlan.legs;
-  return { legs: [mkLeg(a), mkLeg(b)] as const };
-}, [useSplit, splitPlan, sellAmount, selectedSellToken, selectedBuyToken, SLIP]);
-
-
- 
-  
-  
   // Derived buy amount (minOut) using dynamic slippage (size-aware)
 const buyAmountDerived = (() => {
   // For display we can scale the formatted out by (1 - SLIP/10000)
@@ -512,43 +458,6 @@ const selectToken = (picked: string | TokenObj) => {
       const amountIn = parseUnits(sellAmount, inDec);
 
       toast({ title: "Preparing swap...", description: "Checking allowance & building txn" });
-
-
-
-        // ===== Split path (atomic via Multicall3) =====
-    if (useSplit && splitExec?.legs) {
-      if (!(PUBLIC_CONFIG as any).SPLIT_TRADES?.EXECUTION?.ENABLED) {
-        toast({
-          title: "Split execution disabled",
-          description: "Quotes are shown, but execution is disabled to avoid double aggregator fees. Enable it in config when ready.",
-        });
-        return;
-      }
-
-      const receipt = await performSplitSwapMulticall({
-        router,
-        multicall3: (PUBLIC_CONFIG as any).SPLIT_TRADES.MULTICALL3_ADDRESS as `0x${string}`,
-        legs: splitExec.legs,
-        wnative: PUBLIC_CONFIG.WRAPPED_NATIVE as `0x${string}`,
-      });
-
-      toast({
-        title: "Split executed (atomic) ✅",
-        description: `Tx: ${receipt.transactionHash.slice(0, 10)}…`,
-      });
-
-      const status = (receipt as any)?.status;
-      if (status === "success" || status === 1 || status === "0x1") {
-        await refreshBalances();
-      }
-      return; // don’t fall through to single-route path
-    }
-
-
-
-
-
-      
 
       const receipt = await performSwap({
         router,

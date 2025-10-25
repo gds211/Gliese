@@ -23,7 +23,7 @@ export const PUBLIC_CONFIG = {
 
   // --- Quote behaviour (UI polling, slippage, thresholds) ---
   MAX_STEPS: 4,
-  GAS_PRICE_WEI_FALLBACK: 120_000_000_000n, // used ONLY if RPC fee query fails
+  GAS_PRICE_WEI_FALLBACK: 60_000_000_000n, // used ONLY if RPC fee query fails
   FEE_REFRESH_MS: 800,                    // refresh on-chain fee estimates every 0.8s
   QUOTE_POLL_MS: 1000,                     // poll quotes every 1s
   UPDATE_THRESHOLD_BPS: 0n,               // 0 bps
@@ -61,42 +61,6 @@ export const PUBLIC_CONFIG = {
     PROBE_EPS: 0.02,            // +2% input bump
     PROBE_MIN_INTERVAL_MS: 2500 // min spacing between probes
   },
-
-  // --- Split trades (client-side two-route search) ---
-  SPLIT_TRADES: {
-    ENABLED_BY_DEFAULT: true,
-
-    // Only attempt splits above this input size to avoid wasted RPC for tiny swaps
-    MIN_SIZE_WEI: 0n, // set appropriately (e.g., 10n ** 16n on mainnet)
-
-    // Candidate adapters to consider (recommended to curate 4–8 for your chain).
-    // If empty, we fallback to reading first N adapters from router.
-    CANDIDATE_ADAPTERS: [] as string[],
-    MAX_CANDIDATE_ADAPTERS: 6,
-
-    // Ratios to test for A | (1-A) (keep small for light RPC)
-    RATIO_CANDIDATES: [0.25, 0.5, 0.75],
-
-    // Require at least this net improvement vs single-route baseline (in bps) to proceed
-    MIN_IMPROVEMENT_BPS: 8n, // 0.08%
-
-    // Conservative overhead per router call (used when adapter doesn't report gas)
-    ROUTER_OVERHEAD_GAS: 30_000,
-
-    // Multicall3 (set to your chain’s deployment)
-    MULTICALL3_ADDRESS: "0xcA11bde05977b3631167028862bE2a173976CA11",
-
-    AGGREGATOR_FEE_BPS: 2n,
-
-    
-    EXECUTION: {
-      ENABLED: true,                 // keep false by default; toggle to true when you’re ready
-      MODE: "multicall3" as const,    // only supported mode for atomic split with current router
-    },
-
-  },
-
-  
 
 } as const;
 
