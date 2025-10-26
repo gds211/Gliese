@@ -13,7 +13,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogOverlay } from 
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useTokenSearch } from "@/hooks/useTokenSearch";
 
-import { ChevronDown, Wallet, Search } from "lucide-react";
+import { ChevronDown, Wallet, Search, Loader2 } from "lucide-react";
 import TokenAvatar from "@/components/TokenAvatar";
 import { useAccount, useBalance } from "wagmi";
 import { parseUnits } from "viem";
@@ -50,6 +50,7 @@ const TriggerInterface = ({
   const [searchTerm, setSearchTerm] = useState("");
   const [tradeMode, setTradeMode] = useState<"optimized" | "exact">("optimized");
   const [extraTokens, setExtraTokens] = useState<Array<{ symbol: string; name?: string; address?: `0x${string}`; logoURI?: string }>>([]);
+  
   const { data: searchResults = [], isLoading: searching } = useTokenSearch(searchTerm);
   const combinedTokens = useMemo(() => [...tokens, ...extraTokens], [tokens, extraTokens]);
 
@@ -143,31 +144,17 @@ const filteredTokens = mergedTokens;
     return `${addr.slice(0, 6)}...${addr.slice(-6)}`;
   }
 
+
   const handleSwapTokens = () => {
     const temp = payToken;
-     if (token.address) {
-  const addrL = token.address.toLowerCase();
-  const inCurated = tokens.some(t => t.address?.toLowerCase() === addrL);
-  const inExtras  = extraTokens.some(t => t.address?.toLowerCase() === addrL);
-  if (!inCurated && !inExtras) {
-    setExtraTokens(prev => [
-      ...prev,
-      {
-        symbol: token.symbol,
-        name: token.name,
-        address: token.address as `0x${string}`,
-        logoURI: (token as any).logoURI,
-      },
-    ]);
-  }
-}
-
     setPayToken(receiveToken);
     setReceiveToken(temp);
     setPayAmount("");
     setRate("");
   };
 
+
+  
   const handleMax = () => {
     if (payBalance) {
       setPayAmount(payBalance.formatted);
@@ -215,6 +202,26 @@ const filteredTokens = mergedTokens;
     const isSameToken = token.address 
       ? token.address.toLowerCase() === otherToken?.address?.toLowerCase()
       : !otherToken?.address && token.symbol === otherToken?.symbol; // native tokens
+
+
+         // Persist dynamically selected tokens so UI can resolve labels/balances
+    if (token.address) {
+      const addrL = token.address.toLowerCase();
+      const inCurated = tokens.some(t => t.address?.toLowerCase() === addrL);
+      const inExtras  = extraTokens.some(t => t.address?.toLowerCase() === addrL);
+      if (!inCurated && !inExtras) {
+        setExtraTokens(prev => [
+          ...prev,
+          {
+            symbol: token.symbol,
+            name: token.name,
+            address: token.address as `0x${string}`,
+            logoURI: (token as any).logoURI,
+          },
+        ]);
+      }
+    }
+
     
     // If same token selected, swap them instead
     if (isSameToken) {
@@ -491,7 +498,22 @@ const filteredTokens = mergedTokens;
             />
           </div>
 
+          {/* Status */}
+          {searchTerm.trim() && (
+            <div className="flex items-center gap-2 text-xs text-white/60 py-1">
+              {searching ? (
+                <>
+                  <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                  <span>Searching DEXes…</span>
+                </>
+              ) : (
+                <span>{filteredTokens.length} matches</span>
+              )}
+            </div>
+          )}
+
           {/* Token List */}
+
           <ScrollArea className="h-[26rem] w-full pr-4">
             <div className="space-y-2">
               {filteredTokens.map((token) => (
