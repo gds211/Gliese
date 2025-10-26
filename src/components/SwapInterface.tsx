@@ -156,17 +156,19 @@ const SwapInterface = () => {
   }, [isConnected, sellBal?.value, sellBal?.decimals, sellAmount]);
 
   // --- Search + Filter for token modal (DEX + address + local) ---
- type TokenLite = { symbol: string; name?: string; address?: `0x${string}` };
+ type TokenLite = { symbol: string; name?: string; address?: `0x${string}`; logoURI?: string };
  const filteredTokens: TokenLite[] = useMemo(() => {
    const q = searchTerm.trim().toLowerCase();
    // Empty → show your curated defaults
    if (!q) return tokens;
 
-   const local = tokens.filter((t) =>
-     t.symbol.toLowerCase().includes(q) ||
-     t.name.toLowerCase().includes(q) ||
-     (t.address?.toLowerCase().includes(q) ?? false)
-   );
+   const onlyLetters = !q.startsWith("0x");
+const local = tokens.filter((t) =>
+  t.symbol.toLowerCase().includes(q) ||
+  t.name.toLowerCase().includes(q) ||
+  (!onlyLetters && (t.address?.toLowerCase().includes(q) ?? false))
+);
+
 
    const merged: TokenLite[] = [];
    const seen = new Set<string>();
