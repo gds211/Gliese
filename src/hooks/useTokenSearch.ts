@@ -36,7 +36,20 @@ export function useTokenSearch(query: string, limit: number = 20) {
     queryFn: async () => {
       const q = query.trim();
 
-      // 1) Direct 0x address → read metadata on the connected chain (works on Monad).
+
+     const lower = q.toLowerCase();
+     const onlyLetters = !lower.startsWith("0x");
+     const validAddr = isAddress(q as `0x${string}`);
+
+     const nameMatches = (sym?: any, nm?: any) => {
+       const s = String(sym || "").toLowerCase();
+       const n = String(nm || "").toLowerCase();
+       return s.includes(lower) || n.includes(lower);
+     };
+
+
+
+            // 1) Direct 0x address → read metadata on the connected chain (works on Monad).
       if (q.startsWith("0x") && isAddress(q)) {
         try {
           const [symbol, name] = await Promise.all([
@@ -72,20 +85,25 @@ export function useTokenSearch(query: string, limit: number = 20) {
           }
 
           const out: SearchedToken[] = [];
-          const seen = new Set<string>();
-          const pushAttr = (attr?: any) => {
-            const addr: string | undefined = attr?.address;
-            if (!addr || addr.length !== 42 || !addr.startsWith("0x")) return;
-            const key = addr.toLowerCase();
-            if (seen.has(key)) return;
-            seen.add(key);
-            out.push({
-              symbol: String(attr?.symbol || ""),
-              name: typeof attr?.name === "string" ? attr.name : undefined,
-              address: addr as Address,
-              source: "geckoterminal",
-            });
-          };
+const seen = new Set<string>();
+const pushAttr = (attr?: any) => {
+  const addr: string | undefined = attr?.address;
+  if (!addr || addr.length !== 42 || !addr.startsWith("0x")) return;
+  const key = addr.toLowerCase();
+  if (seen.has(key)) return;
+
+  // NEW: letter‑only searches must match by symbol or name, not address
+  if (onlyLetters && !nameMatches(attr?.symbol, attr?.name)) return;
+
+  seen.add(key);
+  out.push({
+    symbol: String(attr?.symbol || ""),
+    name: typeof attr?.name === "string" ? attr.name : undefined,
+    address: addr as Address,
+    source: "geckoterminal",
+  });
+};
+
 
           for (const pool of Array.isArray(json?.data) ? json.data : []) {
             const baseId = pool?.relationships?.base_token?.data?.id;
@@ -118,20 +136,26 @@ export function useTokenSearch(query: string, limit: number = 20) {
             typeof p?.chainId === "string" && /^\d+$/.test(p.chainId) ? Number(p.chainId) :
             undefined;
 
-          const pushTk = (tk?: any) => {
-            const addr: string | undefined = tk?.address;
-            if (!addr || addr.length !== 42 || !addr.startsWith("0x")) return;
-            if (pChainId !== undefined && pChainId !== chainId) return; // keep current chain if dex gives chainId
-            const key = addr.toLowerCase();
-            if (seen.has(key)) return;
-            seen.add(key);
-            out.push({
-              symbol: String(tk?.symbol || ""),
-              name: typeof tk?.name === "string" ? tk.name : undefined,
-              address: addr as Address,
-              source: "dexscreener",
-            });
-          };
+                const pushTk = (tk?: any) => {
+  const addr: string | undefined = tk?.address;
+  if (!addr || addr.length !== 42 || !addr.startsWith("0x")) return;
+  if (pChainId !== undefined && pChainId !== chainId) return; // keep current chain if dex gives chainId
+  const key = addr.toLowerCase();
+  if (seen.has(key)) return;
+
+  // NEW: letter‑only searches must match by symbol or name, not address
+  if (onlyLetters && !nameMatches(tk?.symbol, tk?.name)) return;
+
+  seen.add(key);
+  out.push({
+    symbol: String(tk?.symbol || ""),
+    name: typeof tk?.name === "string" ? tk.name : undefined,
+    address: addr as Address,
+    logoURI: tk?.iconUrl ?? tk?.imageUrl, // NEW: carry logo URL through
+    source: "dexscreener",
+  });
+};
+
 
           pushTk(p?.baseToken);
           pushTk(p?.quoteToken);
