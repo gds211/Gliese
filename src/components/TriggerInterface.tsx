@@ -11,6 +11,7 @@ import {
 } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogOverlay } from "@/components/ui/dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { useTokenSearch } from "@/hooks/useTokenSearch";
 
 import { ChevronDown, Wallet, Search } from "lucide-react";
 import TokenAvatar from "@/components/TokenAvatar";
@@ -48,16 +49,21 @@ const TriggerInterface = ({
   const [tokenSelectionType, setTokenSelectionType] = useState<"pay" | "receive">("pay");
   const [searchTerm, setSearchTerm] = useState("");
   const [tradeMode, setTradeMode] = useState<"optimized" | "exact">("optimized");
+  const [extraTokens, setExtraTokens] = useState<Array<{ symbol: string; name?: string; address?: `0x${string}`; logoURI?: string }>>([]);
+  const { data: searchResults = [], isLoading: searching } = useTokenSearch(searchTerm);
+  const combinedTokens = useMemo(() => [...tokens, ...extraTokens], [tokens, extraTokens]);
+
 
   const selectedPayToken = useMemo(() => {
-    if (payToken === null) return tokens.find(t => !t.address); // find native MON
-    return tokens.find(t => t.address?.toLowerCase() === payToken.toLowerCase());
-  }, [tokens, payToken]);
-  
-  const selectedReceiveToken = useMemo(() => {
-    if (receiveToken === null) return tokens.find(t => !t.address); // find native MON
-    return tokens.find(t => t.address?.toLowerCase() === receiveToken.toLowerCase());
-  }, [tokens, receiveToken]);
+  if (payToken === null) return combinedTokens.find(t => !t.address);
+  return combinedTokens.find(t => t.address?.toLowerCase() === payToken.toLowerCase());
+}, [combinedTokens, tokens, payToken]);
+
+const selectedReceiveToken = useMemo(() => {
+  if (receiveToken === null) return combinedTokens.find(t => !t.address);
+  return combinedTokens.find(t => t.address?.toLowerCase() === receiveToken.toLowerCase());
+}, [combinedTokens, tokens, receiveToken]);
+
 
   const isNativePay = useMemo(
     () => !!selectedPayToken && (selectedPayToken.symbol === "MON" || !selectedPayToken.address),
@@ -97,11 +103,41 @@ const TriggerInterface = ({
     return symbol.length > 4 ? "w-36" : "w-32";
   };
 
-  const filteredTokens = tokens.filter(
-    (t) =>
-      t.symbol.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      t.name.toLowerCase().includes(searchTerm.toLowerCase())
+
+
+   type TokenLite = { symbol: string; name?: string; address?: `0x${string}`; logoURI?: string };
+
+const mergedTokens = useMemo<TokenLite[]>(() => {
+  const q = searchTerm.trim().toLowerCase();
+  if (!q) return combinedTokens;
+
+  // Local subset (symbol/name only)
+  const local = combinedTokens.filter((t) =>
+    t.symbol.toLowerCase().includes(q) || t.name.toLowerCase().includes(q)
   );
+
+  // Merge [searchResults + local] with de‑duplication by address/symbol
+  const seen = new Set<string>();
+  const merged: TokenLite[] = [];
+  const push = (tk?: TokenLite) => {
+    if (!tk) return;
+    const key = tk.address ? tk.address.toLowerCase() : `symbol:${(tk.symbol || "").toUpperCase()}`;
+    if (seen.has(key)) return;
+    seen.add(key);
+    merged.push(tk);
+  };
+
+  (searchResults as any[]).forEach(push);
+  local.forEach(push);
+  return merged;
+}, [combinedTokens, searchResults, searchTerm]);
+
+const filteredTokens = mergedTokens;
+
+
+
+
+  
 
   function formatAddress(addr: string): string {
     return `${addr.slice(0, 6)}...${addr.slice(-6)}`;
@@ -109,6 +145,23 @@ const TriggerInterface = ({
 
   const handleSwapTokens = () => {
     const temp = payToken;
+     if (token.address) {
+  const addrL = token.address.toLowerCase();
+  const inCurated = tokens.some(t => t.address?.toLowerCase() === addrL);
+  const inExtras  = extraTokens.some(t => t.address?.toLowerCase() === addrL);
+  if (!inCurated && !inExtras) {
+    setExtraTokens(prev => [
+      ...prev,
+      {
+        symbol: token.symbol,
+        name: token.name,
+        address: token.address as `0x${string}`,
+        logoURI: (token as any).logoURI,
+      },
+    ]);
+  }
+}
+
     setPayToken(receiveToken);
     setReceiveToken(temp);
     setPayAmount("");
@@ -450,7 +503,13 @@ const TriggerInterface = ({
                 >
                   <div className="flex items-center">
                     <div className="w-9 h-9 rounded-full bg-white/10 flex items-center justify-center">
-                      <img src={glieseLogo} alt={token.symbol} className="w-6 h-6" />
+                      <TokenAvatar
+                         symbol={token.symbol}
+                         address={token.address as `0x${string}` | undefined}
+                         size={24}
+                         title={token.name || token.symbol}
+                         logoURI={(token as any).logoURI}
+                      />
                     </div>
                     <div className="ml-3 text-left">
                       <div className="font-medium text-white">{token.symbol}</div>
