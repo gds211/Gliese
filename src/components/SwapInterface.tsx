@@ -777,7 +777,16 @@ const selectToken = (picked: string | TokenObj) => {
             />
           </div>
 
-          {/* Token List */}
+
+          {/* Status */}
+           {searchTerm.trim() && (
+             <div className="flex items-center gap-2 text-xs text-white/60 py-1">
+                {searching ? (<><Loader2 className="h-3.5 w-3.5 animate-spin" /> <span>Searching DEXes…</span></>) : (<span>{filteredTokens.length} matches</span>)}
+             </div>
+            )}
+            {/* Token List */}
+
+          
           <ScrollArea className="h-[26rem] w-full pr-4">
             <div className="space-y-2">
               {filteredTokens.map((token) => (
