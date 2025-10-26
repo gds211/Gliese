@@ -18,7 +18,7 @@ import { getDecimals } from "@/lib/decimals";
 import { YAK_ROUTER_ABI } from "@/abi/yakRouter";
 import { useDynamicSlippageBps } from "@/hooks/useDynamicSlippage";
 
-import { ArrowUpDown, Wallet, Search, ChevronDown } from "lucide-react";
+import { ArrowUpDown, Wallet, Search, ChevronDown, Loader2 } from "lucide-react";
 import glieseLogo from "@/assets/gliese-logo.png";
 
 import { PUBLIC_CONFIG } from "@/config/public";
@@ -26,6 +26,7 @@ import { useYakQuote } from "@/hooks/useYakQuote";
 import { performSwap } from "@/lib/swap";
 
 import TokenAvatar from "@/components/TokenAvatar";
+import { useTokenSearch } from "@/hooks/useTokenSearch";
 import SlippageIcon from "@/assets/slippage.png";
 import TriggerInterface from "@/components/TriggerInterface";
 
@@ -109,20 +110,23 @@ const SwapInterface = () => {
   const [showTokenModal, setShowTokenModal] = useState(false);
   const [tokenSelectionType, setTokenSelectionType] = useState<"sell" | "buy">("sell");
   const [searchTerm, setSearchTerm] = useState("");
+  const [extraTokens, setExtraTokens] = useState<Array<{ symbol: string; name?: string; address?: `0x${string}` }>>([]);
+  const { data: searchResults = [], isLoading: searching } = useTokenSearch(searchTerm);
   const [autoSlippage, setAutoSlippage] = useState(
     Boolean((PUBLIC_CONFIG as any).AUTO_SLIPPAGE?.ENABLED_BY_DEFAULT ?? true)
   );
 
-  const selectedSellToken = useMemo(() => {
-    if (sellToken === null) return tokens.find(t => !t.address); // find native MON
-    return tokens.find(t => t.address?.toLowerCase() === sellToken.toLowerCase());
-  }, [tokens, sellToken]);
-  
-  const selectedBuyToken = useMemo(() => {
-    if (buyToken === null) return tokens.find(t => !t.address); // find native MON
-    return tokens.find(t => t.address?.toLowerCase() === buyToken.toLowerCase());
-  }, [tokens, buyToken]);
+ const combinedTokens = useMemo(() => [...tokens, ...extraTokens], [tokens, extraTokens]);
+ const selectedSellToken = useMemo(() => {
+   if (sellToken === null) return combinedTokens.find(t => !t.address) || tokens.find(t => !t.address);
+   return combinedTokens.find(t => t.address?.toLowerCase() === sellToken?.toLowerCase());
+ }, [combinedTokens, tokens, sellToken]);
 
+ const selectedBuyToken = useMemo(() => {
+   if (buyToken === null) return combinedTokens.find(t => !t.address) || tokens.find(t => !t.address);
+   return combinedTokens.find(t => t.address?.toLowerCase() === buyToken?.toLowerCase());
+ }, [combinedTokens, tokens, buyToken]);
+  
   // Treat MON as native when it has no address
   const isNativeSell = useMemo(
     () => !!selectedSellToken && (selectedSellToken.symbol === "MON" || !selectedSellToken.address),
@@ -151,12 +155,34 @@ const SwapInterface = () => {
     }
   }, [isConnected, sellBal?.value, sellBal?.decimals, sellAmount]);
 
-  // --- Filter for token modal ---
-  const filteredTokens = tokens.filter(
-    (t) =>
-      t.symbol.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      t.name.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  // --- Search + Filter for token modal (DEX + address + local) ---
+ type TokenLite = { symbol: string; name?: string; address?: `0x${string}` };
+ const filteredTokens: TokenLite[] = useMemo(() => {
+   const q = searchTerm.trim().toLowerCase();
+   // Empty → show your curated defaults
+   if (!q) return tokens;
+
+   const local = tokens.filter((t) =>
+     t.symbol.toLowerCase().includes(q) ||
+     t.name.toLowerCase().includes(q) ||
+     (t.address?.toLowerCase().includes(q) ?? false)
+   );
+
+   const merged: TokenLite[] = [];
+   const seen = new Set<string>();
+   const push = (tk?: { symbol?: string; name?: string; address?: `0x${string}` }) => {
+     if (!tk) return;
+     const key = tk.address ? (tk.address as string).toLowerCase() : `symbol:${(tk.symbol || "").toUpperCase()}`;
+     if (seen.has(key)) return;
+     seen.add(key);
+     merged.push({ symbol: tk.symbol || "", name: tk.name, address: tk.address });
+   };
+
+   // Merge external search results and local matches (deduped)
+   (searchResults as any[]).forEach(push);
+   local.forEach(push);
+   return merged;
+ }, [searchTerm, tokens, searchResults]);
 
   // --- Quote from Yak (every 2s, 5% slippage, threshold ≥ 0.1%) ---
   const router = PUBLIC_CONFIG.YAK_ROUTER as Address;
@@ -428,6 +454,20 @@ const selectToken = (picked: string | TokenObj) => {
     setShowTokenModal(false);
     return;
   }
+
+
+
+  // Persist dynamically selected tokens (so selectedSellToken/BuyToken can resolve)
+  if (tokenObj.address) {
+    const addrL = tokenObj.address.toLowerCase();
+    const inCurated = tokens.some(t => t.address?.toLowerCase() === addrL);
+    const inExtras  = extraTokens.some(t => t.address?.toLowerCase() === addrL);
+    if (!inCurated && !inExtras) {
+      setExtraTokens(prev => [...prev, { symbol: tokenObj.symbol, name: tokenObj.name, address: tokenObj.address as `0x${string}` }]);
+    }
+  }
+  
+  
 
   // Normal assignment - store address or null for native
   if (tokenSelectionType === "sell") {
