@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, type Dispatch, type SetStateAction } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
@@ -23,6 +23,7 @@ interface Token {
   symbol: string;
   name: string;
   address?: `0x${string}`;
+  logoURI?: string;
 }
 
 interface TriggerInterfaceProps {
@@ -31,14 +32,23 @@ interface TriggerInterfaceProps {
   setPayToken: (token: string | null) => void;
   receiveToken: string | null;
   setReceiveToken: (token: string | null) => void;
+
+  // share dynamic tokens with Instant tab
+  extraTokens: Array<{ symbol: string; name?: string; address?: `0x${string}`; logoURI?: string }>;
+  setExtraTokens: Dispatch<
+    SetStateAction<Array<{ symbol: string; name?: string; address?: `0x${string}`; logoURI?: string }>>
+  >;
 }
+
 
 const TriggerInterface = ({ 
   tokens,
   payToken,
   setPayToken,
   receiveToken,
-  setReceiveToken
+  setReceiveToken,
+  extraTokens,
+  setExtraTokens,
 }: TriggerInterfaceProps) => {
   const { address, isConnected } = useAccount();
   
@@ -49,7 +59,7 @@ const TriggerInterface = ({
   const [tokenSelectionType, setTokenSelectionType] = useState<"pay" | "receive">("pay");
   const [searchTerm, setSearchTerm] = useState("");
   const [tradeMode, setTradeMode] = useState<"optimized" | "exact">("optimized");
-  const [extraTokens, setExtraTokens] = useState<Array<{ symbol: string; name?: string; address?: `0x${string}`; logoURI?: string }>>([]);
+  
   
   const { data: searchResults = [], isLoading: searching } = useTokenSearch(searchTerm);
   const combinedTokens = useMemo(() => [...tokens, ...extraTokens], [tokens, extraTokens]);
