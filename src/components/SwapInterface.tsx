@@ -110,7 +110,10 @@ const SwapInterface = () => {
   const [showTokenModal, setShowTokenModal] = useState(false);
   const [tokenSelectionType, setTokenSelectionType] = useState<"sell" | "buy">("sell");
   const [searchTerm, setSearchTerm] = useState("");
-  const [extraTokens, setExtraTokens] = useState<Array<{ symbol: string; name?: string; address?: `0x${string}` }>>([]);
+  const [extraTokens, setExtraTokens] = useState<
+  Array<{ symbol: string; name?: string; address?: `0x${string}`; logoURI?: string }>
+  >([]);
+
   const { data: searchResults = [], isLoading: searching } = useTokenSearch(searchTerm);
   const [autoSlippage, setAutoSlippage] = useState(
     Boolean((PUBLIC_CONFIG as any).AUTO_SLIPPAGE?.ENABLED_BY_DEFAULT ?? true)
@@ -722,11 +725,14 @@ const selectToken = (picked: string | TokenObj) => {
 
           <TabsContent value="trigger" className="mt-4">
             <TriggerInterface 
-              tokens={tokens}
-              payToken={sellToken}
-              setPayToken={setSellToken}
-              receiveToken={buyToken}
-              setReceiveToken={setBuyToken}
+               tokens={tokens}
+               payToken={sellToken}
+               setPayToken={setSellToken}
+               receiveToken={buyToken}
+               setReceiveToken={setBuyToken}
+               extraTokens={extraTokens}
+               setExtraTokens={setExtraTokens}
+
             />
           </TabsContent>
 
