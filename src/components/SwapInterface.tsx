@@ -435,7 +435,7 @@ const buyAmountDerived = (() => {
 
  // Keep TokenPick/tokensEqual as you already have above.
 
-type TokenObj = { symbol: string; address?: `0x${string}`; name?: string; decimals?: number };
+type TokenObj = { symbol: string; address?: `0x${string}`; name?: string; decimals?: number; logoURI?: string };
 
 const selectToken = (picked: string | TokenObj) => {
   // Normalize to a full token object regardless of how it's called
@@ -465,7 +465,16 @@ const selectToken = (picked: string | TokenObj) => {
     const inCurated = tokens.some(t => t.address?.toLowerCase() === addrL);
     const inExtras  = extraTokens.some(t => t.address?.toLowerCase() === addrL);
     if (!inCurated && !inExtras) {
-      setExtraTokens(prev => [...prev, { symbol: tokenObj.symbol, name: tokenObj.name, address: tokenObj.address as `0x${string}` }]);
+      setExtraTokens(prev => [
+  ...prev,
+  {
+    symbol: tokenObj.symbol,
+    name: tokenObj.name,
+    address: tokenObj.address as `0x${string}`,
+    logoURI: (tokenObj as any).logoURI, // NEW
+  },
+]);
+
     }
   }
   
