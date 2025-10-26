@@ -600,6 +600,7 @@ const selectToken = (picked: string | TokenObj) => {
                       address={selectedSellToken?.address as `0x${string}` | undefined}
                       size={24}
                       title={selectedSellToken?.name || selectedSellToken?.symbol}
+                      logoURI={selectedSellToken?.logoURI as any}
                     />
                   </span>
 
@@ -670,6 +671,7 @@ const selectToken = (picked: string | TokenObj) => {
                     address={selectedBuyToken?.address as `0x${string}` | undefined}
                     size={24}
                     title={selectedBuyToken?.name || selectedBuyToken?.symbol}
+                    logoURI={selectedBuyToken?.logoURI as any}
                   />
                 </span>
 
@@ -801,7 +803,13 @@ const selectToken = (picked: string | TokenObj) => {
                 >
                   <div className="flex items-center">
                     <div className="w-9 h-9 rounded-full bg-white/10 flex items-center justify-center">
-                      <img src={glieseLogo} alt={token.symbol} className="w-6 h-6" />
+                      <TokenAvatar
+                        symbol={token.symbol}
+                        address={token.address as `0x${string}` | undefined}
+                        size={24}
+                        title={token.name || token.symbol}
+                        logoURI={(token as any).logoURI}
+                      />
                     </div>
                     <div className="ml-3 text-left">
                       <div className="font-medium text-white">{token.symbol}</div>
