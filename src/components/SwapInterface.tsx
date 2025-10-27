@@ -17,6 +17,10 @@ import { useNetworkFees } from "@/hooks/useNetworkFees";
 import { getDecimals } from "@/lib/decimals";
 import { YAK_ROUTER_ABI } from "@/abi/yakRouter";
 import { useDynamicSlippageBps } from "@/hooks/useDynamicSlippage";
+import type { Address } from "viem";
+import { useYakSplitQuote } from "@/hooks/useYakSplitQuote";
+import { offerToTrade } from "@/lib/swap";
+import { swapSplitViaExecutor } from "@/lib/swapSplit";
 
 import { ArrowUpDown, Wallet, Search, ChevronDown, Loader2 } from "lucide-react";
 import glieseLogo from "@/assets/gliese-logo.png";
@@ -110,6 +114,7 @@ const SwapInterface = () => {
   const [showTokenModal, setShowTokenModal] = useState(false);
   const [tokenSelectionType, setTokenSelectionType] = useState<"sell" | "buy">("sell");
   const [searchTerm, setSearchTerm] = useState("");
+  const [autoSplit, setAutoSplit] = useState(true); // enable split when better (after gas)
   const [extraTokens, setExtraTokens] = useState<
   Array<{ symbol: string; name?: string; address?: `0x${string}`; logoURI?: string }>
   >([]);
