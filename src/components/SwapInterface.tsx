@@ -17,10 +17,6 @@ import { useNetworkFees } from "@/hooks/useNetworkFees";
 import { getDecimals } from "@/lib/decimals";
 import { YAK_ROUTER_ABI } from "@/abi/yakRouter";
 import { useDynamicSlippageBps } from "@/hooks/useDynamicSlippage";
-import type { Address } from "viem";
-import { useYakSplitQuote } from "@/hooks/useYakSplitQuote";
-import { offerToTrade } from "@/lib/swap";
-import { swapSplitViaExecutor } from "@/lib/swapSplit";
 
 import { ArrowUpDown, Wallet, Search, ChevronDown, Loader2 } from "lucide-react";
 import glieseLogo from "@/assets/gliese-logo.png";
@@ -114,7 +110,6 @@ const SwapInterface = () => {
   const [showTokenModal, setShowTokenModal] = useState(false);
   const [tokenSelectionType, setTokenSelectionType] = useState<"sell" | "buy">("sell");
   const [searchTerm, setSearchTerm] = useState("");
-  const [autoSplit, setAutoSplit] = useState(true); // enable split when better (after gas)
   const [extraTokens, setExtraTokens] = useState<
   Array<{ symbol: string; name?: string; address?: `0x${string}`; logoURI?: string }>
   >([]);
@@ -198,17 +193,6 @@ const local = tokens.filter((t) =>
   const router = PUBLIC_CONFIG.YAK_ROUTER as Address;
   const tokenInArg = selectedSellToken?.address ?? sellToken; // pass address if exists; otherwise symbol "MON"
   const tokenOutArg = selectedBuyToken?.address ?? buyToken;
-
-  const splitPlan = useYakSplitQuote({
-  enabled: Boolean(sellAmount && selectedSellToken && selectedBuyToken),
-  router,
-  tokenIn: tokenInArg,
-  tokenOut: tokenOutArg,
-  amountInHuman: sellAmount || "0",
-  maxSteps: (PUBLIC_CONFIG as any).MAX_STEPS ?? 3,
-  grid: [10,20,30,40,50], // 2-way split grid
-  });
-  
 
   // --- Helper: quote per-unit OUT for an arbitrary human input amount
   const ZERO = "0x0000000000000000000000000000000000000000";
@@ -515,70 +499,45 @@ const selectToken = (picked: string | TokenObj) => {
 
   // === SWAP click ===
   const onClickSwap = async () => {
-  try {
-    if (!isConnected) { openConnectModal?.(); return; }
-    if (!sellAmount || Number(sellAmount) <= 0) throw new Error("Enter an amount.");
-    if (!selectedSellToken || !selectedBuyToken) throw new Error("Select tokens.");
-    if (!quote || quote.minOutRaw === 0n || !quote.path?.length) throw new Error("No route found.");
+    try {
+      if (!isConnected) {
+        openConnectModal?.();
+        return;
+      }
+      if (!sellAmount || Number(sellAmount) <= 0) throw new Error("Enter an amount.");
+      if (!quote || quote.minOutRaw === 0n || !quote.path?.length) throw new Error("No route found.");
+      if (!selectedSellToken || !selectedBuyToken) throw new Error("Select tokens.");
 
-    // Fetch router.MIN_FEE to respect protocol minimum
-    const client = usePublicClient();
-    const minFee = (await client!.readContract({
-      address: router,
-      abi: YAK_ROUTER_ABI,
-      functionName: "MIN_FEE",
-    })) as bigint;
-    const DEFAULT_FEE_BPS = 2n;
-    const FEE_BPS = minFee > DEFAULT_FEE_BPS ? minFee : DEFAULT_FEE_BPS;
+      const inDec = sellBal?.decimals ?? 18;
+      const amountIn = parseUnits(sellAmount, inDec);
 
-    // If a split beats baseline and user wants it — execute via executor (one tx)
-    const executor = (PUBLIC_CONFIG as any).SPLIT_EXECUTOR as Address | undefined;
-    if (autoSplit && splitPlan?.mode === "split" && executor) {
-      const slipBps = Number((PUBLIC_CONFIG as any).SLIPPAGE_BPS ?? 500); // default 5%
-      const partA = splitPlan.parts[0];
-      const partB = splitPlan.parts[1];
+      toast({ title: "Preparing swap...", description: "Checking allowance & building txn" });
 
-      const minOutA = partA.result.grossOut - ((partA.result.grossOut * BigInt(slipBps)) / 10000n);
-      const minOutB = partB.result.grossOut - ((partB.result.grossOut * BigInt(slipBps)) / 10000n);
-      const minTotal = minOutA + minOutB;
-
-      const tradeA = offerToTrade(partA.result.offer, partA.result.offer.amounts[0], minOutA);
-      const tradeB = offerToTrade(partB.result.offer, partB.result.offer.amounts[0], minOutB);
-
-      const tokenInIsNative  = !selectedSellToken?.address; // MON/native if no address
-      const tokenOutIsNative = !selectedBuyToken?.address;
-
-      toast({ title: "Submitting split swap...", description: "One tx, two legs, combined min-out enforced." });
-
-      const rcpt = await swapSplitViaExecutor({
-        executor,
-        yakRouter: router,
-        tokenIn:  tokenInIsNative  ? null : (selectedSellToken.address as Address),
-        tokenOut: tokenOutIsNative ? null : (selectedBuyToken.address as Address),
-        feeBps: FEE_BPS,
-        trades: [
-          { amountIn: tradeA.amountIn, minOut: tradeA.amountOut, path: tradeA.path, adapters: tradeA.adapters },
-          { amountIn: tradeB.amountIn, minOut: tradeB.amountOut, path: tradeB.path, adapters: tradeB.adapters },
-        ],
-        minTotalOut: minTotal,
+      const receipt = await performSwap({
+        router,
+        tokenIn: selectedSellToken.address ?? selectedSellToken.symbol, // "MON" is fine here for native detection
+        tokenOut: selectedBuyToken.address ?? selectedBuyToken.symbol,
+        amountIn,
+        amountOutMin: minOutRawDynamic, // dynamic, size-aware (hard-capped) slippage
+        path: quote.path,
+        adapters: quote.adapters,
       });
 
-      toast({ title: "Split swap confirmed ✅", description: `Tx: ${String(rcpt.transactionHash).slice(0,10)}…` });
-      setSellAmount(""); // optional reset
-      return;
+      toast({
+        title: "Swap confirmed ✅",
+        description: `Tx: ${receipt.transactionHash.slice(0, 10)}…`,
+      });
+
+      // Instant balance refresh
+      const status = (receipt as any)?.status;
+      if (status === "success" || status === 1 || status === "0x1") {
+        await refreshBalances();
+      }
+    } catch (err: any) {
+      const msg = err?.shortMessage || err?.message || String(err);
+      toast({ title: "Swap failed", description: msg });
     }
-
-    // Fallback: your existing single-route flow
-    // (this uses quote.minOutRawDynamic etc. — keep your current code)
-    // -----------------------------------------
-    // ... your existing performSwap(...) call ...
-    // -----------------------------------------
-
-  } catch (e: any) {
-    toast({ title: "Swap failed", variant: "destructive", description: (e?.shortMessage || e?.message || String(e)) });
-  }
-};
-
+  };
 
   return (
     <Card className="w-full max-w-md mx-auto bg-muted/40 backdrop-blur-md border border-muted/60 shadow-2xl">

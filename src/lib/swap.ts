@@ -23,27 +23,6 @@ export type SwapArgs = {
   adapters: Address[];
 };
 
-export type YakTrade = {
-  amountIn: bigint;
-  amountOut: bigint;
-  path: Address[];
-  adapters: Address[];
-};
-
-export function offerToTrade(
-  offer: { amounts: bigint[]; adapters: Address[]; path: Address[] },
-  amountIn: bigint,
-  minOut: bigint
-): YakTrade {
-  return {
-    amountIn,
-    amountOut: minOut,
-    path: offer.path as Address[],
-    adapters: offer.adapters as Address[],
-  };
-}
-
-
 // ===== Internals =====
 
 const ZERO = "0x0000000000000000000000000000000000000000" as Address;
