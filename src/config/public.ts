@@ -28,9 +28,12 @@ export const PUBLIC_CONFIG = {
   QUOTE_POLL_MS: 1000,                     // poll quotes every 1s
   UPDATE_THRESHOLD_BPS: 1n,               // 0 bps
   SLIPPAGE_BPS: 500n,                      // 5%
-  // --- Multicall3 (read batching) ---
-  MULTICALL3_ADDRESS: "0xcA11bde05977b3631167028862bE2a173976CA11" as const, // verify on your chain
-  MULTICALL3_GAS_LIMIT: 0n, // 0 means forward all; keep for reads
+  // --- Multicall3 (read batching for split quotes) ---
+MULTICALL3_ADDRESS: "0xcA11bde05977b3631167028862bE2a173976CA11", 
+
+// --- Split executor (one-tx split execution) ---
+SPLIT_EXECUTOR: "0x8F3f98Ded6B078fb4970D5BaC3Dd9Fa33adB60f4",
+
 
 
   // --- Dynamic (auto) slippage config: adaptive + EWMA
