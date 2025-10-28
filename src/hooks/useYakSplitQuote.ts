@@ -6,6 +6,7 @@ import { usePublicClient } from "wagmi";
 import { YAK_ROUTER_ABI } from "@/abi/yakRouter";
 import { PUBLIC_CONFIG } from "@/config/public";
 import { useNetworkFees } from "@/hooks/useNetworkFees";
+import { getDecimals } from "@/lib/decimals";
 
 // --- Types mirrored from your UI ---
 export type YakFormattedOffer = {
@@ -140,8 +141,10 @@ export function useYakSplitQuote(params: {
         // Inputs
         const gasWei   = (fees?.effectiveGasPriceWei ?? (PUBLIC_CONFIG as any).GAS_PRICE_WEI_FALLBACK ?? 60_000_000_000n) as bigint;
         const maxSteps = Number((PUBLIC_CONFIG as any).MAX_STEPS ?? 4);
-        const decimals = Number((PUBLIC_CONFIG as any).NATIVE_DECIMALS ?? 18); // if you track per-token decimals, use them here
-        const amountIn = parseUnits(amountInHuman || "0", decimals);
+        const tokenInAddr = isNative(tokenIn as string) ? wnative : asAddress(tokenIn as string);
+
+        const tokenInDecimals = await getDecimals(client!, tokenInAddr);
+        const amountIn = parseUnits(amountInHuman || "0", tokenInDecimals);
 
         // Fetch effective fee once
         const effectiveFeeBps = await getEffectiveFeeBps(client, router);
