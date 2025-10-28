@@ -52,6 +52,92 @@ async function getEffectiveFeeBps(): Promise<bigint> {
   return minFee > cfg ? minFee : cfg;
 }
 
+// Back‑compat single‑route swap used by SwapInterface.tsx
+// Matches the call signature used in the component.
+export async function performSwap(args: {
+  router: Address | string;
+  tokenIn: Address | string;   // address or native symbol (e.g., "MON")
+  tokenOut: Address | string;  // not required for execution; end of path is authoritative
+  amountIn: bigint;
+  amountOutMin: bigint;
+  path: Address[];
+  adapters: Address[];
+}) {
+  const { address } = getAccount(config);
+  if (!address) throw new Error("Wallet not connected");
+
+  // Build the Yak trade tuple used by the router
+  const trade: YakTrade = {
+    amountIn: args.amountIn,
+    amountOut: args.amountOutMin,
+    path: args.path,
+    adapters: args.adapters,
+  };
+
+  // Use the same effective fee logic as your quotes
+  const feeBps = await getEffectiveFeeBps();
+
+  if (isNative(args.tokenIn as string)) {
+    // Native-in: first hop MUST be WRAPPED_NATIVE
+    const wnative = (PUBLIC_CONFIG.WRAPPED_NATIVE as string).toLowerCase();
+    if (!args.path?.length || args.path[0].toLowerCase() !== wnative) {
+      throw new Error("Invalid path for native input: first hop must be WRAPPED_NATIVE.");
+    }
+
+    const hash = await writeContract(config, {
+      account: address,
+      address: args.router as Address,
+      abi: YAK_ROUTER_ABI,
+      functionName: "swapNoSplitFromAVAX",
+      args: [trade, address, feeBps],
+      value: args.amountIn, // msg.value == amountIn for native flow
+    });
+
+    // return full receipt (UI uses .transactionHash)
+    return await waitForTransactionReceipt(config, { hash });
+  } else {
+    // ERC20-in: ensure allowance to the ROUTER (not the split executor)
+    const token = args.tokenIn as Address;
+    const current = (await readContract(config, {
+      address: token,
+      abi: ERC20_ABI,
+      functionName: "allowance",
+      args: [address, args.router as Address],
+    })) as bigint;
+
+    if (current < args.amountIn) {
+      // Approve safely (zero then set) to handle non‑standard ERC‑20s
+      let hash = await writeContract(config, {
+        account: address,
+        address: token,
+        abi: ERC20_ABI,
+        functionName: "approve",
+        args: [args.router as Address, 0n],
+      });
+      await waitForTransactionReceipt(config, { hash });
+
+      hash = await writeContract(config, {
+        account: address,
+        address: token,
+        abi: ERC20_ABI,
+        functionName: "approve",
+        args: [args.router as Address, args.amountIn],
+      });
+      await waitForTransactionReceipt(config, { hash });
+    }
+
+    const hash = await writeContract(config, {
+      account: address,
+      address: args.router as Address,
+      abi: YAK_ROUTER_ABI,
+      functionName: "swapNoSplit",
+      args: [trade, address, feeBps],
+    });
+
+    return await waitForTransactionReceipt(config, { hash });
+  }
+}
+
 export async function executeSwap(args: {
   plan: SplitPlan;                // best plan from useYakSplitQuote (already fee+slippage adjusted)
   tokenIn: Address | string;
