@@ -2,176 +2,96 @@
 import type { Address, Hash } from "viem";
 import {
   getAccount,
-  getPublicClient,
   writeContract,
   waitForTransactionReceipt,
 } from "wagmi/actions";
 import { config } from "@/config/wagmi";
 import { ERC20_ABI } from "@/abi/erc20";
 import { YAK_ROUTER_ABI } from "@/abi/yakRouter";
+import { YAK_SPLIT_EXECUTOR_ABI } from "@/abi/yakSplitExecutor";
 import { PUBLIC_CONFIG } from "@/config/public";
+import type { SplitPlan, YakTrade } from "@/hooks/useYakSplitQuote";
 
-// ===== Types =====
+const ZERO: Address = "0x0000000000000000000000000000000000000000";
+const isNative = (s?: string) =>
+  !s || s.toUpperCase() === PUBLIC_CONFIG.NATIVE_SYMBOL || s === ZERO;
 
-export type SwapArgs = {
-  router: Address;
-  tokenIn?: string;   // "MON" or address
-  tokenOut?: string;  // symbol or address
-  amountIn: bigint;
-  amountOutMin: bigint;
-  path: Address[];
-  adapters: Address[];
-};
+const MAX_UINT = 2n ** 256n - 1n;
 
-// ===== Internals =====
-
-const ZERO = "0x0000000000000000000000000000000000000000" as Address;
-
-const isNative = (v?: string) =>
-  !v || v.toUpperCase() === PUBLIC_CONFIG.NATIVE_SYMBOL || v === ZERO;
-
-const toQuoteAddr = (v?: string) =>
-  (isNative(v) ? (PUBLIC_CONFIG.WRAPPED_NATIVE as Address) : (v as Address));
-
-async function ensureAllowance(
-  client: any,
-  token: Address,
-  owner: Address,
-  spender: Address,
-  needed: bigint
-) {
-  const current = (await client.readContract({
-    abi: ERC20_ABI,
+// Pulls allowance logic out for re-use
+async function ensureAllowance(token: Address, owner: Address, spender: Address, amount: bigint) {
+  const { readContract, writeContract, waitForTransactionReceipt } = await import("wagmi/actions");
+  const current: bigint = await readContract(config, {
     address: token,
+    abi: ERC20_ABI,
     functionName: "allowance",
     args: [owner, spender],
-  })) as bigint;
+  }) as bigint;
 
-  if (current >= needed) return;
+  if (current >= amount) return;
+
+  // Set exact allowance to be conservative (or MAX_UINT if you prefer UX)
+  let hash: Hash = await writeContract(config, {
+    address: token, abi: ERC20_ABI, functionName: "approve", args: [spender, 0n],
+  });
+  await waitForTransactionReceipt(config, { hash });
+
+  hash = await writeContract(config, {
+    address: token, abi: ERC20_ABI, functionName: "approve", args: [spender, amount],
+  });
+  await waitForTransactionReceipt(config, { hash });
+}
+
+export async function executeSwap(args: {
+  plan: SplitPlan;                // best plan from useYakSplitQuote
+  tokenIn: Address | string;
+  tokenOut: Address | string;
+  unwrapNativeOut?: boolean;      // if true and tokenOut==WNATIVE → unwrap to native
+  feeBps?: number;                // will be clamped by router.MIN_FEE in the executor
+}): Promise<{ hash: Hash }> {
+  const { address } = getAccount(config);
+  if (!address) throw new Error("Wallet not connected");
+
+  const router = PUBLIC_CONFIG.YAK_ROUTER as Address;
+  const executor = PUBLIC_CONFIG.SPLIT_EXECUTOR as Address;
+  if (!router) throw new Error("Missing PUBLIC_CONFIG.YAK_ROUTER");
+  if (!executor) throw new Error("Missing PUBLIC_CONFIG.SPLIT_EXECUTOR");
+
+  const wnative = PUBLIC_CONFIG.WRAPPED_NATIVE as Address;
+  const isInNative = isNative(args.tokenIn as string);
+  const isOutNative = isNative(args.tokenOut as string);
+  const unwrapOut = !!args.unwrapNativeOut && isOutNative;
+
+  const FEE_BPS = BigInt(args.feeBps ?? (PUBLIC_CONFIG.QUOTE?.FEE_BPS ?? 0));
+
+  // Calculate totals
+  const totalIn = args.plan.legs.reduce((acc, l) => acc + l.amountIn, 0n);
+  const trades: YakTrade[] = args.plan.legs.map(l => l.trade);
+
+  if (isInNative) {
+    // Native-in path uses splitSwapNative (msg.value == totalIn). Each trade.path[0] must be WNATIVE.
+    const txHash = await writeContract(config, {
+      account: address,
+      address: executor,
+      abi: YAK_SPLIT_EXECUTOR_ABI,
+      functionName: "splitSwapNative",
+      args: [trades, address, FEE_BPS, args.plan.totalAmountOut, unwrapOut],
+      value: totalIn,
+    });
+    return { hash: txHash };
+  }
+
+  // ERC20-in: ensure allowance to the executor (not the router)
+  const tokenInAddr = args.plan.legs[0].offer.path[0] as Address;
+  await ensureAllowance(tokenInAddr, address, executor, totalIn);
 
   const txHash = await writeContract(config, {
-    abi: ERC20_ABI,
-    address: token,
-    functionName: "approve",
-    args: [spender, needed],
-    account: owner,
-  });
-
-  await waitForTransactionReceipt(config, { hash: txHash });
-}
-
-function assertRouteShape(path: Address[], adapters: Address[]) {
-  if (!path?.length || adapters?.length !== path.length - 1) {
-    throw new Error("Invalid route (path/adapters mismatch).");
-  }
-}
-
-export async function performSwap(args: SwapArgs) {
-  const { address } = getAccount(config);
-  if (!address) throw new Error("Wallet not connected.");
-
-  const router = args.router as Address;
-  const client = getPublicClient(config);
-
-  const inIsNative  = isNative(args.tokenIn);
-  const outIsNative = isNative(args.tokenOut);
-
-  const tokenInAddr = toQuoteAddr(args.tokenIn) as Address;
-
-  assertRouteShape(args.path, args.adapters);
-
-  // ----- Ensure allowance for ERC-20 input -----
-  if (!inIsNative) {
-    await ensureAllowance(client, tokenInAddr, address, router, args.amountIn);
-  }
-
-  // ----- Trade struct -----
-  const trade = {
-    amountIn:  args.amountIn,
-    amountOut: args.amountOutMin, // minOut (slippage already applied by the hook)
-    path:      args.path,
-    adapters:  args.adapters,
-  } as const;
-
-  // ----- Read MIN_FEE & WNATIVE from router (avoid config drift) -----
-  const [minFee, routerWnative] = await Promise.all([
-    client.readContract({ address: router, abi: YAK_ROUTER_ABI, functionName: "MIN_FEE" }) as Promise<bigint>,
-    client.readContract({ address: router, abi: YAK_ROUTER_ABI, functionName: "WNATIVE" }) as Promise<Address>,
-  ]);
-
-  // Fail early if your config WNATIVE doesn't match the router
-  const cfgWN = PUBLIC_CONFIG.WRAPPED_NATIVE.toLowerCase();
-  if (cfgWN !== routerWnative.toLowerCase()) {
-    throw new Error(
-      `WRAPPED_NATIVE mismatch: config=${PUBLIC_CONFIG.WRAPPED_NATIVE} router.WNATIVE=${routerWnative}. ` +
-      `Fix PUBLIC_CONFIG.WRAPPED_NATIVE to match the router deployment.`
-    );
-  }
-
-  // Yak fee denominator is 1e4; use the higher of our default (2 bps) or router.MIN_FEE.
-  const DEFAULT_FEE_BPS = 2n;
-  const FEE_BPS = minFee > DEFAULT_FEE_BPS ? minFee : DEFAULT_FEE_BPS;
-
-  // ----- Choose function name & value -----
-  let functionName: "swapNoSplit" | "swapNoSplitFromAVAX" | "swapNoSplitToAVAX" = "swapNoSplit";
-  let value: bigint | undefined = undefined;
-
-  if (inIsNative && !outIsNative) {
-    if (args.path[0].toLowerCase() !== routerWnative.toLowerCase()) {
-      throw new Error("Route invalid for native input: path[0] must equal router.WNATIVE.");
-    }
-    functionName = "swapNoSplitFromAVAX";
-    value = args.amountIn;
-  } else if (!inIsNative && outIsNative) {
-    const last = args.path[args.path.length - 1];
-    if (last.toLowerCase() !== routerWnative.toLowerCase()) {
-      throw new Error("Route invalid for native output: last path hop must equal router.WNATIVE.");
-    }
-    functionName = "swapNoSplitToAVAX";
-  } else {
-    functionName = "swapNoSplit";
-  }
-
-  // ----- Preflight simulation (catch Yak revert reasons *before* opening wallet) -----
-  try {
-    await client.simulateContract({
-      account: address,
-      address: router,
-      abi: YAK_ROUTER_ABI,
-      functionName,
-      args: [trade, address, FEE_BPS],
-      value,
-    });
-  } catch (e: any) {
-    const msg = (e?.shortMessage || e?.message || String(e)).toLowerCase();
-    if (msg.includes("invalid max-steps")) {
-      throw new Error("YakRouter revert: Invalid max-steps (must be 1..4).");
-    }
-    if (msg.includes("insufficient output amount")) {
-      throw new Error("YakRouter revert: Insufficient output amount. Refresh your quote or increase slippage.");
-    }
-    if (msg.includes("insufficient fee")) {
-      throw new Error(`YakRouter revert: Insufficient fee. Router MIN_FEE=${minFee} bps; using ${FEE_BPS} bps.`);
-    }
-    if (msg.includes("begin with wavax")) {
-      throw new Error("YakRouter revert: Path must begin with WNATIVE for native input.");
-    }
-    if (msg.includes("end with wavax")) {
-      throw new Error("YakRouter revert: Path must end with WNATIVE for native output.");
-    }
-    throw e;
-  }
-
-  // ----- Actual write -----
-  const txHash: Hash = await writeContract(config, {
     account: address,
-    address: router,
-    abi: YAK_ROUTER_ABI,
-    functionName,
-    args: [trade, address, FEE_BPS],
-    value,
+    address: executor,
+    abi: YAK_SPLIT_EXECUTOR_ABI,
+    functionName: "splitSwapERC20",
+    args: [trades, address, FEE_BPS, args.plan.totalAmountOut, unwrapOut],
   });
 
-  const receipt = await waitForTransactionReceipt(config, { hash: txHash });
-  return receipt;
+  return { hash: txHash };
 }
