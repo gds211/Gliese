@@ -130,6 +130,73 @@ export const YAK_ROUTER_ABI = [
     outputs: [],
   },
 
+   // --- Split swaps ---
+  {
+    type: "function",
+    name: "swapSplit",
+    stateMutability: "nonpayable",
+    inputs: [
+      {
+        name: "_trades",
+        type: "tuple[]",
+        components: [
+          { name: "amountIn",  type: "uint256" },
+          { name: "amountOut", type: "uint256" }, // not enforced by router; kept for ABI parity
+          { name: "path",      type: "address[]" },
+          { name: "adapters",  type: "address[]" },
+        ],
+      },
+      { name: "_to",                  type: "address" },
+      { name: "_fee",                 type: "uint256" },
+      { name: "_minTotalAmountOut",   type: "uint256" },
+    ],
+    outputs: [],
+  },
+  {
+    type: "function",
+    name: "swapSplitFromAVAX",
+    stateMutability: "payable",
+    inputs: [
+      {
+        name: "_trades",
+        type: "tuple[]",
+        components: [
+          { name: "amountIn",  type: "uint256" },
+          { name: "amountOut", type: "uint256" },
+          { name: "path",      type: "address[]" },
+          { name: "adapters",  type: "address[]" },
+        ],
+      },
+      { name: "_to",                  type: "address" },
+      { name: "_fee",                 type: "uint256" },
+      { name: "_minTotalAmountOut",   type: "uint256" },
+    ],
+    outputs: [],
+  },
+  {
+    type: "function",
+    name: "swapSplitToAVAX",
+    stateMutability: "nonpayable",
+    inputs: [
+      {
+        name: "_trades",
+        type: "tuple[]",
+        components: [
+          { name: "amountIn",  type: "uint256" },
+          { name: "amountOut", type: "uint256" },
+          { name: "path",      type: "address[]" },
+          { name: "adapters",  type: "address[]" },
+        ],
+      },
+      { name: "_to",                  type: "address" },
+      { name: "_fee",                 type: "uint256" },
+      { name: "_minTotalAmountOut",   type: "uint256" },
+    ],
+    outputs: [],
+  },
+
+  
+
   // Optional helper reads if you want:
   { type: "function", name: "WNATIVE", stateMutability: "view", inputs: [], outputs: [{ type: "address" }] },
   { type: "function", name: "MIN_FEE", stateMutability: "view", inputs: [], outputs: [{ type: "uint256" }] },
