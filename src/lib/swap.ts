@@ -21,7 +21,24 @@ export type SwapArgs = {
   amountOutMin: bigint;
   path: Address[];
   adapters: Address[];
+  split?: SplitPlanArgs;
 };
+
+// --- Split trading types (new) ---
+export type SplitTradeInput = {
+  amountIn: bigint;
+  amountOut: bigint;  // informational; router does not enforce per-leg amountOut
+  path: Address[];
+  adapters: Address[];
+};
+
+export type SplitPlanArgs = {
+  trades: SplitTradeInput[]; // exactly 2 routes for now (UI side)
+  minTotalOut: bigint;       // aggregate slippage guard from the quote hook
+  fromNative: boolean;       // input is native (e.g., AVAX -> WNATIVE first)
+  toNative: boolean;         // output ends as native (WNATIVE -> AVAX at the end)
+};
+
 
 // ===== Internals =====
 
@@ -163,15 +180,36 @@ export async function performSwap(args: SwapArgs) {
   }
 
   // ----- Actual write -----
-  const txHash: Hash = await writeContract(config, {
+   // === single-route path (unchanged) ===
+  if (!args.split) {
+    const txHash = await writeContract(config, {
+      account: address,
+      address: router,
+      abi: YAK_ROUTER_ABI,
+      functionName: functionNameNoSplit,
+      args: [trade, address, FEE_BPS],
+      value,
+    });
+    return waitForTransactionReceipt(config, { hash: txHash });
+  }
+
+  // === split path (new) ===
+  const { trades, minTotalOut, fromNative, toNative } = args.split;
+  const fn: "swapSplit" | "swapSplitFromAVAX" | "swapSplitToAVAX" =
+    fromNative ? "swapSplitFromAVAX" : toNative ? "swapSplitToAVAX" : "swapSplit";
+
+  const valueForFromNative = fromNative
+    ? trades.reduce((acc, t) => acc + t.amountIn, 0n)
+    : undefined;
+
+  const txHash = await writeContract(config, {
     account: address,
     address: router,
     abi: YAK_ROUTER_ABI,
-    functionName,
-    args: [trade, address, FEE_BPS],
-    value,
+    functionName: fn,
+    args: [trades, address, FEE_BPS, minTotalOut],
+    value: valueForFromNative,
   });
-
   const receipt = await waitForTransactionReceipt(config, { hash: txHash });
   return receipt;
 }
