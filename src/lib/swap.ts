@@ -1,5 +1,5 @@
 // src/lib/swap.ts
-import type { Address, Hash } from "viem";
+import { encodeFunctionData, type Address, type Hash } from "viem";
 import {
   getAccount,
   getPublicClient,
@@ -9,6 +9,7 @@ import {
 import { config } from "@/config/wagmi";
 import { ERC20_ABI } from "@/abi/erc20";
 import { YAK_ROUTER_ABI } from "@/abi/yakRouter";
+import { MULTICALL3_ABI } from "@/abi/multicall3";
 import { PUBLIC_CONFIG } from "@/config/public";
 
 // ===== Types =====
@@ -174,4 +175,73 @@ export async function performSwap(args: SwapArgs) {
 
   const receipt = await waitForTransactionReceipt(config, { hash: txHash });
   return receipt;
+
+  export type SplitLeg = {
+  // Quote-derived fields for one leg
+  amountIn: bigint;                   // in base units of native (e.g., 1e18)
+  minAmountOut: bigint;               // per-leg minOut
+  path: Address[];                    // as returned by Yak quote (first must be WRAPPED_NATIVE)
+  adapters: Address[];                // as returned by Yak quote
+};
+
+export async function performSplitSwapViaMulticall(args: {
+  legs: SplitLeg[];
+  to: Address;
+  feeBps?: number;                    // defaults to PUBLIC_CONFIG.YAK.FEE_BPS if present, else 0
+}): Promise<import("viem").TransactionReceipt> {
+  const { address } = getAccount(config);
+  if (!address) throw new Error("Wallet not connected.");
+
+  if (!Array.isArray(args.legs) || args.legs.length < 2) {
+    throw new Error("Provide at least two legs for a split.");
+  }
+
+  const router  = PUBLIC_CONFIG.YAK_ROUTER as Address;
+  const wnative = PUBLIC_CONFIG.WRAPPED_NATIVE as Address;
+  const feeBps  = BigInt((PUBLIC_CONFIG as any).YAK?.FEE_BPS ?? args.feeBps ?? 0);
+
+  // Multicall address
+  const multicall = PUBLIC_CONFIG.MULTICALL3_ADDRESS as Address;
+  if (!multicall) throw new Error("MULTICALL3_ADDRESS missing in PUBLIC_CONFIG.");
+
+  // Build YakRouter calldata for each leg
+  const calls = args.legs.map((leg) => {
+    if (!leg.path?.length || leg.path[0].toLowerCase() !== wnative.toLowerCase()) {
+      throw new Error("Each leg must be native-in: path[0] must be WRAPPED_NATIVE.");
+    }
+    const trade = {
+      amountIn:  leg.amountIn,
+      amountOut: leg.minAmountOut,  // Yak's Trade.amountOut is minOut
+      path:      leg.path,
+      adapters:  leg.adapters,
+    } as const;
+
+    const callData = encodeFunctionData({
+      abi: YAK_ROUTER_ABI,
+      functionName: "swapNoSplitFromAVAX", // payable; wraps native and sets _from = address(this)
+      args: [trade, args.to, feeBps],
+    });
+
+    return {
+      target: router,
+      allowFailure: false,
+      value: leg.amountIn, // per-call msg.value (native in)
+      callData,
+    } as const;
+  });
+
+  const totalValue = calls.reduce((acc, c) => acc + c.value, 0n);
+
+  const txHash: Hash = await writeContract(config, {
+    account: address,
+    address: multicall,
+    abi: MULTICALL3_ABI,
+    functionName: "aggregate3Value",
+    args: [calls],
+    value: totalValue,
+  });
+
+  const receipt = await waitForTransactionReceipt(config, { hash: txHash });
+  return receipt;
+
 }
