@@ -7,6 +7,7 @@ import { YAK_ROUTER_ABI } from "@/abi/yakRouter";
 import { PUBLIC_CONFIG } from "@/config/public";
 import { useNetworkFees } from "@/hooks/useNetworkFees";
 
+// --- Types mirrored from your UI ---
 export type YakFormattedOffer = {
   amounts: bigint[];
   adapters: Address[];
@@ -16,7 +17,7 @@ export type YakFormattedOffer = {
 
 export type YakTrade = {
   amountIn: bigint;
-  amountOut: bigint;    // minOut for slippage guard
+  amountOut: bigint;    // per-leg minOut
   path: Address[];
   adapters: Address[];
 };
@@ -32,17 +33,64 @@ export type SplitPlan = {
   kind: "single" | "split2";
   legs: SplitLeg[];
   totalAmountIn: bigint;
-  totalAmountOut: bigint; // sum of minOuts (pre-slippage or already applied)
-  assumedGas: bigint;     // raw gasEstimate sum (informational)
+  totalAmountOut: bigint; // sum of per-leg minOut (fee + slippage adjusted)
+  assumedGas: bigint;
 };
 
+const ZERO: Address = "0x0000000000000000000000000000000000000000";
 const asAddress = (v: string) => v as Address;
-const toBps = (pct: number) => Math.round(pct * 100);
+const isNative = (v?: string) =>
+  !v || v.toUpperCase() === PUBLIC_CONFIG.NATIVE_SYMBOL || v === ZERO;
 
-function toTrade(offer: YakFormattedOffer, amountIn: bigint, slippageBps: number): YakTrade {
+// Clamp fee on the client to avoid per-leg minOut mismatch with router fee
+async function getEffectiveFeeBps(client: ReturnType<typeof usePublicClient> | null, router: Address): Promise<number> {
+  try {
+    const minFee = (await client?.readContract({
+      address: router,
+      abi: YAK_ROUTER_ABI,
+      functionName: "MIN_FEE",
+      args: [],
+    })) as bigint | undefined;
+    const cfg = BigInt((PUBLIC_CONFIG as any).QUOTE?.FEE_BPS ?? 0);
+    const eff = (minFee ?? 0n) > cfg ? (minFee ?? 0n) : cfg;
+    const n = Number(eff);
+    // Safety: fee must be <= 10000
+    return n > 10000 ? 10000 : n;
+  } catch {
+    const cfg = (PUBLIC_CONFIG as any).QUOTE?.FEE_BPS ?? 0;
+    return Math.min(10000, Number(cfg));
+  }
+}
+
+function toMinOutWithFeeAndSlippage(rawOut: bigint, feeBps: number, slippageBps: number): bigint {
+  const FEE_DEN = 10_000n;
+  const feeAdj  = (rawOut * (FEE_DEN - BigInt(feeBps))) / FEE_DEN;
+  const slipAdj = (feeAdj * (FEE_DEN - BigInt(slippageBps))) / FEE_DEN;
+  return slipAdj;
+}
+
+function toTrade(offer: YakFormattedOffer, amountIn: bigint, effectiveFeeBps: number, slippageBps: number): YakTrade {
   const rawOut = offer.amounts[offer.amounts.length - 1];
-  const minOut = rawOut - (rawOut * BigInt(slippageBps)) / 10_000n;
+  const minOut = toMinOutWithFeeAndSlippage(rawOut, effectiveFeeBps, slippageBps);
   return { amountIn, amountOut: minOut, path: offer.path, adapters: offer.adapters };
+}
+
+async function quoteOne(
+  client: ReturnType<typeof usePublicClient>,
+  router: Address,
+  amountIn: bigint,
+  tokenIn: Address,
+  tokenOut: Address,
+  gasPriceWei: bigint,
+  maxSteps: number
+): Promise<YakFormattedOffer> {
+  const offer = await client.readContract({
+    address: router,
+    abi: YAK_ROUTER_ABI,
+    functionName: "findBestPathWithGas",
+    args: [amountIn, tokenIn, tokenOut, BigInt(maxSteps), gasPriceWei],
+  }) as YakFormattedOffer;
+  return offer;
 }
 
 export function useYakSplitQuote(params: {
@@ -57,9 +105,9 @@ export function useYakSplitQuote(params: {
     tokenIn,
     tokenOut,
     amountInHuman = "0",
-    slippageBps = PUBLIC_CONFIG.QUOTE?.SLIPPAGE_BPS ?? 100, // 1%
+    slippageBps = Number((PUBLIC_CONFIG as any).SLIPPAGE_BPS ?? 100), // default 1%
     enabled = true,
-    pollingMs = PUBLIC_CONFIG.QUOTE_POLL_MS ?? 5000,
+    pollingMs = Number((PUBLIC_CONFIG as any).QUOTE_POLL_MS ?? 1000),
   } = params;
 
   const client = usePublicClient();
@@ -67,91 +115,94 @@ export function useYakSplitQuote(params: {
   const [plan, setPlan] = useState<SplitPlan | null>(null);
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  const router = PUBLIC_CONFIG?.YAK_ROUTER as Address;
-  const wnative = PUBLIC_CONFIG?.WRAPPED_NATIVE as Address;
-  const isNative = (v?: string) => !v || v.toUpperCase() === PUBLIC_CONFIG.NATIVE_SYMBOL || v === "0x0000000000000000000000000000000000000000";
+  const router = PUBLIC_CONFIG.YAK_ROUTER as Address;
+  const wnative = PUBLIC_CONFIG.WRAPPED_NATIVE as Address;
 
-  // Resolve quote addresses
-  const tokenInAddr = useMemo(() => isNative(tokenIn as string) ? wnative : asAddress(tokenIn as string), [tokenIn, wnative]);
-  const tokenOutAddr = useMemo(() => isNative(tokenOut as string) ? wnative : asAddress(tokenOut as string), [tokenOut, wnative]);
+  // Resolve quote token addresses (native is represented as WNATIVE on router paths)
+  const tokenInAddr = useMemo(
+    () => isNative(tokenIn as string) ? wnative : asAddress(tokenIn as string),
+    [tokenIn, wnative]
+  );
+  const tokenOutAddr = useMemo(
+    () => isNative(tokenOut as string) ? wnative : asAddress(tokenOut as string),
+    [tokenOut, wnative]
+  );
 
   useEffect(() => {
-    if (!enabled || !client || !router || !tokenInAddr || !tokenOutAddr) return;
-
     let dead = false;
     const run = async () => {
       try {
-        const maxSteps = PUBLIC_CONFIG.QUOTE?.MAX_STEPS ?? 3;
-        const gasPrice = fees?.effectiveGasPriceWei ?? 0n;
-        const decimalsIn = BigInt(PUBLIC_CONFIG.NATIVE_DECIMALS); // or fetch via ERC20 if desired
-        const amountIn = parseUnits(amountInHuman || "0", Number(decimalsIn));
-        if (amountIn === 0n) { setPlan(null); return; }
+        if (!enabled || !client || !router || !tokenInAddr || !tokenOutAddr) {
+          if (!dead) setPlan(null);
+          return;
+        }
 
-        const splitsBps = [
-          [10000, 0], // no split (we’ll treat as single)
-          [5000, 5000],
-          [7000, 3000],
-          [3000, 7000],
-        ];
+        // Inputs
+        const gasWei   = (fees?.effectiveGasPriceWei ?? (PUBLIC_CONFIG as any).GAS_PRICE_WEI_FALLBACK ?? 60_000_000_000n) as bigint;
+        const maxSteps = Number((PUBLIC_CONFIG as any).MAX_STEPS ?? 4);
+        const decimals = Number((PUBLIC_CONFIG as any).NATIVE_DECIMALS ?? 18); // if you track per-token decimals, use them here
+        const amountIn = parseUnits(amountInHuman || "0", decimals);
 
-        // helper to quote a portion
-        const quotePortion = async (portion: bigint) => {
-          const offer = await client.readContract({
-            address: router,
-            abi: YAK_ROUTER_ABI,
-            functionName: "findBestPathWithGas",
-            args: [portion, tokenInAddr, tokenOutAddr, BigInt(maxSteps), gasPrice],
-          }) as YakFormattedOffer;
+        // Fetch effective fee once
+        const effectiveFeeBps = await getEffectiveFeeBps(client, router);
 
-          return offer;
+        // Try: (1) single route, (2) 50/50 split (simple and robust heuristic)
+        const legsCandidates: Array<SplitPlan> = [];
+
+        // Single
+        const offerSingle = await quoteOne(client, router, amountIn, tokenInAddr, tokenOutAddr, gasWei, maxSteps);
+        const legSingle: SplitLeg = {
+          portionBps: 10_000,
+          amountIn,
+          offer: offerSingle,
+          trade: toTrade(offerSingle, amountIn, effectiveFeeBps, slippageBps),
         };
+        legsCandidates.push({
+          kind: "single",
+          legs: [legSingle],
+          totalAmountIn: amountIn,
+          totalAmountOut: legSingle.trade.amountOut,
+          assumedGas: offerSingle.gasEstimate ?? 0n,
+        });
 
-        // Evaluate candidates
-        let best: SplitPlan | null = null;
-
-        for (const [bpsA, bpsB] of splitsBps) {
-          const aIn = (amountIn * BigInt(bpsA)) / 10_000n;
-          const bIn = amountIn - aIn;
-
-          const offerA = await quotePortion(aIn);
-          const tradeA = toTrade(offerA, aIn, slippageBps);
-
-          let legs: SplitLeg[] = [{
-            portionBps: bpsA,
-            amountIn: aIn,
+        // Split 50/50 (you can extend with more splits if desired)
+        if (amountIn > 0n) {
+          const half = amountIn / 2n;
+          const [offerA, offerB] = await Promise.all([
+            quoteOne(client, router, half, tokenInAddr, tokenOutAddr, gasWei, maxSteps),
+            quoteOne(client, router, amountIn - half, tokenInAddr, tokenOutAddr, gasWei, maxSteps),
+          ]);
+          const legA: SplitLeg = {
+            portionBps: 5000,
+            amountIn: half,
             offer: offerA,
-            trade: tradeA,
-          }];
-
-          if (bpsB > 0) {
-            const offerB = await quotePortion(bIn);
-            const tradeB = toTrade(offerB, bIn, slippageBps);
-            legs.push({
-              portionBps: bpsB,
-              amountIn: bIn,
-              offer: offerB,
-              trade: tradeB,
-            });
-          }
-
-          const totalOut = legs.reduce((acc, l) => acc + l.trade.amountOut, 0n);
-          const gasSum   = legs.reduce((acc, l) => acc + (l.offer.gasEstimate ?? 0n), 0n);
-
-          const candidate: SplitPlan = {
-            kind: bpsB === 0 ? "single" : "split2",
-            legs,
-            totalAmountIn: amountIn,
-            totalAmountOut: totalOut,
-            assumedGas: gasSum,
+            trade: toTrade(offerA, half, effectiveFeeBps, slippageBps),
           };
+          const legB: SplitLeg = {
+            portionBps: 5000,
+            amountIn: amountIn - half,
+            offer: offerB,
+            trade: toTrade(offerB, amountIn - half, effectiveFeeBps, slippageBps),
+          };
+          legsCandidates.push({
+            kind: "split2",
+            legs: [legA, legB],
+            totalAmountIn: amountIn,
+            totalAmountOut: legA.trade.amountOut + legB.trade.amountOut,
+            assumedGas: (offerA.gasEstimate ?? 0n) + (offerB.gasEstimate ?? 0n),
+          });
+        }
 
-          if (!best || candidate.totalAmountOut > best.totalAmountOut) best = candidate;
+        // Pick the best by minOut sum (already fee+slippage adjusted)
+        let best = legsCandidates[0];
+        for (const cand of legsCandidates) {
+          if (cand.totalAmountOut > best.totalAmountOut) best = cand;
         }
 
         if (!dead) setPlan(best);
       } catch (e) {
-        if (!dead) setPlan(null);
         console.error("useYakSplitQuote error", e);
+        if (!dead) setPlan(null);
       } finally {
         if (!dead) {
           if (timerRef.current) clearTimeout(timerRef.current);
@@ -167,4 +218,3 @@ export function useYakSplitQuote(params: {
 
   return plan;
 }
-
