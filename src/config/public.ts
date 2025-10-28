@@ -21,6 +21,8 @@ export const PUBLIC_CONFIG = {
   // Wrapped native (WMON) address on Monad testnet (from your notes)
   WRAPPED_NATIVE: "0x760AfE86e5de5fa0Ee542fc7B7B713e1c5425701",
 
+  SPLIT_EXECUTOR: "0xB06B5773f30e6C82AC6CdFfA189E0D417eA43426",
+
   // --- Quote behaviour (UI polling, slippage, thresholds) ---
   MAX_STEPS: 4,
   GAS_PRICE_WEI_FALLBACK: 60_000_000_000n, // used ONLY if RPC fee query fails
