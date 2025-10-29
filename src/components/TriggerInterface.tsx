@@ -490,7 +490,7 @@ const filteredTokens = mergedTokens;
       {/* Token Selection Modal */}
       <Dialog open={showTokenModal} onOpenChange={setShowTokenModal}>
         <DialogOverlay />
-        <DialogContent className="sm:max-w-[420px] bg-[#0b0f17]/95 border border-white/10 text-white">
+        <DialogContent className="sm:max-w-md bg-[#0b0f17]/95 border border-white/10 text-white">
           <DialogHeader>
             <DialogTitle className="text-white">
               Select a token to {tokenSelectionType === "pay" ? "pay" : "receive"}
@@ -504,7 +504,7 @@ const filteredTokens = mergedTokens;
               placeholder="Search any token. Include '0x' for exact match."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-10 bg-white/5 border border-white/10 text-white placeholder:text-white/40 focus:border-white/40 focus:bg-white/10"
+              className="pl-10 bg-white/5 border border-white/10 text-white placeholder:text-white/40 focus:border-white/40 focus:bg-white/10 focus-visible:ring-0 focus-visible:ring-offset-0"
             />
           </div>
 
@@ -530,26 +530,26 @@ const filteredTokens = mergedTokens;
                 <Button
                   key={token.address ? token.address.toLowerCase() : `symbol:${token.symbol}`}
                   variant="ghost"
-                  className="w-full justify-between py-3 px-3 rounded-xl border border-white/10 hover:bg-white/5"
+                  className="w-full py-3 px-3 rounded-xl border border-white/10 hover:bg-white/5 transition-colors h-auto"
                   onClick={() => selectToken(token)}
                 >
-                  <div className="flex items-center">
-                    <div className="w-9 h-9 rounded-full bg-white/10 flex items-center justify-center">
+                  <div className="flex items-center gap-3 w-full">
+                    <div className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center shrink-0">
                       <TokenAvatar
-                         symbol={token.symbol}
-                         address={token.address as `0x${string}` | undefined}
-                         size={24}
-                         title={token.name || token.symbol}
-                         logoURI={(token as any).logoURI}
+                        symbol={token.symbol}
+                        address={token.address as `0x${string}` | undefined}
+                        size={26}
+                        title={token.name || token.symbol}
+                        logoURI={(token as any).logoURI}
                       />
                     </div>
-                    <div className="ml-3 text-left">
-                      <div className="font-medium text-white">{token.symbol}</div>
-                      <div className="text-xs text-white/60">{token.name}</div>
+                    <div className="flex-1 text-left">
+                      <div className="font-semibold text-white text-base">{token.symbol}</div>
+                      <div className="text-sm text-white/60">{token.name}</div>
+                      <div className="text-sm text-white/60 font-mono">
+                        {token.address ? formatAddress(token.address) : "Native coin"}
+                      </div>
                     </div>
-                  </div>
-                  <div className="text-right text-xs text-white/60">
-                    {token.address ? formatAddress(token.address) : "Native coin"}
                   </div>
                 </Button>
               ))}

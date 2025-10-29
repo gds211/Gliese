@@ -142,13 +142,17 @@ All colors MUST be HSL.
     display: none !important;
   }
   
-  [data-radix-scroll-area-scrollbar][data-state] {
-    opacity: 1 !important;
-    visibility: visible !important;
-  }
-  
+  /* Force scrollbar to always be visible */
   [data-radix-scroll-area-scrollbar] {
     opacity: 1 !important;
     visibility: visible !important;
+    transition: none !important;
+  }
+  
+  [data-radix-scroll-area-scrollbar][data-state="visible"],
+  [data-radix-scroll-area-scrollbar][data-state="hidden"] {
+    opacity: 1 !important;
+    visibility: visible !important;
+    transition: none !important;
   }
 }
