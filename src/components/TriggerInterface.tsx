@@ -21,7 +21,7 @@ import glieseLogo from "@/assets/gliese-logo.png";
 
 interface Token {
   symbol: string;
-  name?: string;
+  name: string;
   address?: `0x${string}`;
   logoURI?: string;
 }

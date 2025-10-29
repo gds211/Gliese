@@ -607,7 +607,7 @@ const selectToken = (picked: string | TokenObj) => {
                       address={selectedSellToken?.address as `0x${string}` | undefined}
                       size={24}
                       title={selectedSellToken?.name || selectedSellToken?.symbol}
-                      logoURI={(selectedSellToken as any)?.logoURI}
+                      logoURI={selectedSellToken?.logoURI as any}
                     />
                   </span>
 
@@ -678,7 +678,7 @@ const selectToken = (picked: string | TokenObj) => {
                     address={selectedBuyToken?.address as `0x${string}` | undefined}
                     size={24}
                     title={selectedBuyToken?.name || selectedBuyToken?.symbol}
-                    logoURI={(selectedBuyToken as any)?.logoURI}
+                    logoURI={selectedBuyToken?.logoURI as any}
                   />
                 </span>
 
@@ -773,7 +773,7 @@ const selectToken = (picked: string | TokenObj) => {
       {/* Token Selection Modal */}
       <Dialog open={showTokenModal} onOpenChange={setShowTokenModal}>
         <DialogOverlay />
-        <DialogContent className="sm:max-w-md bg-[#0a0e14]/98 border border-white/10 text-white">
+        <DialogContent className="sm:max-w-[420px] bg-[#0b0f17]/95 border border-white/10 text-white">
           <DialogHeader>
             <DialogTitle className="text-white">
               Select a token to {tokenSelectionType === "sell" ? "sell" : "buy"}
