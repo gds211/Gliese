@@ -607,7 +607,7 @@ const selectToken = (picked: string | TokenObj) => {
                       address={selectedSellToken?.address as `0x${string}` | undefined}
                       size={24}
                       title={selectedSellToken?.name || selectedSellToken?.symbol}
-                      logoURI={selectedSellToken?.logoURI as any}
+                      logoURI={(selectedSellToken as any)?.logoURI}
                     />
                   </span>
 
@@ -678,7 +678,7 @@ const selectToken = (picked: string | TokenObj) => {
                     address={selectedBuyToken?.address as `0x${string}` | undefined}
                     size={24}
                     title={selectedBuyToken?.name || selectedBuyToken?.symbol}
-                    logoURI={selectedBuyToken?.logoURI as any}
+                    logoURI={(selectedBuyToken as any)?.logoURI}
                   />
                 </span>
 
@@ -773,7 +773,7 @@ const selectToken = (picked: string | TokenObj) => {
       {/* Token Selection Modal */}
       <Dialog open={showTokenModal} onOpenChange={setShowTokenModal}>
         <DialogOverlay />
-        <DialogContent className="sm:max-w-[420px] bg-[#0b0f17]/95 border border-white/10 text-white">
+        <DialogContent className="sm:max-w-md bg-[#0b0f17]/95 border border-white/10 text-white">
           <DialogHeader>
             <DialogTitle className="text-white">
               Select a token to {tokenSelectionType === "sell" ? "sell" : "buy"}
@@ -807,27 +807,26 @@ const selectToken = (picked: string | TokenObj) => {
                 <Button
                   key={token.address ? token.address.toLowerCase() : `symbol:${token.symbol}`}
                   variant="ghost"
-                  className="w-full justify-between py-3 px-3 rounded-xl border border-white/10 hover:bg-white/5"
+                  className="w-full py-4 px-4 rounded-xl border border-white/10 hover:bg-white/5 transition-colors h-auto"
                   onClick={() => selectToken(token)}
-
                 >
-                  <div className="flex items-center">
-                    <div className="w-9 h-9 rounded-full bg-white/10 flex items-center justify-center">
+                  <div className="flex items-center gap-4 w-full">
+                    <div className="w-12 h-12 rounded-full bg-white/10 flex items-center justify-center shrink-0">
                       <TokenAvatar
                         symbol={token.symbol}
                         address={token.address as `0x${string}` | undefined}
-                        size={24}
+                        size={32}
                         title={token.name || token.symbol}
                         logoURI={(token as any).logoURI}
                       />
                     </div>
-                    <div className="ml-3 text-left">
-                      <div className="font-medium text-white">{token.symbol}</div>
-                      <div className="text-xs text-white/60">{token.name}</div>
+                    <div className="flex-1 text-left">
+                      <div className="font-semibold text-white text-base">{token.symbol}</div>
+                      <div className="text-sm text-white/60">{token.name || 'Unknown'}</div>
+                      <div className="text-sm text-white/60 font-mono">
+                        {token.address ? formatAddress(token.address) : "Native coin"}
+                      </div>
                     </div>
-                  </div>
-                  <div className="text-right text-xs text-white/60">
-                    {token.address ? formatAddress(token.address) : "Native coin"}
                   </div>
                 </Button>
               ))}
