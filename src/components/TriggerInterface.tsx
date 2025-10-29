@@ -21,22 +21,21 @@ import glieseLogo from "@/assets/gliese-logo.png";
 
 interface Token {
   symbol: string;
-  name: string;
+  name?: string;
   address?: `0x${string}`;
-  logoURI?: string;
 }
 
 interface TriggerInterfaceProps {
-  tokens: Token[];
+  tokens: Array<{ symbol: string; name?: string; address?: `0x${string}` }>;
   payToken: string | null;
   setPayToken: (token: string | null) => void;
   receiveToken: string | null;
   setReceiveToken: (token: string | null) => void;
 
   // share dynamic tokens with Instant tab
-  extraTokens: Array<{ symbol: string; name?: string; address?: `0x${string}`; logoURI?: string }>;
+  extraTokens: Array<{ symbol: string; name?: string; address?: `0x${string}` }>;
   setExtraTokens: Dispatch<
-    SetStateAction<Array<{ symbol: string; name?: string; address?: `0x${string}`; logoURI?: string }>>
+    SetStateAction<Array<{ symbol: string; name?: string; address?: `0x${string}` }>>
   >;
 }
 
@@ -116,7 +115,7 @@ const selectedReceiveToken = useMemo(() => {
 
 
 
-   type TokenLite = { symbol: string; name?: string; address?: `0x${string}`; logoURI?: string };
+   type TokenLite = { symbol: string; name?: string; address?: `0x${string}` };
 
 const mergedTokens = useMemo<TokenLite[]>(() => {
   const q = searchTerm.trim().toLowerCase();
@@ -226,7 +225,6 @@ const filteredTokens = mergedTokens;
             symbol: token.symbol,
             name: token.name,
             address: token.address as `0x${string}`,
-            logoURI: (token as any).logoURI,
           },
         ]);
       }
@@ -540,7 +538,6 @@ const filteredTokens = mergedTokens;
                          address={token.address as `0x${string}` | undefined}
                          size={24}
                          title={token.name || token.symbol}
-                         logoURI={(token as any).logoURI}
                       />
                     </div>
                     <div className="ml-3 text-left">
