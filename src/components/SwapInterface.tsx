@@ -28,6 +28,7 @@ import { performSwap } from "@/lib/swap";
 import TokenAvatar from "@/components/TokenAvatar";
 import { useTokenSearch } from "@/hooks/useTokenSearch";
 import SlippageIcon from "@/assets/slippage.png";
+import RayGunIcon from "@/assets/ray-gun.png";
 import TriggerInterface from "@/components/TriggerInterface";
 
 
@@ -549,7 +550,7 @@ const selectToken = (picked: string | TokenObj) => {
               <span>⚡</span> Instant
             </TabsTrigger>
             <TabsTrigger value="trigger" className="text-sm flex items-center gap-2 h-8 data-[state=active]:text-primary data-[state=inactive]:text-muted-foreground">
-              <span>🔫</span> Trigger
+              <img src={RayGunIcon} alt="" className="w-4 h-4 inline-block" /> Trigger
             </TabsTrigger>
             <TabsTrigger value="recurring" className="text-sm flex items-center gap-2 h-8 data-[state=active]:text-primary data-[state=inactive]:text-muted-foreground">
               <span>🔄</span> Recurring
