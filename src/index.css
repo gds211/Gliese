@@ -141,4 +141,14 @@ All colors MUST be HSL.
   [data-radix-scroll-area-corner] {
     display: none !important;
   }
+  
+  [data-radix-scroll-area-scrollbar][data-state] {
+    opacity: 1 !important;
+    visibility: visible !important;
+  }
+  
+  [data-radix-scroll-area-scrollbar] {
+    opacity: 1 !important;
+    visibility: visible !important;
+  }
 }

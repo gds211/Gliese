@@ -807,15 +807,15 @@ const selectToken = (picked: string | TokenObj) => {
                 <Button
                   key={token.address ? token.address.toLowerCase() : `symbol:${token.symbol}`}
                   variant="ghost"
-                  className="w-full py-4 px-4 rounded-xl border border-white/10 hover:bg-white/5 transition-colors h-auto"
+                  className="w-full py-3 px-3 rounded-xl border border-white/10 hover:bg-white/5 transition-colors h-auto"
                   onClick={() => selectToken(token)}
                 >
-                  <div className="flex items-center gap-4 w-full">
-                    <div className="w-12 h-12 rounded-full bg-white/10 flex items-center justify-center shrink-0">
+                  <div className="flex items-center gap-3 w-full">
+                    <div className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center shrink-0">
                       <TokenAvatar
                         symbol={token.symbol}
                         address={token.address as `0x${string}` | undefined}
-                        size={32}
+                        size={26}
                         title={token.name || token.symbol}
                         logoURI={(token as any).logoURI}
                       />
