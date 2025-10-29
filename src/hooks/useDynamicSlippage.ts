@@ -58,10 +58,17 @@ function quantileAbs(returns: number[], q: number): number {
   return arr[k];
 }
 
-/** EWMA variance on log-returns (dimensionless). */
-function useEwmaSigma(active: boolean, price: number | null, alpha: number) {
+/** EWMA variance on log-returns (dimensionless). Resettable by resetKey. */
+function useEwmaSigma(
+  active: boolean,
+  price: number | null,
+  alpha: number,
+  resetKey?: unknown
+) {
   const last = useRef<number | null>(null);
   const [v, setV] = useState(0);
+  // Reset EWMA state when context changes (new pair/route)
+  useEffect(() => { last.current = null; setV(0); }, [resetKey]);
   useEffect(() => {
     if (!active || price === null || price <= 0) return;
     if (last.current && last.current > 0) {
@@ -73,10 +80,17 @@ function useEwmaSigma(active: boolean, price: number | null, alpha: number) {
   return Math.sqrt(v);
 }
 
-/** Rolling ring-buffer of log-returns for robust quantile vol. */
-function useReturnWindow(active: boolean, price: number | null, capacity: number) {
+/** Rolling ring-buffer of log-returns for robust quantile vol. Resettable by resetKey. */
+function useReturnWindow(
+  active: boolean,
+  price: number | null,
+  capacity: number,
+  resetKey?: unknown
+) {
   const last = useRef<number | null>(null);
   const buf = useRef<number[]>([]);
+  // Reset window when context changes (new pair/route)
+  useEffect(() => { last.current = null; buf.current = []; }, [resetKey, capacity]);
   useEffect(() => {
     if (!active || price === null || price <= 0) return;
     if (last.current && last.current > 0) {
@@ -153,8 +167,8 @@ export function useDynamicSlippageBps({
   const priceSource = unitPerUnit ?? userPerUnit ?? null;
 
   // ---- Volatility (robust) ----
-  const sigma = useEwmaSigma(enabled, priceSource, EWMA_ALPHA);
-  const window = useReturnWindow(enabled, priceSource, QRET_WINDOW);
+  const sigma = useEwmaSigma(enabled, priceSource, EWMA_ALPHA, resetKey);
+  const window = useReturnWindow(enabled, priceSource, QRET_WINDOW, resetKey);
   const qAbs = quantileAbs(window, QRET_QUANTILE); // tail of |returns|
 
   // Convert to bps (small log-returns ≈ percent change)
@@ -173,6 +187,8 @@ export function useDynamicSlippageBps({
   // Optional local elasticity probe improves size estimate for curved CLMM segments
   const [probeBps, setProbeBps] = useState<number | null>(null);
   const lastProbeAt = useRef<number>(0);
+  // Clear probe state on context change to avoid stale carry-over
+  useEffect(() => { setProbeBps(null); lastProbeAt.current = 0; }, [resetKey]);
   useEffect(() => {
     if (
       !enabled ||
