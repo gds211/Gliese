@@ -141,14 +141,4 @@ All colors MUST be HSL.
   [data-radix-scroll-area-corner] {
     display: none !important;
   }
-
-  /* Hide scrollbar for horizontal quick access chips */
-  .scrollbar-hide {
-    -ms-overflow-style: none;
-    scrollbar-width: none;
-  }
-  
-  .scrollbar-hide::-webkit-scrollbar {
-    display: none;
-  }
 }

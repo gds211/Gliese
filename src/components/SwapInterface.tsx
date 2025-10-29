@@ -24,13 +24,11 @@ import glieseLogo from "@/assets/gliese-logo.png";
 import { PUBLIC_CONFIG } from "@/config/public";
 import { useYakQuote } from "@/hooks/useYakQuote";
 import { performSwap } from "@/lib/swap";
-import { useTokenBalance } from "@/hooks/useTokenBalance";
 
 import TokenAvatar from "@/components/TokenAvatar";
 import { useTokenSearch } from "@/hooks/useTokenSearch";
 import SlippageIcon from "@/assets/slippage.png";
 import TriggerInterface from "@/components/TriggerInterface";
-import { TokenListItem } from "@/components/TokenListItem";
 
 
 
@@ -101,9 +99,6 @@ const SwapInterface = () => {
     { symbol: "aprMON", name: "apriori MON", address: "0xb2f82D0f38dc453D596Ad40A37799446Cc89274A" as `0x${string}` },
   ];
 
-  // Featured tokens for quick access chips
-  const featuredTokens = ["MON", "USDC", "USDT", "CHOG", "DAK", "aprMON"];
-
   
 
   // --- UI State ---
@@ -116,7 +111,7 @@ const SwapInterface = () => {
   const [tokenSelectionType, setTokenSelectionType] = useState<"sell" | "buy">("sell");
   const [searchTerm, setSearchTerm] = useState("");
   const [extraTokens, setExtraTokens] = useState<
-  Array<{ symbol: string; name?: string; address?: `0x${string}` }>
+  Array<{ symbol: string; name?: string; address?: `0x${string}`; logoURI?: string }>
   >([]);
 
   const { data: searchResults = [], isLoading: searching } = useTokenSearch(searchTerm);
@@ -164,7 +159,7 @@ const SwapInterface = () => {
   }, [isConnected, sellBal?.value, sellBal?.decimals, sellAmount]);
 
   // --- Search + Filter for token modal (DEX + address + local) ---
- type TokenLite = { symbol: string; name?: string; address?: `0x${string}` };
+ type TokenLite = { symbol: string; name?: string; address?: `0x${string}`; logoURI?: string };
  const filteredTokens: TokenLite[] = useMemo(() => {
    const q = searchTerm.trim().toLowerCase();
    // Empty → show your curated defaults
@@ -612,6 +607,7 @@ const selectToken = (picked: string | TokenObj) => {
                       address={selectedSellToken?.address as `0x${string}` | undefined}
                       size={24}
                       title={selectedSellToken?.name || selectedSellToken?.symbol}
+                      logoURI={selectedSellToken?.logoURI as any}
                     />
                   </span>
 
@@ -682,6 +678,7 @@ const selectToken = (picked: string | TokenObj) => {
                     address={selectedBuyToken?.address as `0x${string}` | undefined}
                     size={24}
                     title={selectedBuyToken?.name || selectedBuyToken?.symbol}
+                    logoURI={selectedBuyToken?.logoURI as any}
                   />
                 </span>
 
@@ -787,33 +784,11 @@ const selectToken = (picked: string | TokenObj) => {
           <div className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-white/50" />
             <Input
-              placeholder="Search by token or paste address"
+              placeholder="Search any token. Include '0x' for exact match."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="pl-10 bg-white/5 border border-white/10 text-white placeholder:text-white/40 focus:border-white/40 focus:bg-white/10"
             />
-          </div>
-
-          {/* Quick Access Token Chips */}
-          <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
-            {featuredTokens.map((symbol) => {
-              const token = tokens.find(t => t.symbol === symbol);
-              if (!token) return null;
-              return (
-                <button
-                  key={symbol}
-                  onClick={() => selectToken(token)}
-                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white/5 border border-white/10 hover:bg-white/10 transition-colors shrink-0"
-                >
-                  <TokenAvatar 
-                    symbol={token.symbol} 
-                    address={token.address}
-                    size={20} 
-                  />
-                  <span className="text-xs font-medium text-white">{symbol}</span>
-                </button>
-              );
-            })}
           </div>
 
 
@@ -827,19 +802,35 @@ const selectToken = (picked: string | TokenObj) => {
 
           
           <ScrollArea className="h-[26rem] w-full pr-4">
-            <div className="space-y-1">
-              {filteredTokens.map((token) => {
-                const isNativeToken = !token.address;
-                return (
-                  <TokenListItem
-                    key={token.address ? token.address.toLowerCase() : `symbol:${token.symbol}`}
-                    token={token}
-                    walletAddress={address}
-                    isNative={isNativeToken}
-                    onSelect={() => selectToken(token)}
-                  />
-                );
-              })}
+            <div className="space-y-2">
+              {filteredTokens.map((token) => (
+                <Button
+                  key={token.address ? token.address.toLowerCase() : `symbol:${token.symbol}`}
+                  variant="ghost"
+                  className="w-full justify-between py-3 px-3 rounded-xl border border-white/10 hover:bg-white/5"
+                  onClick={() => selectToken(token)}
+
+                >
+                  <div className="flex items-center">
+                    <div className="w-9 h-9 rounded-full bg-white/10 flex items-center justify-center">
+                      <TokenAvatar
+                        symbol={token.symbol}
+                        address={token.address as `0x${string}` | undefined}
+                        size={24}
+                        title={token.name || token.symbol}
+                        logoURI={(token as any).logoURI}
+                      />
+                    </div>
+                    <div className="ml-3 text-left">
+                      <div className="font-medium text-white">{token.symbol}</div>
+                      <div className="text-xs text-white/60">{token.name}</div>
+                    </div>
+                  </div>
+                  <div className="text-right text-xs text-white/60">
+                    {token.address ? formatAddress(token.address) : "Native coin"}
+                  </div>
+                </Button>
+              ))}
             </div>
           </ScrollArea>
         </DialogContent>
