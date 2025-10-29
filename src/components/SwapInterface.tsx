@@ -291,15 +291,12 @@ const minOutRawDynamic =
   quote?.outRaw != null ? (quote.outRaw * (10_000n - SLIP)) / 10_000n : 0n;
 
 
-  // Derived buy amount (minOut) using dynamic slippage (size-aware)
+  // Derived buy amount (minOut) 
 const buyAmountDerived = (() => {
-  // For display we can scale the formatted out by (1 - SLIP/10000)
+  // For display, show the raw quoted output (do NOT apply slippage reduction)
   const baseOut = Number(quote?.outFormatted ?? NaN);
-  if (!Number.isFinite(baseOut)) return "0.00";
-  const s = Number(SLIP) / 10_000;
-  const v = baseOut * (1 - s);
-  if (!Number.isFinite(v) || v <= 0) return "0.00";
-  return v.toString();
+  if (!Number.isFinite(baseOut) || baseOut <= 0) return "0.00";
+  return baseOut.toString();
 })();
 
   
@@ -327,19 +324,17 @@ const buyAmountDerived = (() => {
       }
     }
 
-    // Before typing: use the 1-unit *raw* quote, but apply *dynamic* slippage (SLIP)
+    // Before typing: use the 1-unit *raw* quote
     if (unitQuote && unitQuote.outFormatted) {
-      const uRaw = Number(unitQuote.outFormatted);
-      if (Number.isFinite(uRaw) && uRaw > 0) {
-        const s = Number(SLIP) / 10_000;
-        const u = uRaw * (1 - s);
-        return `1 ${selectedSellToken?.symbol} = ${u.toFixed(6).replace(/\.?0+$/, "")} ${selectedBuyToken?.symbol}`;
-      }
-    }
+       const uRaw = Number(unitQuote.outFormatted);
+       if (Number.isFinite(uRaw) && uRaw > 0) {
+           return `1 ${selectedSellToken?.symbol} = ${uRaw.toFixed(6).replace(/\.?0+$/, "")} ${selectedBuyToken?.symbol}`;
+       }
+     }
 
     // Fallback to your mock when no on-chain path yet
     return priceRate;
-  }, [quote, unitQuote, buyAmountDerived, sellAmount, selectedSellToken, selectedBuyToken, priceRate, SLIP]);
+  }, [quote, unitQuote, buyAmountDerived, sellAmount, selectedSellToken, selectedBuyToken, priceRate]);
 
   // Keep your existing mock updater as a fallback when no quote yet
   useEffect(() => {
