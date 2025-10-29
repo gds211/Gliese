@@ -35,7 +35,7 @@ export const PUBLIC_CONFIG = {
 
     // --- Base/limits (bps) ---
     BASE_BPS: 30,               // 0.30% baseline cushion
-    MIN_BPS: 5,                 // 0.05% absolute floor
+    MIN_BPS: 50,                 // 0.5% absolute floor
     MAX_BPS: 500,               // 5.00% hard cap (seatbelt)
 
     // --- Volatility model (runs on per-unit returns) ---
