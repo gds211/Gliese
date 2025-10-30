@@ -20,6 +20,7 @@ import { useDynamicSlippageBps } from "@/hooks/useDynamicSlippage";
 
 import { ArrowUpDown, Wallet, Search, ChevronDown, Loader2 } from "lucide-react";
 import glieseLogo from "@/assets/gliese-logo.png";
+import verifiedBadge from "@/assets/verified-badge.svg";
 
 import { PUBLIC_CONFIG } from "@/config/public";
 import { useYakQuote } from "@/hooks/useYakQuote";
@@ -614,9 +615,10 @@ const selectToken = (picked: string | TokenObj) => {
                   {/* Label zone spans between the logo and the chevron; text biased toward the chevron */}
                    {/* Label centered in the space between logo and chevron */}
                   <span
-                    className="absolute inset-y-0 left-[2.75rem] right-[2.5rem] flex items-center justify-center pointer-events-none truncate"
+                    className="absolute inset-y-0 left-[2.75rem] right-[2.5rem] flex items-center justify-center pointer-events-none truncate gap-1"
                   >
                     {selectedSellToken?.symbol}
+                    <img src={verifiedBadge} alt="verified" className="w-3.5 h-3.5 inline-block" />
                   </span>
 
 
@@ -684,9 +686,10 @@ const selectToken = (picked: string | TokenObj) => {
 
                 {/* Label centered exactly between logo and chevron (same as SELL) */}
                 <span
-                  className="absolute inset-y-0 left-[2.75rem] right-[2.5rem] flex items-center justify-center pointer-events-none truncate"
+                  className="absolute inset-y-0 left-[2.75rem] right-[2.5rem] flex items-center justify-center pointer-events-none truncate gap-1"
                 >
                  {selectedBuyToken?.symbol}
+                 <img src={verifiedBadge} alt="verified" className="w-3.5 h-3.5 inline-block" />
                 </span>
 
                 {/* Right chevron (same as SELL) */}
@@ -821,7 +824,10 @@ const selectToken = (picked: string | TokenObj) => {
                       />
                     </div>
                     <div className="flex-1 text-left">
-                      <div className="font-semibold text-white text-base">{token.symbol}</div>
+                      <div className="font-semibold text-white text-base flex items-center gap-1">
+                        {token.symbol}
+                        <img src={verifiedBadge} alt="verified" className="w-4 h-4 inline-block" />
+                      </div>
                       <div className="text-sm text-white/60">{token.name || 'Unknown'}</div>
                       <div className="text-sm text-white/60 font-mono">
                         {token.address ? formatAddress(token.address) : "Native coin"}

@@ -18,6 +18,7 @@ import TokenAvatar from "@/components/TokenAvatar";
 import { useAccount, useBalance } from "wagmi";
 import { parseUnits } from "viem";
 import glieseLogo from "@/assets/gliese-logo.png";
+import verifiedBadge from "@/assets/verified-badge.svg";
 
 interface Token {
   symbol: string;
@@ -320,8 +321,9 @@ const filteredTokens = mergedTokens;
               </span>
 
               {/* Label centered between logo and chevron */}
-              <span className="absolute inset-y-0 left-[2.75rem] right-[2.5rem] flex items-center justify-center pointer-events-none truncate">
+              <span className="absolute inset-y-0 left-[2.75rem] right-[2.5rem] flex items-center justify-center pointer-events-none truncate gap-1">
                 {selectedPayToken?.symbol}
+                <img src={verifiedBadge} alt="verified" className="w-3.5 h-3.5 inline-block" />
               </span>
 
               {/* Right chevron */}
@@ -395,8 +397,9 @@ const filteredTokens = mergedTokens;
               </span>
 
               {/* Label centered between logo and chevron */}
-              <span className="absolute inset-y-0 left-[2.75rem] right-[2.5rem] flex items-center justify-center pointer-events-none truncate">
+              <span className="absolute inset-y-0 left-[2.75rem] right-[2.5rem] flex items-center justify-center pointer-events-none truncate gap-1">
                 {selectedReceiveToken?.symbol}
+                <img src={verifiedBadge} alt="verified" className="w-3.5 h-3.5 inline-block" />
               </span>
 
               {/* Right chevron */}
@@ -544,7 +547,10 @@ const filteredTokens = mergedTokens;
                       />
                     </div>
                     <div className="flex-1 text-left">
-                      <div className="font-semibold text-white text-base">{token.symbol}</div>
+                      <div className="font-semibold text-white text-base flex items-center gap-1">
+                        {token.symbol}
+                        <img src={verifiedBadge} alt="verified" className="w-4 h-4 inline-block" />
+                      </div>
                       <div className="text-sm text-white/60">{token.name}</div>
                       <div className="text-sm text-white/60 font-mono">
                         {token.address ? formatAddress(token.address) : "Native coin"}
