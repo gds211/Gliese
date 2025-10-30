@@ -524,7 +524,7 @@ const filteredTokens = mergedTokens;
 
           {/* Token List */}
 
-          <ScrollArea className="h-[28.375rem] w-full pr-4">
+          <ScrollArea className="h-[22rem] w-full pr-4">
             <div className="space-y-2">
               {filteredTokens.map((token) => (
                 <Button
