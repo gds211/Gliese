@@ -142,12 +142,11 @@ All colors MUST be HSL.
     display: none !important;
   }
   
-  /* Force scrollbar to always be visible - enhanced rules */
+  /* Force scrollbar to always be visible */
   [data-radix-scroll-area-scrollbar] {
     opacity: 1 !important;
     visibility: visible !important;
     transition: none !important;
-    pointer-events: auto !important;
   }
   
   [data-radix-scroll-area-scrollbar][data-state="visible"],
@@ -155,18 +154,5 @@ All colors MUST be HSL.
     opacity: 1 !important;
     visibility: visible !important;
     transition: none !important;
-    pointer-events: auto !important;
-  }
-  
-  /* Also target the scrollbar thumb specifically */
-  [data-radix-scroll-area-scrollbar] [data-radix-scroll-area-thumb] {
-    opacity: 1 !important;
-    visibility: visible !important;
-    transition: none !important;
-  }
-  
-  [data-radix-scroll-area-scrollbar][data-state="hidden"] [data-radix-scroll-area-thumb] {
-    opacity: 1 !important;
-    visibility: visible !important;
   }
 }
