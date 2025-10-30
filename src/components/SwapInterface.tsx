@@ -615,10 +615,9 @@ const selectToken = (picked: string | TokenObj) => {
                   {/* Label zone spans between the logo and the chevron; text biased toward the chevron */}
                    {/* Label centered in the space between logo and chevron */}
                   <span
-                    className="absolute inset-y-0 left-[2.75rem] right-[2.5rem] flex items-center justify-center pointer-events-none truncate gap-1"
+                    className="absolute inset-y-0 left-[2.75rem] right-[2.5rem] flex items-center justify-center pointer-events-none truncate"
                   >
                     {selectedSellToken?.symbol}
-                    <img src={verifiedBadge} alt="verified" className="w-3.5 h-3.5 inline-block" />
                   </span>
 
 
@@ -686,10 +685,9 @@ const selectToken = (picked: string | TokenObj) => {
 
                 {/* Label centered exactly between logo and chevron (same as SELL) */}
                 <span
-                  className="absolute inset-y-0 left-[2.75rem] right-[2.5rem] flex items-center justify-center pointer-events-none truncate gap-1"
+                  className="absolute inset-y-0 left-[2.75rem] right-[2.5rem] flex items-center justify-center pointer-events-none truncate"
                 >
                  {selectedBuyToken?.symbol}
-                 <img src={verifiedBadge} alt="verified" className="w-3.5 h-3.5 inline-block" />
                 </span>
 
                 {/* Right chevron (same as SELL) */}

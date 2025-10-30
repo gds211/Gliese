@@ -321,9 +321,8 @@ const filteredTokens = mergedTokens;
               </span>
 
               {/* Label centered between logo and chevron */}
-              <span className="absolute inset-y-0 left-[2.75rem] right-[2.5rem] flex items-center justify-center pointer-events-none truncate gap-1">
+              <span className="absolute inset-y-0 left-[2.75rem] right-[2.5rem] flex items-center justify-center pointer-events-none truncate">
                 {selectedPayToken?.symbol}
-                <img src={verifiedBadge} alt="verified" className="w-3.5 h-3.5 inline-block" />
               </span>
 
               {/* Right chevron */}
@@ -397,9 +396,8 @@ const filteredTokens = mergedTokens;
               </span>
 
               {/* Label centered between logo and chevron */}
-              <span className="absolute inset-y-0 left-[2.75rem] right-[2.5rem] flex items-center justify-center pointer-events-none truncate gap-1">
+              <span className="absolute inset-y-0 left-[2.75rem] right-[2.5rem] flex items-center justify-center pointer-events-none truncate">
                 {selectedReceiveToken?.symbol}
-                <img src={verifiedBadge} alt="verified" className="w-3.5 h-3.5 inline-block" />
               </span>
 
               {/* Right chevron */}
