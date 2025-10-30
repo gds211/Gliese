@@ -824,7 +824,7 @@ const selectToken = (picked: string | TokenObj) => {
                     <div className="flex-1 text-left">
                       <div className="font-semibold text-white text-base flex items-center gap-1">
                         {token.symbol}
-                        <img src={verifiedBadge} alt="verified" className="w-4 h-4 inline-block" />
+                        <img src={verifiedBadge} alt="verified" className="w-3.5 h-3.5 inline-block" />
                       </div>
                       <div className="text-sm text-white/60">{token.name || 'Unknown'}</div>
                       <div className="text-sm text-white/60 font-mono">
