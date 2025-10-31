@@ -808,11 +808,12 @@ const selectToken = (picked: string | TokenObj) => {
           </div>
 
 
-          {/* Status */}
-           {searchTerm.trim() && (
-             <div className="flex items-center gap-2 text-xs text-white/60 py-1">
-                {searching ? (<><Loader2 className="h-3.5 w-3.5 animate-spin" /> <span>Searching DEXes…</span></>) : (<span>{filteredTokens.length} matches</span>)}
-             </div>
+            {/* Status */}
+            {searchTerm.trim() && searching && (
+              <div className="flex items-center gap-2 text-xs text-white/60 py-1">
+                <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                <span>Searching DEXes…</span>
+              </div>
             )}
             {/* Token List */}
 
