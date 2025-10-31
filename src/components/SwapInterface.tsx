@@ -100,6 +100,21 @@ const SwapInterface = () => {
     { symbol: "aprMON", name: "apriori MON", address: "0xb2f82D0f38dc453D596Ad40A37799446Cc89274A" as `0x${string}` },
   ];
 
+  // Helper to check if token is verified (in our tokens list)
+  const isVerifiedToken = (token: { symbol: string; address?: `0x${string}` }) => {
+    return tokens.some(t => {
+      // Match by address if both have addresses
+      if (t.address && token.address) {
+        return t.address.toLowerCase() === token.address.toLowerCase();
+      }
+      // Match by symbol for native tokens (no address)
+      if (!t.address && !token.address) {
+        return t.symbol.toUpperCase() === token.symbol.toUpperCase();
+      }
+      return false;
+    });
+  };
+
   
 
   // --- UI State ---
@@ -824,7 +839,9 @@ const selectToken = (picked: string | TokenObj) => {
                     <div className="flex-1 text-left">
                       <div className="font-semibold text-white text-base flex items-center gap-1">
                         {token.symbol}
-                        <img src={verifiedBadge} alt="verified" className="w-3.5 h-3.5 inline-block" />
+                        {isVerifiedToken(token) && (
+                          <img src={verifiedBadge} alt="verified" className="w-3.5 h-3.5 inline-block" />
+                        )}
                       </div>
                       <div className="text-sm text-white/60">{token.name || 'Unknown'}</div>
                       <div className="text-sm text-white/60 font-mono">

@@ -99,6 +99,21 @@ const selectedReceiveToken = useMemo(() => {
     query: { enabled: Boolean(isConnected && address && selectedReceiveToken) },
   });
 
+  // Helper to check if token is verified (in our tokens list)
+  const isVerifiedToken = (token: { symbol: string; address?: `0x${string}` }) => {
+    return tokens.some(t => {
+      // Match by address if both have addresses
+      if (t.address && token.address) {
+        return t.address.toLowerCase() === token.address.toLowerCase();
+      }
+      // Match by symbol for native tokens (no address)
+      if (!t.address && !token.address) {
+        return t.symbol.toUpperCase() === token.symbol.toUpperCase();
+      }
+      return false;
+    });
+  };
+
   const isExceeding = useMemo(() => {
     if (!isConnected || !payBalance || !payAmount) return false;
     try {
@@ -547,7 +562,9 @@ const filteredTokens = mergedTokens;
                     <div className="flex-1 text-left">
                       <div className="font-semibold text-white text-base flex items-center gap-1">
                         {token.symbol}
-                        <img src={verifiedBadge} alt="verified" className="w-3.5 h-3.5 inline-block" />
+                        {isVerifiedToken(token) && (
+                          <img src={verifiedBadge} alt="verified" className="w-3.5 h-3.5 inline-block" />
+                        )}
                       </div>
                       <div className="text-sm text-white/60">{token.name}</div>
                       <div className="text-sm text-white/60 font-mono">
