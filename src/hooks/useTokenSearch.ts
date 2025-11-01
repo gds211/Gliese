@@ -9,6 +9,14 @@ const ERC20_META_ABI = [
   { type: "function", name: "name",   stateMutability: "view", inputs: [], outputs: [{ type: "string" }] },
 ] as const;
 
+const normalize = (s?: string) => (s ?? "")
+  .normalize("NFKD")
+  .replace(/\p{Diacritic}/gu, "")
+  .toLowerCase();
+const fold = (s?: string) => normalize(s).replace(/[^a-z0-9]/g, "");
+const is0x = (s?: string) => !!s && /^0x[0-9a-f]{4,}$/i.test(s);
+
+
 export type SearchedToken = {
   symbol: string;
   name?: string;
@@ -113,7 +121,39 @@ const pushAttr = (attr?: any) => {
             if (out.length >= limit) break;
           }
 
-          return out.slice(0, limit);
+          const fq = fold(query.trim());
+const raw = query.trim();
+out.sort((a, b) => {
+  const sa = score(a);
+  const sb = score(b);
+  return sb - sa;
+});
+return out.slice(0, limit);
+
+function score(t: { symbol?: string; name?: string; address?: Address }) {
+  const sym = t.symbol ?? "";
+  const nm = t.name ?? "";
+  const addr = (t.address ?? "").toLowerCase();
+
+  const symU = sym.toUpperCase();
+  const symF = fold(sym);
+  const nameF = fold(nm);
+
+  let s = 0;
+  if (is0x(raw)) {
+    if (addr === raw.toLowerCase()) s += 10000;
+    if (addr.includes(raw.toLowerCase())) s += 9000;
+  }
+  if (symU === raw.toUpperCase()) s += 8000;
+  if (normalize(nm) === normalize(raw)) s += 7600;
+  if (symF.startsWith(fq)) s += 6000;
+  if (nameF.startsWith(fq)) s += 5200;
+  if (symF.includes(fq)) s += 4000;
+  if (nameF.includes(fq)) s += 3500;
+  // light penalty for obvious "wrapped" prefix when query matches base
+  if (/^w/i.test(sym) && symF.replace(/^w/i, "") === fq) s -= 500;
+  return s;
+}
         } catch {
           // If GeckoTerminal is unreachable, fall through to DexScreener (may not return Monad hits).
         }
