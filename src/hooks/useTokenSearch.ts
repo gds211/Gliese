@@ -1,171 +1,170 @@
-// src/hooks/useTokenSearch.ts
+import { useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { isAddress, type Address } from "viem";
+import { usePublicClient } from "wagmi";
 import { PUBLIC_CONFIG } from "@/config/public";
 
-// --- Types ---
+const ERC20_META_ABI = [
+  { type: "function", name: "symbol", stateMutability: "view", inputs: [], outputs: [{ type: "string" }] },
+  { type: "function", name: "name",   stateMutability: "view", inputs: [], outputs: [{ type: "string" }] },
+] as const;
+
 export type SearchedToken = {
   symbol: string;
   name?: string;
   address?: Address;
   logoURI?: string;
-  source?: "gecko" | "dexscreener" | "address";
+  source: "dexscreener" | "geckoterminal" | "address";
 };
 
-// --- Helpers ---
-const norm = (s = "") =>
-  s.toLowerCase().normalize("NFKD").replace(/[\u0300-\u036f]/g, "");
-
-const startsWithNorm = (text = "", q = "") => norm(text).startsWith(norm(q));
-
-const geckoNetworkSlug = (chainId: number) => {
-  // Extend here if you add more chains.
-  // Monad Testnet in your config:
+function geckoNetworkSlug(chainId?: number | null) {
+  if (chainId === 143) return "monad";         // mainnet (when indexed)
   if (chainId === 10143) return "monad-testnet";
-  // If you move to mainnet later, set proper slug (e.g. "monad").
   return null;
-};
+}
 
-// --- Hook ---
-export function useTokenSearch(query: string, opts?: { limit?: number }) {
-  const limit = Math.min(Math.max(opts?.limit ?? 50, 1), 100);
-  const chainId = PUBLIC_CONFIG.CHAIN_ID;
+export function useTokenSearch(query: string, limit: number = 20) {
+  const client = usePublicClient();
+  const chainId = Number(PUBLIC_CONFIG.CHAIN_ID);
+  const enabled = useMemo(() => query.trim().length > 0, [query]);
 
   return useQuery<SearchedToken[]>({
-    queryKey: ["token-search", chainId, query, limit],
-    enabled: Boolean(query && query.trim().length > 0),
-    // Small caching helps with typeahead
-    staleTime: 45_000,
+    queryKey: ["token-search", query, chainId],
+    enabled,
+    staleTime: 30_000,
     gcTime: 5 * 60_000,
-    refetchOnWindowFocus: false,
-
-    queryFn: async (): Promise<SearchedToken[]> => {
+    queryFn: async () => {
       const q = query.trim();
 
-      // 1) If user pasted a 0x address, return the address itself.
-      // (Explicit user intent—allowed even if not listed on a DEX.)
+
+     const lower = q.toLowerCase();
+     const onlyLetters = !lower.startsWith("0x");
+     const validAddr = isAddress(q as `0x${string}`);
+
+     const nameMatches = (sym?: any, nm?: any) => {
+       const s = String(sym || "").toLowerCase();
+       const n = String(nm || "").toLowerCase();
+       return s.includes(lower) || n.includes(lower);
+     };
+
+
+
+            // 1) Direct 0x address → read metadata on the connected chain (works on Monad).
       if (q.startsWith("0x") && isAddress(q)) {
-        // Optionally: attempt to read `symbol`/`name` via RPC here.
-        return [{ symbol: "ERC20", address: q as Address, source: "address" }];
+        try {
+          const [symbol, name] = await Promise.all([
+            client.readContract({ address: q as Address, abi: ERC20_META_ABI, functionName: "symbol" }) as Promise<string>,
+            client.readContract({ address: q as Address, abi: ERC20_META_ABI, functionName: "name" })   as Promise<string>,
+          ]);
+          return [{ symbol, name, address: q as Address, source: "address" }];
+        } catch {
+          return [{ symbol: "ERC20", name: undefined, address: q as Address, source: "address" }];
+        }
       }
 
-      // 2) GeckoTerminal — scoped to Monad network, returns only tokens in pools (listed)
-      const geckoSlug = geckoNetworkSlug(chainId);
-      const out: SearchedToken[] = [];
-      const seen = new Set<string>();
-      const push = (t?: SearchedToken) => {
-        if (!t) return;
-        const key = t.address ? t.address.toLowerCase() : `symbol:${t.symbol.toUpperCase()}`;
-        if (seen.has(key)) return;
-        seen.add(key);
-        out.push(t);
-      };
-
-      if (geckoSlug) {
+      // 2) If current chain is Monad → use GeckoTerminal search on the Monad network.
+      const monadSlug = geckoNetworkSlug(chainId);
+      if (monadSlug) {
         try {
+          // Public GeckoTerminal API. Search pools on a specific network and include token objects.
+          // Docs confirm /search/pools with `network` + `include` (base_token, quote_token).
+          // https://docs.coingecko.com/reference/search-pools
           const url =
             `https://api.geckoterminal.com/api/v2/search/pools` +
-            `?query=${encodeURIComponent(q)}` +
-            `&network=${encodeURIComponent(geckoSlug)}` +
-            `&take=${limit}` +
-            `&include=base_token,quote_token`;
+            `?query=${encodeURIComponent(q)}&network=${encodeURIComponent(monadSlug)}&include=base_token,quote_token`;
+
           const res = await fetch(url, { headers: { accept: "application/json" } });
           if (!res.ok) throw new Error(`HTTP ${res.status}`);
           const json: any = await res.json();
 
-          // `included` holds tokens; pool data references them by id.
-          const included = new Map(
-            (Array.isArray(json?.included) ? json.included : []).map((x: any) => [x?.id, x])
-          );
-
-          const toToken = (attr?: any): SearchedToken | undefined => {
-            if (!attr) return;
-            const symbol = String(attr?.attributes?.symbol ?? "").trim();
-            const name   = String(attr?.attributes?.name ?? "").trim();
-            const addr   = String(attr?.attributes?.address ?? "").toLowerCase();
-            if (!symbol) return;
-            return {
-              symbol,
-              name,
-              address: addr && addr.startsWith("0x") ? (addr as Address) : undefined,
-              logoURI: attr?.attributes?.image_url || undefined,
-              source: "gecko",
-            };
-          };
-
-          const pushAttr = (id?: string) => {
-            const node = id ? included.get(id) : undefined;
-            const tk = toToken(node);
-            if (!tk) return;
-            // **Prefix filter** only (symbol/name)
-            if (startsWithNorm(tk.symbol, q) || startsWithNorm(tk.name ?? "", q)) {
-              push(tk);
+          const included = new Map<string, any>();
+          for (const inc of Array.isArray(json?.included) ? json.included : []) {
+            if (inc?.type === "token" && inc?.id && inc?.attributes?.address) {
+              included.set(String(inc.id), inc.attributes);
             }
-          };
+          }
+
+          const out: SearchedToken[] = [];
+const seen = new Set<string>();
+const pushAttr = (attr?: any) => {
+  const addr: string | undefined = attr?.address;
+  if (!addr || addr.length !== 42 || !addr.startsWith("0x")) return;
+  const key = addr.toLowerCase();
+  if (seen.has(key)) return;
+
+  // NEW: letter‑only searches must match by symbol or name, not address
+  if (onlyLetters && !nameMatches(attr?.symbol, attr?.name)) return;
+
+  seen.add(key);
+  out.push({
+    symbol: String(attr?.symbol || ""),
+    name: typeof attr?.name === "string" ? attr.name : undefined,
+    address: addr as Address,
+    source: "geckoterminal",
+  });
+};
+
 
           for (const pool of Array.isArray(json?.data) ? json.data : []) {
-            const baseId  = pool?.relationships?.base_token?.data?.id;
+            const baseId = pool?.relationships?.base_token?.data?.id;
             const quoteId = pool?.relationships?.quote_token?.data?.id;
-            pushAttr(baseId);
-            pushAttr(quoteId);
+            pushAttr(included.get(baseId));
+            pushAttr(included.get(quoteId));
             if (out.length >= limit) break;
           }
+
+          return out.slice(0, limit);
         } catch {
-          // Fall through to DexScreener
+          // If GeckoTerminal is unreachable, fall through to DexScreener (may not return Monad hits).
         }
       }
 
-      // 3) DexScreener fallback — also lists traded tokens (may be multi-chain)
-      if (out.length < limit) {
-        try {
-          const url = `https://api.dexscreener.com/latest/dex/search?q=${encodeURIComponent(q)}`;
-          const res = await fetch(url, { headers: { accept: "application/json" } });
-          if (!res.ok) throw new Error(`HTTP ${res.status}`);
-          const json: any = await res.json();
+      // 3) Fallback: multi‑chain name search via DexScreener (filters by chainId when provided by API)
+      try {
+        const url = `https://api.dexscreener.com/latest/dex/search?q=${encodeURIComponent(q)}`;
+        const res = await fetch(url, { headers: { accept: "application/json" } });
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
 
-          const pairs: any[] = Array.isArray(json?.pairs) ? json.pairs : [];
-          for (const p of pairs) {
-            const pushTk = (tk?: any) => {
-              if (!tk || !tk.symbol) return;
-              const s = String(tk.symbol);
-              const n = String(tk.name ?? "");
-              // **Prefix filter** only
-              if (!(startsWithNorm(s, q) || startsWithNorm(n, q))) return;
+        const json: any = await res.json();
+        const pairs: any[] = Array.isArray(json?.pairs) ? json.pairs : [];
+        const out: SearchedToken[] = [];
+        const seen = new Set<string>();
 
-              push({
-                symbol: s,
-                name: n || undefined,
-                address: typeof tk.address === "string" && tk.address.startsWith("0x")
-                  ? (tk.address as Address)
-                  : undefined,
-                source: "dexscreener",
-              });
-            };
+        for (const p of pairs) {
+          const pChainId: number | undefined =
+            typeof p?.chainId === "number" ? p.chainId :
+            typeof p?.chainId === "string" && /^\d+$/.test(p.chainId) ? Number(p.chainId) :
+            undefined;
 
-            // Only interested in tokens, not pairs — take both sides
-            pushTk(p?.baseToken);
-            pushTk(p?.quoteToken);
+                const pushTk = (tk?: any) => {
+  const addr: string | undefined = tk?.address;
+  if (!addr || addr.length !== 42 || !addr.startsWith("0x")) return;
+  if (pChainId !== undefined && pChainId !== chainId) return; // keep current chain if dex gives chainId
+  const key = addr.toLowerCase();
+  if (seen.has(key)) return;
 
-            if (out.length >= limit) break;
-          }
-        } catch {
-          // Ignore; return whatever we have
+  // NEW: letter‑only searches must match by symbol or name, not address
+  if (onlyLetters && !nameMatches(tk?.symbol, tk?.name)) return;
+
+  seen.add(key);
+  out.push({
+    symbol: String(tk?.symbol || ""),
+    name: typeof tk?.name === "string" ? tk.name : undefined,
+    address: addr as Address,
+    logoURI: tk?.iconUrl ?? tk?.imageUrl, // NEW: carry logo URL through
+    source: "dexscreener",
+  });
+};
+
+
+          pushTk(p?.baseToken);
+          pushTk(p?.quoteToken);
+          if (out.length >= limit) break;
         }
+        return out.slice(0, limit);
+      } catch {
+        return [];
       }
-
-      // Simple deterministic ranking: exact symbol > exact name > prefix symbol > prefix name
-      const score = (t: SearchedToken) => {
-        const s = norm(t.symbol);
-        const n = norm(t.name ?? "");
-        const qn = norm(q);
-        if (s === qn) return 0;
-        if (n === qn) return 1;
-        if (s.startsWith(qn)) return 2;
-        if (n.startsWith(qn)) return 3;
-        return 9;
-      };
-
-      return out.sort((a, b) => score(a) - score(b)).slice(0, limit);
     },
   });
 }
