@@ -59,6 +59,23 @@ const tokensEqual = (a?: TokenPick | null, b?: TokenPick | null) => {
   return aSym !== "" && aSym === bSym;        // fallback for native/no-address
 };
 
+
+// --- search normalization helpers ---
+const normalize = (s?: string) =>
+  (s ?? "")
+    .normalize("NFKD")
+    // strip diacritics
+    .replace(/\p{Diacritic}/gu, "")
+    .toLowerCase();
+
+const fold = (s?: string) =>
+  normalize(s).replace(/[^a-z0-9]/g, ""); // collapse separators
+
+const is0x = (s?: string) => !!s && /^0x[0-9a-f]{4,}$/i.test(s);
+
+
+
+
 // Get dynamic button width based on symbol length
 const getButtonWidth = (symbol?: string) => {
   if (!symbol) return "w-32";
@@ -174,36 +191,129 @@ const SwapInterface = () => {
     }
   }, [isConnected, sellBal?.value, sellBal?.decimals, sellAmount]);
 
-  // --- Search + Filter for token modal (DEX + address + local) ---
- type TokenLite = { symbol: string; name?: string; address?: `0x${string}`; logoURI?: string };
- const filteredTokens: TokenLite[] = useMemo(() => {
-   const q = searchTerm.trim().toLowerCase();
-   // Empty → show your curated defaults
-   if (!q) return tokens;
+ // --- Search + Filter for token modal (DEX + address + local) ---
+type TokenLite = {
+  symbol: string;
+  name?: string;
+  address?: `0x${string}`;
+  logoURI?: string;
+};
 
-   const onlyLetters = !q.startsWith("0x");
-const local = tokens.filter((t) =>
-  t.symbol.toLowerCase().includes(q) ||
-  t.name.toLowerCase().includes(q) ||
-  (!onlyLetters && (t.address?.toLowerCase().includes(q) ?? false))
-);
+const filteredTokens: TokenLite[] = useMemo(() => {
+  const raw = (searchTerm ?? "").trim();
+  const q = normalize(raw);
+  const fq = fold(raw);
 
+  // Show curated defaults when empty
+  if (!q) return tokens;
 
-   const merged: TokenLite[] = [];
-   const seen = new Set<string>();
-   const push = (tk?: { symbol?: string; name?: string; address?: `0x${string}` }) => {
-     if (!tk) return;
-     const key = tk.address ? (tk.address as string).toLowerCase() : `symbol:${(tk.symbol || "").toUpperCase()}`;
-     if (seen.has(key)) return;
-     seen.add(key);
-     merged.push({ symbol: tk.symbol || "", name: tk.name, address: tk.address });
-   };
+  // Precompute curated membership for the priority boost
+  const curatedAddr = new Set(
+    tokens.map(t => t.address?.toLowerCase()).filter(Boolean) as string[]
+  );
+  const curatedSym = new Set(
+    tokens.filter(t => !t.address).map(t => (t.symbol || "").toUpperCase())
+  );
 
-   // Merge external search results and local matches (deduped)
-   (searchResults as any[]).forEach(push);
-   local.forEach(push);
-   return merged;
- }, [searchTerm, tokens, searchResults]);
+  // Collect candidates from: curated (tokens), extraTokens (user‑added), and remote searchResults
+  const candidates: Array<TokenLite & { __source: "curated" | "extra" | "remote" }> = [];
+
+  const shouldKeep = (t: TokenLite) => {
+    const symF = fold(t.symbol);
+    const nameF = fold(t.name);
+    const addr = t.address?.toLowerCase() || "";
+    // address search only when input looks like 0x…
+    const addrHit = is0x(raw) && addr.includes(raw.toLowerCase());
+    return (
+      symF.includes(fq) ||
+      nameF.includes(fq) ||
+      addrHit
+    );
+  };
+
+  // 1) curated first (we will still score/sort, but they get a large boost)
+  for (const t of tokens) {
+    const tk: TokenLite = { symbol: t.symbol, name: t.name, address: t.address, logoURI: (t as any).logoURI };
+    if (shouldKeep(tk)) candidates.push({ ...tk, __source: "curated" });
+  }
+
+  // 2) extra tokens (user-added)
+  for (const t of extraTokens) {
+    const tk: TokenLite = { symbol: t.symbol, name: t.name, address: t.address, logoURI: t.logoURI };
+    if (shouldKeep(tk)) candidates.push({ ...tk, __source: "extra" });
+  }
+
+  // 3) remote results from the hook
+  for (const t of (searchResults as any[])) {
+    const tk: TokenLite = { symbol: t.symbol || "", name: t.name, address: t.address as any, logoURI: t.logoURI };
+    if (shouldKeep(tk)) candidates.push({ ...tk, __source: "remote" });
+  }
+
+  // De‑duplicate: first by address (ERC‑20), then by native symbol
+  const seen = new Set<string>();
+  const deduped: TokenLite[] = [];
+  for (const t of candidates) {
+    const key = t.address ? `addr:${t.address.toLowerCase()}` : `sym:${(t.symbol || "").toUpperCase()}`;
+    if (seen.has(key)) continue;
+    seen.add(key);
+    deduped.push({ symbol: t.symbol, name: t.name, address: t.address, logoURI: t.logoURI });
+  }
+
+  const scoreOf = (t: TokenLite): number => {
+    const sym = t.symbol || "";
+    const nm = t.name || "";
+    const addr = (t.address || "").toLowerCase();
+
+    const symU = sym.toUpperCase();
+    const symF = fold(sym);
+    const nameF = fold(nm);
+
+    let s = 0;
+
+    // 1) address typed → exact match on top
+    if (is0x(raw)) {
+      if (addr === raw.toLowerCase()) s += 10000;
+      if (addr.includes(raw.toLowerCase())) s += 9000;
+    }
+
+    // 2) exact symbol / exact name
+    if (symU === raw.toUpperCase()) s += 8000;
+    if (normalize(nm) === q) s += 7600;
+
+    // 3) startsWith (symbol first, then name)
+    if (symF.startsWith(fq)) s += 6000;
+    if (nameF.startsWith(fq)) s += 5200;
+
+    // 4) substring (symbol first, then name)
+    if (symF.includes(fq)) s += 4000;
+    if (nameF.includes(fq)) s += 3500;
+
+    // 5) curated boost (local tokens[] are preferred)
+    const isCurated = t.address
+      ? curatedAddr.has(addr)
+      : curatedSym.has(symU);
+    if (isCurated) s += 100000;
+
+    // 6) prefer native over "wrapped" when query matches base symbol
+    if (/^w/i.test(sym) && symF.replace(/^w/i, "") === fq) s -= 500;
+
+    // 7) tiny bias toward shorter symbols for tie‑breaks
+    s += Math.max(0, 200 - sym.length);
+
+    return s;
+  };
+
+  deduped.sort((a, b) => {
+    const d = scoreOf(b) - scoreOf(a);
+    if (d !== 0) return d;
+    // Stable, deterministic secondary order
+    const aKey = (a.symbol || "") + "|" + (a.address || "");
+    const bKey = (b.symbol || "") + "|" + (b.address || "");
+    return aKey.localeCompare(bKey);
+  });
+
+  return deduped;
+}, [searchTerm, tokens, extraTokens, searchResults]);
 
   // --- Quote from Yak (every 2s, 5% slippage, threshold ≥ 0.1%) ---
   const router = PUBLIC_CONFIG.YAK_ROUTER as Address;
