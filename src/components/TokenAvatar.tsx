@@ -40,19 +40,15 @@ export default function TokenAvatar({
   if (logoURI && !externalFailed) {
     return (
       <img
-  src={logoURI}
-  alt={symbol || (address as string) || "token"}
-  width={size}
-  height={size}
-  title={title}
-  decoding="async"
-  loading="lazy"
-  referrerPolicy="no-referrer"
-  className={`${rounded ? "rounded-full" : ""} ${className}`}
-  draggable={false}
-  onError={() => setExternalFailed(true)}
-/>
-
+        src={logoURI}
+        alt={symbol || (address as string) || "token"}
+        width={size}
+        height={size}
+        title={title}
+        className={`${rounded ? "rounded-full" : ""} ${className}`}
+        draggable={false}
+        onError={() => setExternalFailed(true)}
+      />
     );
   }
 
@@ -79,8 +75,6 @@ export default function TokenAvatar({
         width={size}
         height={size}
         title={title}
-        decoding="async"
-        loading="lazy"
         className={`${rounded ? "rounded-full" : ""} ${className}`}
         draggable={false}
       />
