@@ -12,3 +12,4 @@ const tokens = [
     { symbol: "WETH", name: "Wrapped ETH", address: "0xB5a30b0FDc5EA94A52fDc42e3E9760Cb8449Fb37" as `0x${string}` },
     { symbol: "WBTC", name: "Wrapped BTC", address: "0xB5a30b0FDc5EA94A52fDc42e3E9760Cb8449Fb37" as `0x${string}` },
   ];
+export { tokens as TOKENS };
