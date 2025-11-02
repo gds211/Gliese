@@ -12,6 +12,7 @@ import {
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogOverlay } from "@/components/ui/dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useTokenSearch } from "@/hooks/useTokenSearch";
+import { useConnectModal } from "@rainbow-me/rainbowkit";
 
 import { ChevronDown, Wallet, Search, Loader2 } from "lucide-react";
 import TokenAvatar from "@/components/TokenAvatar";
@@ -52,6 +53,7 @@ const TriggerInterface = ({
   setExtraTokens,
 }: TriggerInterfaceProps) => {
   const { address, isConnected } = useAccount();
+  const { openConnectModal } = useConnectModal();
   
   const [payAmount, setPayAmount] = useState("");
   const [rate, setRate] = useState("");
@@ -401,7 +403,9 @@ const filteredTokens: TokenLite[] = useMemo(() => {
           <div className="flex items-center gap-2 text-xs text-muted-foreground">
             <span className="flex items-center gap-1">
               <Wallet className="h-3 w-3" />
-              {payBalance ? `${Number(payBalance.formatted).toFixed(4)} ${selectedPayToken?.symbol}` : `0.0000 ${selectedPayToken?.symbol}`}
+              {payBalance && Number(payBalance.formatted) > 0
+                ? `${Number(payBalance.formatted).toFixed(6).replace(/\.?0+$/, '')} ${selectedPayToken?.symbol}` 
+                : `0.00 ${selectedPayToken?.symbol}`}
             </span>
             <Button
               variant="ghost"
@@ -603,7 +607,11 @@ const filteredTokens: TokenLite[] = useMemo(() => {
       <Button
         size="lg"
         className="w-full text-base font-semibold tracking-wide"
-        disabled={!isConnected || !payAmount || !rate || isExceeding}
+        disabled={isConnected && (!payAmount || !rate || isExceeding)}
+        onClick={() => {
+          if (!isConnected) return openConnectModal?.();
+          // TODO: Add trigger order creation logic here
+        }}
       >
         {getButtonText()}
       </Button>

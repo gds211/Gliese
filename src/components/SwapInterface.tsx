@@ -869,13 +869,14 @@ const selectToken = (picked: string | TokenObj) => {
             size="lg"
             className="w-full text-base font-semibold tracking-wide"
             disabled={
-              (!isConnected && !openConnectModal) ||
-              !sellAmount ||
-              sellAmount === "0" ||
-              sellAmount === "0.0" ||
-              isExceeding ||
-              !quote ||
-              quote.minOutRaw === 0n
+              isConnected && (
+                !sellAmount ||
+                sellAmount === "0" ||
+                sellAmount === "0.0" ||
+                isExceeding ||
+                !quote ||
+                quote.minOutRaw === 0n
+              )
             }
             onClick={() => {
               if (!isConnected) return openConnectModal?.();
