@@ -45,7 +45,7 @@ export default function TokenAvatar({
         width={size}
         height={size}
         title={title}
-        className={`${rounded ? "rounded-full" : ""} ${className}`}
+        className={`block object-cover ${rounded ? "rounded-full" : ""} ${className}`}
         draggable={false}
         onError={() => setExternalFailed(true)}
       />
@@ -75,7 +75,7 @@ export default function TokenAvatar({
         width={size}
         height={size}
         title={title}
-        className={`${rounded ? "rounded-full" : ""} ${className}`}
+        className={`block object-cover ${rounded ? "rounded-full" : ""} ${className}`}
         draggable={false}
       />
     );

@@ -943,7 +943,7 @@ const selectToken = (picked: string | TokenObj) => {
                       <TokenAvatar
                         symbol={token.symbol}
                         address={token.address as `0x${string}` | undefined}
-                        size={26}
+                        size={30}
                         title={token.name || token.symbol}
                         logoURI={(token as any).logoURI}
                       />
