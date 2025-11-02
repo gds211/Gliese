@@ -120,7 +120,7 @@ const SwapInterface = () => {
     { symbol: "shMON", name: "ShMonad", address: "0x3a98250F98Dd388C211206983453837C8365BDc1" as `0x${string}` },
     { symbol: "YAKI", name: "Moyaki", address: "0xfe140e1dCe99Be9F4F15d657CD9b7BF622270C50" as `0x${string}` },
     { symbol: "WETH", name: "Wrapped ETH", address: "0xB5a30b0FDc5EA94A52fDc42e3E9760Cb8449Fb37" as `0x${string}` },
-    { symbol: "WBTC", name: "Wrapped BTC", address: "0xB5a30b0FDc5EA94A52fDc42e3E9760Cb8449Fb37" as `0x${string}` },
+    { symbol: "WBTC", name: "Wrapped BTC", address: "0xcf5a6076cfa32686c0Df13aBaDa2b40dec133F1d" as `0x${string}` },
   ];
 
   // Helper to check if token is verified (in our tokens list)
