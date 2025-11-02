@@ -21,6 +21,7 @@ import { useDynamicSlippageBps } from "@/hooks/useDynamicSlippage";
 import { ArrowUpDown, Wallet, Search, ChevronDown, Loader2 } from "lucide-react";
 import glieseLogo from "@/assets/gliese-logo.png";
 import verifiedBadge from "@/assets/verified-badge.svg";
+import { TOKENS as tokens } from "@/config/tokens";
 
 import { PUBLIC_CONFIG } from "@/config/public";
 import { useYakQuote } from "@/hooks/useYakQuote";
@@ -108,21 +109,7 @@ const SwapInterface = () => {
     aprMON: 0.00214,
   };
 
-  const tokens = [
-    { symbol: "MON", name: "monad" }, // native (no address)
-    { symbol: "USDC", name: "Circle USD", address: "0xf817257fed379853cDe0fa4F97AB987181B1E5Ea" as `0x${string}` },
-    { symbol: "USDT", name: "Tether USD", address: "0x88b8E2161DEDC77EF4ab7585569D2415a1C1055D" as `0x${string}` },
-    { symbol: "CHOG", name: "chog", address: "0xE0590015A873bF326bd645c3E1266d4db41C4E6B" as `0x${string}` },
-    { symbol: "DAK", name: "Molandak", address: "0x0F0BDEbF0F83cD1EE3974779Bcb7315f9808c714" as `0x${string}` },
-    { symbol: "aprMON", name: "apriori MON", address: "0xb2f82D0f38dc453D596Ad40A37799446Cc89274A" as `0x${string}` },
-    { symbol: "WMON", name: "Wrapped Monad", address: "0x760AfE86e5de5fa0Ee542fc7B7B713e1c5425701" as `0x${string}` },
-    { symbol: "gMON", name: "gMON", address: "0xaEef2f6B429Cb59C9B2D7bB2141ADa993E8571c3" as `0x${string}` },
-    { symbol: "shMON", name: "ShMonad", address: "0x3a98250F98Dd388C211206983453837C8365BDc1" as `0x${string}` },
-    { symbol: "YAKI", name: "Moyaki", address: "0xfe140e1dCe99Be9F4F15d657CD9b7BF622270C50" as `0x${string}` },
-    { symbol: "WETH", name: "Wrapped ETH", address: "0xB5a30b0FDc5EA94A52fDc42e3E9760Cb8449Fb37" as `0x${string}` },
-    { symbol: "WBTC", name: "Wrapped BTC", address: "0xB5a30b0FDc5EA94A52fDc42e3E9760Cb8449Fb37" as `0x${string}` },
-  ];
-
+  
   // Helper to check if token is verified (in our tokens list)
   const isVerifiedToken = (token: { symbol: string; address?: `0x${string}` }) => {
     return tokens.some(t => {
@@ -197,77 +184,87 @@ const SwapInterface = () => {
     }
   }, [isConnected, sellBal?.value, sellBal?.decimals, sellAmount]);
 
- // --- Search + Filter for token modal (DEX + address + local) ---
+// --- Search + Filter for token modal (DEX + address + local) ---
 type TokenLite = {
   symbol: string;
   name?: string;
   address?: `0x${string}`;
   logoURI?: string;
+  // new optional fields passed through from useTokenSearch
+  chainId?: number;
+  source?: "dexscreener" | "geckoterminal" | "address";
+  liquidityUSD?: number;
+  volume24hUSD?: number;
 };
+
+// helpers kept local for UI filtering
+const normalize = (s?: string) => (s ?? "")
+  .normalize("NFKD")
+  .replace(/\p{Diacritic}/gu, "")
+  .toLowerCase();
+const fold = (s?: string) => normalize(s).replace(/[^a-z0-9]/g, "");
+const is0x = (s?: string) => !!s && /^0x[0-9a-f]{4,}$/i.test(s);
 
 const filteredTokens: TokenLite[] = useMemo(() => {
   const raw = (searchTerm ?? "").trim();
-  const q = normalize(raw);
-  const fq = fold(raw);
+  const q   = normalize(raw);
+  const fq  = fold(raw);
 
   // Show curated defaults when empty
   if (!q) return tokens;
 
-  // Precompute curated membership for the priority boost
-  const curatedAddr = new Set(
-    tokens.map(t => t.address?.toLowerCase()).filter(Boolean) as string[]
-  );
-  const curatedSym = new Set(
-    tokens.filter(t => !t.address).map(t => (t.symbol || "").toUpperCase())
-  );
-
-  // Collect candidates from: curated (tokens), extraTokens (user‑added), and remote searchResults
+  // Pull remote results (already debounced & chain‑filtered in the hook)
+  // Also keep extraTokens (user‑added) and curated tokens
   const candidates: Array<TokenLite & { __source: "curated" | "extra" | "remote" }> = [];
 
   const shouldKeep = (t: TokenLite) => {
-    const symF = fold(t.symbol);
+    const symF  = fold(t.symbol);
     const nameF = fold(t.name);
-    const addr = t.address?.toLowerCase() || "";
-    // address search only when input looks like 0x…
+    const addr  = t.address?.toLowerCase() || "";
+    // treat address search only when input looks like 0x…
     const addrHit = is0x(raw) && addr.includes(raw.toLowerCase());
-    return (
-      symF.includes(fq) ||
-      nameF.includes(fq) ||
-      addrHit
-    );
+    // when remote passed a chainId and it differs, drop it
+    const chainOk = typeof t.chainId !== "number" || t.chainId === Number(PUBLIC_CONFIG.CHAIN_ID);
+    return chainOk && (symF.includes(fq) || nameF.includes(fq) || addrHit);
   };
 
-  // 1) curated first (we will still score/sort, but they get a large boost)
+  // 1) curated first
   for (const t of tokens) {
     const tk: TokenLite = { symbol: t.symbol, name: t.name, address: t.address, logoURI: (t as any).logoURI };
     if (shouldKeep(tk)) candidates.push({ ...tk, __source: "curated" });
   }
 
-  // 2) extra tokens (user-added)
+  // 2) user‑added tokens
   for (const t of extraTokens) {
     const tk: TokenLite = { symbol: t.symbol, name: t.name, address: t.address, logoURI: t.logoURI };
     if (shouldKeep(tk)) candidates.push({ ...tk, __source: "extra" });
   }
 
-  // 3) remote results from the hook
-  for (const t of (searchResults as any[])) {
-    const tk: TokenLite = { symbol: t.symbol || "", name: t.name, address: t.address as any, logoURI: t.logoURI };
+  // 3) remote results from the hook (carry metrics + chainId)
+  for (const t of (searchResults ?? [])) {
+    const tk: TokenLite = {
+      symbol: t.symbol, name: t.name, address: t.address,
+      logoURI: t.logoURI, chainId: t.chainId, source: t.source,
+      liquidityUSD: t.liquidityUSD, volume24hUSD: t.volume24hUSD,
+    };
     if (shouldKeep(tk)) candidates.push({ ...tk, __source: "remote" });
   }
 
-  // De‑duplicate: first by address (ERC‑20), then by native symbol
+  // Dedupe by address (if present) else by symbol
   const seen = new Set<string>();
   const deduped: TokenLite[] = [];
   for (const t of candidates) {
     const key = t.address ? `addr:${t.address.toLowerCase()}` : `sym:${(t.symbol || "").toUpperCase()}`;
     if (seen.has(key)) continue;
     seen.add(key);
-    deduped.push({ symbol: t.symbol, name: t.name, address: t.address, logoURI: t.logoURI });
+    deduped.push({ symbol: t.symbol, name: t.name, address: t.address, logoURI: t.logoURI,
+      chainId: t.chainId, source: t.source, liquidityUSD: t.liquidityUSD, volume24hUSD: t.volume24hUSD });
   }
 
+  // Ranking: your lexical score + soft popularity signals
   const scoreOf = (t: TokenLite): number => {
-    const sym = t.symbol || "";
-    const nm = t.name || "";
+    const sym  = t.symbol || "";
+    const nm   = t.name || "";
     const addr = (t.address || "").toLowerCase();
 
     const symU = sym.toUpperCase();
@@ -275,8 +272,7 @@ const filteredTokens: TokenLite[] = useMemo(() => {
     const nameF = fold(nm);
 
     let s = 0;
-
-    // 1) address typed → exact match on top
+    // 1) address match only when user is typing an 0x
     if (is0x(raw)) {
       if (addr === raw.toLowerCase()) s += 10000;
       if (addr.includes(raw.toLowerCase())) s += 9000;
@@ -284,26 +280,35 @@ const filteredTokens: TokenLite[] = useMemo(() => {
 
     // 2) exact symbol / exact name
     if (symU === raw.toUpperCase()) s += 8000;
-    if (normalize(nm) === q) s += 7600;
+    if (normalize(nm) === q)       s += 7600;
 
     // 3) startsWith (symbol first, then name)
-    if (symF.startsWith(fq)) s += 6000;
+    if (symF.startsWith(fq))  s += 6000;
     if (nameF.startsWith(fq)) s += 5200;
 
     // 4) substring (symbol first, then name)
-    if (symF.includes(fq)) s += 4000;
+    if (symF.includes(fq))  s += 4000;
     if (nameF.includes(fq)) s += 3500;
 
-    // 5) curated boost (local tokens[] are preferred)
-    const isCurated = t.address
-      ? curatedAddr.has(addr)
-      : curatedSym.has(symU);
+    // 5) curated boost (local tokens are preferred)
+    //    (curated address or curated native symbol)
+    const curatedAddr = new Set(tokens.filter(t => t.address).map(t => t.address!.toLowerCase()));
+    const curatedSym  = new Set(tokens.filter(t => !t.address).map(t => (t.symbol || "").toUpperCase()));
+    const isCurated = t.address ? curatedAddr.has(addr) : curatedSym.has(symU);
     if (isCurated) s += 100000;
 
     // 6) prefer native over "wrapped" when query matches base symbol
     if (/^w/i.test(sym) && symF.replace(/^w/i, "") === fq) s -= 500;
 
-    // 7) tiny bias toward shorter symbols for tie‑breaks
+    // 7) soft popularity signals from remote sources
+    if (typeof t.liquidityUSD === "number") {
+      s += Math.min(2000, Math.log10(t.liquidityUSD + 1) * 400);
+    }
+    if (typeof t.volume24hUSD === "number") {
+      s += Math.min(1000, Math.log10(t.volume24hUSD + 1) * 200);
+    }
+
+    // tiny bias toward shorter symbols for tie‑breaks
     s += Math.max(0, 200 - sym.length);
 
     return s;
@@ -312,7 +317,6 @@ const filteredTokens: TokenLite[] = useMemo(() => {
   deduped.sort((a, b) => {
     const d = scoreOf(b) - scoreOf(a);
     if (d !== 0) return d;
-    // Stable, deterministic secondary order
     const aKey = (a.symbol || "") + "|" + (a.address || "");
     const bKey = (b.symbol || "") + "|" + (b.address || "");
     return aKey.localeCompare(bKey);
@@ -320,6 +324,7 @@ const filteredTokens: TokenLite[] = useMemo(() => {
 
   return deduped;
 }, [searchTerm, tokens, extraTokens, searchResults]);
+
 
   // --- Quote from Yak (every 2s, 5% slippage, threshold ≥ 0.1%) ---
   const router = PUBLIC_CONFIG.YAK_ROUTER as Address;
