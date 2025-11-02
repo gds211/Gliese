@@ -677,7 +677,7 @@ const selectToken = (picked: string | TokenObj) => {
             </TabsTrigger>
           </TabsList>
 
-          <TabsContent value="instant" className="mt-4 space-y-3">
+          <TabsContent value="instant" className="mt-4 space-y-3" forceMount>
             {/* Selling Section */}
             <div className="space-y-3">
               <div className="flex items-center justify-between">
@@ -844,7 +844,7 @@ const selectToken = (picked: string | TokenObj) => {
             </div>
           </TabsContent>
 
-          <TabsContent value="trigger" className="mt-4">
+          <TabsContent value="trigger" className="mt-4" forceMount>
             <TriggerInterface 
                tokens={tokens}
                payToken={sellToken}
