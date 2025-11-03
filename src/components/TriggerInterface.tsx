@@ -1,7 +1,9 @@
 import { useState, useMemo, type Dispatch, type SetStateAction } from "react";
+import { Address } from "viem";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
+import { useTokenBalance } from "@/hooks/useTokenBalance";
 import {
   Select,
   SelectContent,
@@ -42,8 +44,30 @@ interface TriggerInterfaceProps {
   >;
 }
 
+// Helper component to display token balance
+const TokenBalanceDisplay = ({ 
+  tokenAddress, 
+  walletAddress 
+}: { 
+  tokenAddress?: Address; 
+  walletAddress?: Address;
+}) => {
+  const { formatted, isLoading } = useTokenBalance({
+    address: walletAddress,
+    token: tokenAddress,
+  });
 
-const TriggerInterface = ({ 
+  if (!walletAddress) return <span className="text-white/60 text-base">0.00</span>;
+  if (isLoading) return <span className="text-white/60 text-base">...</span>;
+  
+  return (
+    <span className="text-white/60 text-base">
+      {formatted ? parseFloat(formatted).toFixed(2) : "0.00"}
+    </span>
+  );
+};
+
+const TriggerInterface = ({
   tokens,
   payToken,
   setPayToken,
@@ -677,6 +701,12 @@ const filteredTokens: TokenLite[] = useMemo(() => {
                       <div className="text-sm text-white/60 font-mono">
                         {token.address ? formatAddress(token.address) : "Native coin"}
                       </div>
+                    </div>
+                    <div className="shrink-0">
+                      <TokenBalanceDisplay 
+                        tokenAddress={token.address as Address | undefined}
+                        walletAddress={address}
+                      />
                     </div>
                   </div>
                 </Button>
