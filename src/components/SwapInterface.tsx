@@ -4,7 +4,6 @@ import { Address, parseUnits, formatUnits } from "viem";
 import { useAccount, useBalance } from "wagmi";
 import { useConnectModal } from "@rainbow-me/rainbowkit";
 import { useQueryClient } from "@tanstack/react-query"; // <-- ADDED
-import { useTokenBalance } from "@/hooks/useTokenBalance";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -84,29 +83,6 @@ const getButtonWidth = (symbol?: string) => {
 };
 
 
-
-// Helper component to display token balance
-const TokenBalanceDisplay = ({ 
-  tokenAddress, 
-  walletAddress 
-}: { 
-  tokenAddress?: Address; 
-  walletAddress?: Address;
-}) => {
-  const { formatted, isLoading } = useTokenBalance({
-    address: walletAddress,
-    token: tokenAddress,
-  });
-
-  if (!walletAddress) return <span className="text-white/60 text-base">0.00</span>;
-  if (isLoading) return <span className="text-white/60 text-base">...</span>;
-  
-  return (
-    <span className="text-white/60 text-base">
-      {formatted ? parseFloat(formatted).toFixed(2) : "0.00"}
-    </span>
-  );
-};
 
 // -------------------- Component --------------------
 const SwapInterface = () => {
@@ -1012,12 +988,6 @@ const selectToken = (picked: string | TokenObj) => {
                       <div className="text-sm text-white/60 font-mono">
                         {token.address ? formatAddress(token.address) : "Native coin"}
                       </div>
-                    </div>
-                    <div className="shrink-0">
-                      <TokenBalanceDisplay 
-                        tokenAddress={token.address as Address | undefined}
-                        walletAddress={address}
-                      />
                     </div>
                   </div>
                 </Button>
