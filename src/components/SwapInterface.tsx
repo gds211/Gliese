@@ -98,11 +98,11 @@ const TokenBalanceDisplay = ({
     token: tokenAddress,
   });
 
-  if (!walletAddress) return <span className="text-white/60 text-base">0.00</span>;
-  if (isLoading) return <span className="text-white/60 text-base">...</span>;
+  if (!walletAddress) return <span className="text-white text-base">0.00</span>;
+  if (isLoading) return <span className="text-white text-base">...</span>;
   
   return (
-    <span className="text-white/60 text-base">
+    <span className="text-white text-base">
       {formatted ? parseFloat(formatted).toFixed(2) : "0.00"}
     </span>
   );
