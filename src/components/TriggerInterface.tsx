@@ -691,22 +691,22 @@ const filteredTokens: TokenLite[] = useMemo(() => {
                       />
                     </div>
                     <div className="flex-1 text-left">
-                      <div className="font-semibold text-white text-base flex items-center gap-1">
-                        {token.symbol}
-                        {isVerifiedToken(token) && (
-                          <img src={verifiedBadge} alt="verified" className="w-3.5 h-3.5 inline-block" />
-                        )}
+                      <div className="font-semibold text-white text-base flex items-center justify-between gap-2">
+                        <div className="flex items-center gap-1">
+                          {token.symbol}
+                          {isVerifiedToken(token) && (
+                            <img src={verifiedBadge} alt="verified" className="w-3.5 h-3.5 inline-block" />
+                          )}
+                        </div>
+                        <TokenBalanceDisplay 
+                          tokenAddress={token.address as Address | undefined}
+                          walletAddress={address}
+                        />
                       </div>
                       <div className="text-sm text-white/60">{token.name}</div>
                       <div className="text-sm text-white/60 font-mono">
                         {token.address ? formatAddress(token.address) : "Native coin"}
                       </div>
-                    </div>
-                    <div className="shrink-0">
-                      <TokenBalanceDisplay 
-                        tokenAddress={token.address as Address | undefined}
-                        walletAddress={address}
-                      />
                     </div>
                   </div>
                 </Button>
