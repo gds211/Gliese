@@ -739,7 +739,11 @@ const selectToken = (picked: string | TokenObj) => {
                 <div className="flex items-center gap-2 text-xs text-muted-foreground">
                   <span className="flex items-center gap-1">
                     <Wallet className="h-3 w-3" />
-                    {sellBalLoading ? "…" : sellBal ? `${Number(sellBal.formatted).toFixed(4)} ${selectedSellToken?.symbol}` : `0.00 ${selectedSellToken?.symbol}`}
+                    {sellBalLoading ? "…" : sellBal ? (() => {
+                      const num = Number(sellBal.formatted);
+                      const formatted = num === 0 ? "0.00" : num.toFixed(4);
+                      return `${formatted} ${selectedSellToken?.symbol}`;
+                    })() : `0.00 ${selectedSellToken?.symbol}`}
                   </span>
                   <Button
                     variant="ghost"
@@ -828,7 +832,7 @@ const selectToken = (picked: string | TokenObj) => {
                 variant="ghost"
                 size="sm"
                 onClick={handleSwapTokens}
-                className="h-8 w-8 p-0 bg-background/60 hover:bg-white rounded-md border border-border/40 hover:border-blue-600 transition-colors duration-200"
+                className="h-8 w-8 p-0 bg-background/60 hover:bg-white rounded-md border border-border/40 hover:border-2 hover:border-blue-600 transition-colors duration-200"
               >
                 <ArrowUpDown className="h-4 w-4 text-blue-600" />
               </Button>
