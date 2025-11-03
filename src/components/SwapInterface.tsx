@@ -437,7 +437,30 @@ const buyAmountDerived = (() => {
     const num = Number(buyAmountDerived);
     if (isNaN(num)) return "0.00";
     if (num === 0) return "0.00";
-    return num.toFixed(6).replace(/\.?0+$/, '');
+    
+    // Count digits before decimal point
+    const integerPart = Math.floor(Math.abs(num));
+    const digitCount = integerPart === 0 ? 1 : Math.floor(Math.log10(integerPart)) + 1;
+    
+    // Determine decimal places based on digit count
+    let decimals;
+    if (digitCount <= 4) {
+      decimals = 6; // e.g., 1234.123456
+    } else if (digitCount === 5) {
+      decimals = 5; // e.g., 12345.12345
+    } else if (digitCount === 6) {
+      decimals = 4; // e.g., 123456.1234
+    } else if (digitCount === 7) {
+      decimals = 3; // e.g., 1234567.123
+    } else if (digitCount === 8) {
+      decimals = 2; // e.g., 12345678.12
+    } else if (digitCount === 9) {
+      decimals = 1; // e.g., 123456789.1
+    } else {
+      decimals = 0; // e.g., 1234567890
+    }
+    
+    return num.toFixed(decimals).replace(/\.?0+$/, '');
   }, [buyAmountDerived]);
 
   // Rate display: accurate even before typing (uses a 1-unit on-chain quote)
