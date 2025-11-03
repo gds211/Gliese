@@ -460,7 +460,7 @@ const buyAmountDerived = (() => {
       decimals = 0; // e.g., 1234567890
     }
     
-    return num.toFixed(decimals).replace(/\.?0+$/, '');
+    return num.toFixed(decimals);
   }, [buyAmountDerived]);
 
   // Rate display: accurate even before typing (uses a 1-unit on-chain quote)
