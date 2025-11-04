@@ -2,10 +2,6 @@
 import { createRoot } from "react-dom/client";
 import App from "./App";
 import "./index.css";
-import { preloadLocalLogos } from "./lib/imageCache";
-
-// Preload all local token logos immediately
-preloadLocalLogos();
 
 import "@rainbow-me/rainbowkit/styles.css";
 import { WagmiProvider } from "wagmi";

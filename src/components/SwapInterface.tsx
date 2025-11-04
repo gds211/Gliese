@@ -20,7 +20,6 @@ import { YAK_ROUTER_ABI } from "@/abi/yakRouter";
 import { useDynamicSlippageBps } from "@/hooks/useDynamicSlippage";
 
 import { ArrowUpDown, Wallet, Search, ChevronDown, Loader2 } from "lucide-react";
-import { Skeleton } from "@/components/ui/skeleton";
 import glieseLogo from "@/assets/gliese-logo.png";
 import verifiedBadge from "@/assets/verified-badge.svg";
 
@@ -1007,21 +1006,9 @@ const selectToken = (picked: string | TokenObj) => {
               </div>
             )}
             {/* Token List */}
+
           
           <ScrollArea className="h-[30.5rem] w-full pr-4">
-            {searching && searchTerm.trim() ? (
-              <div className="space-y-2">
-                {[...Array(8)].map((_, i) => (
-                  <div key={i} className="flex items-center gap-3 py-3 px-3">
-                    <Skeleton className="h-10 w-10 rounded-full" />
-                    <div className="space-y-2 flex-1">
-                      <Skeleton className="h-4 w-20" />
-                      <Skeleton className="h-3 w-32" />
-                    </div>
-                  </div>
-                ))}
-              </div>
-            ) : (
             <div className="space-y-2">
               {filteredTokens.map((token) => (
                 <Button
@@ -1062,7 +1049,6 @@ const selectToken = (picked: string | TokenObj) => {
                 </Button>
               ))}
             </div>
-            )}
           </ScrollArea>
         </DialogContent>
       </Dialog>
