@@ -59,17 +59,17 @@ export default function TokenAvatar({
       className={`${rounded ? "rounded-full" : ""} ${className}`}
       title={title}
     >
-      {/* 1. Try external logo (if not previously failed) */}
-      {logoURI && !skipExternal && (
+      {/* 1. Try local asset FIRST (instant) */}
+      {localSrc && <AvatarImage src={localSrc} alt={symbol || "token"} />}
+
+      {/* 2. Try external logo only if no local asset (and not previously failed) */}
+      {!localSrc && logoURI && !skipExternal && (
         <AvatarImage
           src={logoURI}
           alt={symbol || "token"}
           onError={() => imageCache.markFailed(logoURI)}
         />
       )}
-
-      {/* 2. Try local asset */}
-      {localSrc && <AvatarImage src={localSrc} alt={symbol || "token"} />}
 
       {/* 3. Letter badge fallback */}
       <AvatarFallback className="bg-white/15 text-[10px] font-semibold uppercase">
