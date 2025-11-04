@@ -57,11 +57,11 @@ const TokenBalanceDisplay = ({
     token: tokenAddress,
   });
 
-  if (!walletAddress) return <span className="text-white/60 text-base">0.00</span>;
-  if (isLoading) return <span className="text-white/60 text-base">...</span>;
+  if (!walletAddress) return <span className="text-xs text-white/50 font-medium tabular-nums">0.00</span>;
+  if (isLoading) return <span className="text-xs text-white/50 font-medium tabular-nums">...</span>;
   
   return (
-    <span className="text-white/60 text-base">
+    <span className="text-xs text-white/50 font-medium tabular-nums">
       {formatted ? parseFloat(formatted).toFixed(2) : "0.00"}
     </span>
   );

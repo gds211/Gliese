@@ -32,7 +32,7 @@ import { useTokenSearch } from "@/hooks/useTokenSearch";
 import SlippageIcon from "@/assets/slippage.png";
 import TriggerInterface from "@/components/TriggerInterface";
 import { swapAudioPlayer } from "@/lib/audioPlayer";
-import CheckmarkIcon from "@/assets/checkmark-icon.png";
+
 
 // -------------------- Local helpers --------------------
 function formatAmount(raw: bigint, decimals: number, maxFrac: number = 6): string {
@@ -97,11 +97,11 @@ const TokenBalanceDisplay = ({
     token: tokenAddress,
   });
 
-  if (!walletAddress) return <span className="text-white text-base">0.00</span>;
-  if (isLoading) return <span className="text-white text-base">...</span>;
+  if (!walletAddress) return <span className="text-xs text-white/50 font-medium tabular-nums">0.00</span>;
+  if (isLoading) return <span className="text-xs text-white/50 font-medium tabular-nums">...</span>;
   
   return (
-    <span className="text-white text-base">
+    <span className="text-xs text-white/50 font-medium tabular-nums">
       {formatted ? parseFloat(formatted).toFixed(2) : "0.00"}
     </span>
   );
@@ -709,11 +709,7 @@ const selectToken = (picked: string | TokenObj) => {
       // Show toast immediately when transaction is confirmed
       const toastTitle: React.ReactNode = (
         <div className="flex items-center gap-2">
-          <img 
-            src={CheckmarkIcon} 
-            alt="Success" 
-            className="w-5 h-5 flex-shrink-0"
-          />
+          <span className="text-lg">✅</span>
           <span>Swap confirmed</span>
         </div>
       );
