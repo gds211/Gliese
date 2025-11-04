@@ -698,8 +698,10 @@ const selectToken = (picked: string | TokenObj) => {
         },
         {
           onWalletConfirmed: () => {
-            // 🎵 Audio plays immediately when user confirms in wallet
-            swapAudioPlayer.play();
+            // 🎵 Audio plays 0.5 seconds after wallet confirmation
+            setTimeout(() => {
+              swapAudioPlayer.play();
+            }, 500);
           },
         }
       );
