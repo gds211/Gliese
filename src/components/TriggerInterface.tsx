@@ -19,7 +19,6 @@ import { useConnectModal } from "@rainbow-me/rainbowkit";
 import { ChevronDown, Wallet, Search, Loader2 } from "lucide-react";
 import TokenAvatar from "@/components/TokenAvatar";
 import { useAccount, useBalance } from "wagmi";
-import { Skeleton } from "@/components/ui/skeleton";
 import { parseUnits } from "viem";
 import glieseLogo from "@/assets/gliese-logo.png";
 import verifiedBadge from "@/assets/verified-badge.svg";
@@ -673,19 +672,6 @@ const filteredTokens: TokenLite[] = useMemo(() => {
           {/* Token List */}
 
           <ScrollArea className="h-[30.5rem] w-full pr-4">
-            {searching ? (
-              <div className="space-y-2">
-                {[...Array(8)].map((_, i) => (
-                  <div key={i} className="flex items-center gap-3 p-3 rounded-xl border border-white/10">
-                    <Skeleton className="h-10 w-10 rounded-full bg-white/10" />
-                    <div className="space-y-2 flex-1">
-                      <Skeleton className="h-4 w-20 bg-white/10" />
-                      <Skeleton className="h-3 w-32 bg-white/10" />
-                    </div>
-                  </div>
-                ))}
-              </div>
-            ) : (
             <div className="space-y-2">
               {filteredTokens.map((token) => (
                 <Button
@@ -726,7 +712,6 @@ const filteredTokens: TokenLite[] = useMemo(() => {
                 </Button>
               ))}
             </div>
-            )}
           </ScrollArea>
         </DialogContent>
       </Dialog>
