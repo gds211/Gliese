@@ -1,15 +1,14 @@
-import React, { useState } from "react";
-
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
+import { imageCache } from "@/lib/imageCache";
 
 // Eagerly import *local* token logos once at build time.
-// Put files in: src/assets/tokens/  (e.g., mon.svg, usdc.svg, 0xabc....png)
 const modules = import.meta.glob("../assets/tokens/*.{svg,png,webp}", {
   eager: true,
 }) as Record<string, { default: string }>;
 
 const byBase: Record<string, string> = {};
 for (const [path, mod] of Object.entries(modules)) {
-  const file = path.split("/").pop()!;                           // e.g. usdc.svg
+  const file = path.split("/").pop()!;
   const base = file.replace(/\.(svg|png|webp)$/i, "").toLowerCase();
   byBase[base] = mod.default;
 }
@@ -17,83 +16,65 @@ for (const [path, mod] of Object.entries(modules)) {
 type Props = {
   symbol?: string;
   address?: `0x${string}` | string;
-  logoURI?: string;     // NEW: external icon URL
-  size?: number;        // px
+  logoURI?: string;
+  size?: number;
   className?: string;
-  rounded?: boolean;    // default circle
-  title?: string;       // optional tooltip text
+  rounded?: boolean;
+  title?: string;
 };
-
 
 export default function TokenAvatar({
   symbol,
   address,
-  logoURI,              // NEW
+  logoURI,
   size = 18,
   className = "",
   rounded = true,
   title,
 }: Props) {
-  const [externalFailed, setExternalFailed] = useState(false);
+  // Check if external logo previously failed
+  const skipExternal = logoURI && imageCache.hasFailed(logoURI);
 
-  // 1) External logo (highest priority)
-  if (logoURI && !externalFailed) {
-    return (
-      <img
-        src={logoURI}
-        alt={symbol || (address as string) || "token"}
-        width={size}
-        height={size}
-        title={title}
-        className={`block object-cover ${rounded ? "rounded-full" : ""} ${className}`}
-        draggable={false}
-        onError={() => setExternalFailed(true)}
-      />
-    );
-  }
-
-  // 2) Local logos (by address or symbol)
+  // Find local asset
   const candidates: string[] = [];
-  // Prioritize address first since most icons are named by address
-
   if (address) candidates.push(String(address).toLowerCase());
   if (symbol) candidates.push(String(symbol).toLowerCase());
 
-  let src: string | undefined;
+  let localSrc: string | undefined;
   for (const key of candidates) {
     if (byBase[key]) {
-      src = byBase[key];
+      localSrc = byBase[key];
       break;
     }
   }
 
-  if (src) {
-    return (
-      <img
-        src={src}
-        alt={symbol || (address as string) || "token"}
-        width={size}
-        height={size}
-        title={title}
-        className={`block object-cover ${rounded ? "rounded-full" : ""} ${className}`}
-        draggable={false}
-      />
-    );
-  }
-
-  // Fallback: letter badge
+  // Fallback letter
   const letter = (symbol || (address ? String(address).slice(2, 3) : "?"))
     .slice(0, 1)
     .toUpperCase();
 
   return (
-    <div
+    <Avatar
       style={{ width: size, height: size }}
-      className={`grid place-items-center ${rounded ? "rounded-full" : ""} bg-white/15 text-[10px] font-semibold uppercase ${className}`}
-      title={`${title || symbol || address || "token"} (no icon)`}
-      aria-label={`${symbol || address || "token"} (no icon)`}
+      className={`${rounded ? "rounded-full" : ""} ${className}`}
+      title={title}
     >
-      {letter}
-    </div>
+      {/* 1. Try external logo (if not previously failed) */}
+      {logoURI && !skipExternal && (
+        <AvatarImage
+          src={logoURI}
+          alt={symbol || "token"}
+          onError={() => imageCache.markFailed(logoURI)}
+        />
+      )}
+
+      {/* 2. Try local asset */}
+      {localSrc && <AvatarImage src={localSrc} alt={symbol || "token"} />}
+
+      {/* 3. Letter badge fallback */}
+      <AvatarFallback className="bg-white/15 text-[10px] font-semibold uppercase">
+        {letter}
+      </AvatarFallback>
+    </Avatar>
   );
 }

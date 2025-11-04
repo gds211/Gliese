@@ -32,7 +32,7 @@ import { useTokenSearch } from "@/hooks/useTokenSearch";
 import SlippageIcon from "@/assets/slippage.png";
 import TriggerInterface from "@/components/TriggerInterface";
 import { swapAudioPlayer } from "@/lib/audioPlayer";
-import CheckmarkIcon from "@/assets/checkmark-icon.png";
+import { Skeleton } from "@/components/ui/skeleton";
 
 // -------------------- Local helpers --------------------
 function formatAmount(raw: bigint, decimals: number, maxFrac: number = 6): string {
@@ -707,19 +707,8 @@ const selectToken = (picked: string | TokenObj) => {
       );
 
       // Show toast immediately when transaction is confirmed
-      const toastTitle: React.ReactNode = (
-        <div className="flex items-center gap-2">
-          <img 
-            src={CheckmarkIcon} 
-            alt="Success" 
-            className="w-5 h-5 flex-shrink-0"
-          />
-          <span>Swap confirmed</span>
-        </div>
-      );
-      
       toast({
-        title: toastTitle,
+        title: "Swap confirmed ✅",
         description: `Tx: ${receipt.transactionHash.slice(0, 10)}…`,
       });
 
@@ -1009,6 +998,19 @@ const selectToken = (picked: string | TokenObj) => {
 
           
           <ScrollArea className="h-[30.5rem] w-full pr-4">
+            {searching ? (
+              <div className="space-y-2">
+                {[...Array(8)].map((_, i) => (
+                  <div key={i} className="flex items-center gap-3 p-3 rounded-xl border border-white/10">
+                    <Skeleton className="h-10 w-10 rounded-full bg-white/10" />
+                    <div className="space-y-2 flex-1">
+                      <Skeleton className="h-4 w-20 bg-white/10" />
+                      <Skeleton className="h-3 w-32 bg-white/10" />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
             <div className="space-y-2">
               {filteredTokens.map((token) => (
                 <Button
@@ -1049,6 +1051,7 @@ const selectToken = (picked: string | TokenObj) => {
                 </Button>
               ))}
             </div>
+            )}
           </ScrollArea>
         </DialogContent>
       </Dialog>
