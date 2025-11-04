@@ -12,7 +12,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogOverlay } from "@/components/ui/dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { useToast } from "@/components/ui/use-toast";
+import { toast, useToast } from "@/hooks/use-toast";
 import { usePublicClient } from "wagmi";
 import { useNetworkFees } from "@/hooks/useNetworkFees";
 import { getDecimals } from "@/lib/decimals";
@@ -32,9 +32,7 @@ import { useTokenSearch } from "@/hooks/useTokenSearch";
 import SlippageIcon from "@/assets/slippage.png";
 import TriggerInterface from "@/components/TriggerInterface";
 import { swapAudioPlayer } from "@/lib/audioPlayer";
-
-// Timing constant for explosion sound (in milliseconds)
-const EXPLOSION_TIMING_MS = 933; // Explosion occurs at 0.933 seconds
+import CheckmarkIcon from "@/assets/checkmark-icon.png";
 
 // -------------------- Local helpers --------------------
 function formatAmount(raw: bigint, decimals: number, maxFrac: number = 6): string {
@@ -706,12 +704,20 @@ const selectToken = (picked: string | TokenObj) => {
         }
       );
 
-      // ⏱️ Wait for explosion timing (933ms from audio start)
-      await new Promise(resolve => setTimeout(resolve, EXPLOSION_TIMING_MS));
-
-      // 💥 Show toast at exact explosion moment
+      // Show toast immediately when transaction is confirmed
+      const toastTitle: React.ReactNode = (
+        <div className="flex items-center gap-2">
+          <img 
+            src={CheckmarkIcon} 
+            alt="Success" 
+            className="w-5 h-5 flex-shrink-0"
+          />
+          <span>Swap confirmed</span>
+        </div>
+      );
+      
       toast({
-        title: "Swap confirmed ✅",
+        title: toastTitle,
         description: `Tx: ${receipt.transactionHash.slice(0, 10)}…`,
       });
 
