@@ -23,6 +23,10 @@ export type SwapArgs = {
   adapters: Address[];
 };
 
+export type SwapOptions = {
+  onWalletConfirmed?: () => void;
+};
+
 // ===== Internals =====
 
 const ZERO = "0x0000000000000000000000000000000000000000" as Address;
@@ -66,7 +70,7 @@ function assertRouteShape(path: Address[], adapters: Address[]) {
   }
 }
 
-export async function performSwap(args: SwapArgs) {
+export async function performSwap(args: SwapArgs, options?: SwapOptions) {
   const { address } = getAccount(config);
   if (!address) throw new Error("Wallet not connected.");
 
@@ -171,6 +175,11 @@ export async function performSwap(args: SwapArgs) {
     args: [trade, address, FEE_BPS],
     value,
   });
+
+  // 🎵 Trigger callback immediately after wallet confirmation
+  if (options?.onWalletConfirmed) {
+    options.onWalletConfirmed();
+  }
 
   const receipt = await waitForTransactionReceipt(config, { hash: txHash });
   return receipt;

@@ -31,9 +31,10 @@ import TokenAvatar from "@/components/TokenAvatar";
 import { useTokenSearch } from "@/hooks/useTokenSearch";
 import SlippageIcon from "@/assets/slippage.png";
 import TriggerInterface from "@/components/TriggerInterface";
+import { swapAudioPlayer } from "@/lib/audioPlayer";
 
-
-
+// Timing constant for explosion sound (in milliseconds)
+const EXPLOSION_TIMING_MS = 933; // Explosion occurs at 0.933 seconds
 
 // -------------------- Local helpers --------------------
 function formatAmount(raw: bigint, decimals: number, maxFrac: number = 6): string {
@@ -687,16 +688,28 @@ const selectToken = (picked: string | TokenObj) => {
 
       toast({ title: "Preparing swap...", description: "Checking allowance & building txn" });
 
-      const receipt = await performSwap({
-        router,
-        tokenIn: selectedSellToken.address ?? selectedSellToken.symbol, // "MON" is fine here for native detection
-        tokenOut: selectedBuyToken.address ?? selectedBuyToken.symbol,
-        amountIn,
-        amountOutMin: minOutRawDynamic, // dynamic, size-aware (hard-capped) slippage
-        path: quote.path,
-        adapters: quote.adapters,
-      });
+      const receipt = await performSwap(
+        {
+          router,
+          tokenIn: selectedSellToken.address ?? selectedSellToken.symbol, // "MON" is fine here for native detection
+          tokenOut: selectedBuyToken.address ?? selectedBuyToken.symbol,
+          amountIn,
+          amountOutMin: minOutRawDynamic, // dynamic, size-aware (hard-capped) slippage
+          path: quote.path,
+          adapters: quote.adapters,
+        },
+        {
+          onWalletConfirmed: () => {
+            // 🎵 Audio plays immediately when user confirms in wallet
+            swapAudioPlayer.play();
+          },
+        }
+      );
 
+      // ⏱️ Wait for explosion timing (933ms from audio start)
+      await new Promise(resolve => setTimeout(resolve, EXPLOSION_TIMING_MS));
+
+      // 💥 Show toast at exact explosion moment
       toast({
         title: "Swap confirmed ✅",
         description: `Tx: ${receipt.transactionHash.slice(0, 10)}…`,
