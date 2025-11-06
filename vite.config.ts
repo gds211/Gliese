@@ -8,11 +8,19 @@ export default defineConfig(({ mode }) => ({
   server: {
     host: "::",
     port: 8080,
+    proxy: {
+      // wrangler dev --local runs on 127.0.0.1:8787 by default
+      "/rpc": {
+        target: "http://127.0.0.1:8787",
+        changeOrigin: false,
+        secure: false,
+        ws: false,
+      },
+    },
   },
   plugins: [
     react(),
-    mode === 'development' &&
-    componentTagger(),
+    mode === "development" && componentTagger(),
   ].filter(Boolean),
   resolve: {
     alias: {
@@ -22,4 +30,5 @@ export default defineConfig(({ mode }) => ({
   },
   optimizeDeps: {
     include: ["react", "react-dom"],
-}}));
+  },
+}));
