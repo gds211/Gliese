@@ -3,21 +3,25 @@ main = "src/index.ts"
 compatibility_date = "2025-10-01"
 tsconfig = "tsconfig.json"
 
-# ---- Env vars (edit RPC to match your chain) ----
+# ===== Default (shared) vars: adjust as needed =====
 [vars]
-UPSTREAM_RPC = "https://testnet-rpc.monad.xyz"
-GLOBAL_READS_RPS = "500"      # global ceiling enforced by the DO
-BATCH_WAIT_MS = "15"          # short batch window in the Worker
-MAX_BATCH_SIZE = "250"
-CACHE_TTL_MS = "1000"         # 1s default cache for "latest"
+UPSTREAM_RPC   = "https://testnet-rpc.monad.xyz" # TODO: for mainnet/provider use a secret instead
+GLOBAL_READS_RPS = "500"          # global ceiling via Durable Object
+BATCH_WAIT_MS    = "15"           # client (wagmi) batches; server batches kept off
+MAX_BATCH_SIZE   = "250"
+CACHE_TTL_MS     = "1000"         # 1s cache for "latest" reads
+# Comma-separated list of allowed front-end origins (set in 'production' below)
+# ORIGIN_ALLOWLIST = ""
 
-# ---- Per-POP rate limit binding (cheap safety rail) ----
+# ---- Rate limiting binding: pick a namespace_id unique in your account ----
+# See docs: workers runtime APIs > bindings > Rate Limiting (requires Wrangler >= 4.36)
+# https://developers.cloudflare.com/workers/runtime-apis/bindings/rate-limit/
 [[ratelimits]]
 name = "READS_LOCAL_LIMIT"
-namespace_id = "2001"
-simple = { limit = 500, period = 60 }
+namespace_id = "20001"             # TODO: any positive integer unique per account
+simple = { limit = 1500, period = 60 }  # 1500 reads/min per POP
 
-# ---- Durable Object for a GLOBAL token bucket ----
+# ---- Durable Object binding + migration ----
 [[durable_objects.bindings]]
 name = "ReadsBudget"
 class_name = "ReadsBudgetDO"
@@ -26,8 +30,29 @@ class_name = "ReadsBudgetDO"
 tag = "v1"
 new_classes = ["ReadsBudgetDO"]
 
-# (Optional) Set a route once you’ve connected your domain:
+# ===== Environments =====
+# Dev uses workers.dev subdomain to keep things simple
+[env.dev]
+workers_dev = true
+# ORIGIN_ALLOWLIST blank in dev; cors() will mirror the dev origin
+
+# Staging (optional)
+[env.staging]
+workers_dev = true
+[env.staging.vars]
+ORIGIN_ALLOWLIST = "https://your-staging-frontend.example" # TODO (optional)
+
+# Production: use your own zone route, or workers.dev if you prefer a subdomain
+[env.production]
+# If you have a Cloudflare zone for your domain, route the worker at /rpc:
+# Replace zone_name with YOUR zone and host
 # routes = [
-#   { pattern = "yourdomain.com/rpc", zone_id = "YOUR_ZONE_ID" }
+#   { pattern = "api.yourdomain.com/rpc", zone_name = "yourdomain.com" }
 # ]
 
+# Alternatively, keep workers.dev and point the frontend to https://<name>.<account>.workers.dev
+workers_dev = true
+
+[env.production.vars]
+# Lock down CORS to your production frontend(s)
+ORIGIN_ALLOWLIST = "https://YOUR_LOVABLE_OR_CUSTOM_DOMAIN"
