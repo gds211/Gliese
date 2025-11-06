@@ -1,1 +1,33 @@
+name = "rpc-gateway"
+main = "src/index.ts"
+compatibility_date = "2025-10-01"
+tsconfig = "tsconfig.json"
+
+# ---- Env vars (edit RPC to match your chain) ----
+[vars]
+UPSTREAM_RPC = "https://testnet-rpc.monad.xyz"
+GLOBAL_READS_RPS = "500"      # global ceiling enforced by the DO
+BATCH_WAIT_MS = "15"          # short batch window in the Worker
+MAX_BATCH_SIZE = "250"
+CACHE_TTL_MS = "1000"         # 1s default cache for "latest"
+
+# ---- Per-POP rate limit binding (cheap safety rail) ----
+[[ratelimits]]
+name = "READS_LOCAL_LIMIT"
+namespace_id = "2001"
+simple = { limit = 500, period = 60 }
+
+# ---- Durable Object for a GLOBAL token bucket ----
+[[durable_objects.bindings]]
+name = "ReadsBudget"
+class_name = "ReadsBudgetDO"
+
+[[migrations]]
+tag = "v1"
+new_classes = ["ReadsBudgetDO"]
+
+# (Optional) Set a route once you’ve connected your domain:
+# routes = [
+#   { pattern = "yourdomain.com/rpc", zone_id = "YOUR_ZONE_ID" }
+# ]
 
