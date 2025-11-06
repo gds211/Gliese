@@ -1,1 +1,11 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "lib": ["es2022", "webworker"],
+    "module": "esnext",
+    "moduleResolution": "bundler",
+    "strict": true,
+    "types": ["@cloudflare/workers-types"]
+  }
+}
 
