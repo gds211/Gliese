@@ -14,12 +14,7 @@ export const wagmiConfig = getDefaultConfig({
   projectId: WALLETCONNECT_PROJECT_ID,
   chains: [monadChain], // ONLY chains you support (keeps "Wrong network" UX simple)
   transports: {
-    [monadChain.id]: http("/rpc", {
-  // optional client-side batching (fine to keep)
-  batch: { wait: 10, batchSize: 200 },
-  timeout: 10_000,
-}),
-
+    [monadChain.id]: http(PUBLIC_CONFIG.RPC_URL),
   },
   ssr: false,
 });

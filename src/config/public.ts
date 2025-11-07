@@ -1,11 +1,6 @@
 // App Configuration
 // src/config/public.ts
 
-const DEV = import.meta.env.DEV;
-// In production we’ll read VITE_RPC_URL if set; otherwise fall back to your Worker URL.
-const PROD_RPC = import.meta.env.VITE_RPC_URL ?? "https://<YOUR-WORKER-NAME>.<YOUR-ACCOUNT>.workers.dev/rpc";
-
-
 // One public config object for your app + chain (PUBLIC values only)
 export const PUBLIC_CONFIG = {
   APP_NAME: "Gliese",
@@ -13,7 +8,7 @@ export const PUBLIC_CONFIG = {
 
   // --- Chain target (Monad Testnet) ---
   CHAIN_ID: 10143,
-  RPC_URL: DEV ? "/rpc" : PROD_RPC,
+  RPC_URL: "https://testnet-rpc.monad.xyz",
   EXPLORER_NAME: "SocialScan",
   EXPLORER_URL: "https://monad-testnet.socialscan.io",
   NATIVE_SYMBOL: "MON",
