@@ -1,7 +1,6 @@
 // src/lib/wagmiConfig.ts
 import { getDefaultConfig } from '@rainbow-me/rainbowkit';
-import { http, webSocket } from 'wagmi';
-import { fallback } from 'viem';
+import { http } from 'wagmi';
 import { monadChain } from './monadChain';
 import { PUBLIC_CONFIG, WALLETCONNECT_PROJECT_ID } from '@/config/public';
 
@@ -15,11 +14,7 @@ export const wagmiConfig = getDefaultConfig({
   projectId: WALLETCONNECT_PROJECT_ID,
   chains: [monadChain], // ONLY chains you support (keeps "Wrong network" UX simple)
   transports: {
-    [monadChain.id]:
-      PUBLIC_CONFIG.WS_URL && PUBLIC_CONFIG.WS_URL.length > 0
-        ? fallback([webSocket(PUBLIC_CONFIG.WS_URL), http(PUBLIC_CONFIG.RPC_URL)])
-        : http(PUBLIC_CONFIG.RPC_URL),
+    [monadChain.id]: http(PUBLIC_CONFIG.RPC_URL),
   },
   ssr: false,
 });
-
