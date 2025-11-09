@@ -11,7 +11,7 @@ export const PUBLIC_CONFIG = {
   /** Optional WebSocket endpoint that matches the RPC node above.
    *  If you aren't sure, leave this string empty ("") and the app will fall back to HTTP-only.
    */
-  WS_URL: "wss://testnet-rpc.monad.xyz/ws",
+  WS_URL: "wss://monad-testnet.drpc.org",
 
   EXPLORER_NAME: "SocialScan",
   EXPLORER_URL: "https://monad-testnet.socialscan.io",
