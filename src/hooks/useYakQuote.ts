@@ -116,10 +116,9 @@ async function getDecimalsCached(addr: Address, native: boolean): Promise<number
     return;
   }
 
-    let timer: any;
     let cancelled = false;
 
-    async function tick() {
+    async function load() {
       const myReq = ++reqCounter.current;
 
       try {
@@ -173,12 +172,21 @@ async function getDecimalsCached(addr: Address, native: boolean): Promise<number
           if (!quote) setQuote(null);
         }
       } finally {
-        if (!cancelled) timer = setTimeout(tick, PUBLIC_CONFIG.QUOTE_POLL_MS);
+        // no userland timer scheduling; updates come from new blocks
       }
     }
 
-    tick();
-    return () => { cancelled = true; clearTimeout(timer); };
+    // initial fetch
+    load();
+
+    // update on every new block (WS if available, HTTP if not)
+    const unwatch = client.watchBlockNumber({
+      emitOnBegin: false,
+      onBlockNumber: () => { if (!cancelled) load(); },
+      onError: () => {},
+    });
+
+    return () => { cancelled = true; unwatch?.(); };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [polling, enabled, router, tokenInAddr, tokenOutAddr, amountInHuman]);
 
