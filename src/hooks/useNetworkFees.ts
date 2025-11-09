@@ -1,15 +1,15 @@
 // src/hooks/useNetworkFees.ts
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { usePublicClient } from "wagmi";
 import { PUBLIC_CONFIG } from "@/config/public";
 
 type FeeState = {
   type: "eip1559" | "legacy" | "fallback";
   gasPriceWei?: bigint;                 // legacy
-  maxFeePerGasWei?: bigint;            // EIP-1559
-  maxPriorityFeePerGasWei?: bigint;    // EIP-1559
-  baseFeePerGasWei?: bigint;           // EIP-1559 (from latest block)
-  effectiveGasPriceWei: bigint;        // what we’ll pass to Yak for costing
+  maxFeePerGasWei?: bigint;            // EIP-1559 (effective cap)
+  maxPriorityFeePerGasWei?: bigint;    // EIP-1559 tip
+  baseFeePerGasWei?: bigint;           // EIP-1559 base from latest block
+  effectiveGasPriceWei: bigint;        // what we pass to Yak for costing
   lastUpdated: number;                 // ms epoch
   source: "estimateFeesPerGas" | "getGasPrice" | "fallback";
 };
@@ -22,51 +22,63 @@ export function useNetworkFees(refreshMs = PUBLIC_CONFIG.FEE_REFRESH_MS) {
     lastUpdated: Date.now(),
     source: "fallback",
   }));
+  const lastMaxPrioRef = useRef<bigint>(0n);
 
   useEffect(() => {
     if (!client) return;
     let dead = false;
-    let timer: any;
+    let unwatch: undefined | (() => void);
+    let blockCounter = 0;
 
-    async function load() {
+    async function updateFromBlock(block: any) {
+      if (dead) return;
       try {
-        // Try EIP-1559 first
-        const e = await (client as any).estimateFeesPerGas?.();
-        if (e && (e.maxFeePerGas ?? e["maxFeePerGas"])) {
-          const maxFee = BigInt(e.maxFeePerGas);
-          const maxPrio = BigInt(e.maxPriorityFeePerGas ?? 0n);
+        // EIP-1559 path if block includes base fee.
+        if (block?.baseFeePerGas != null) {
+          const base = BigInt(block.baseFeePerGas);
+          let maxPrio = lastMaxPrioRef.current;
 
-          // Base fee from latest block (if available)
-          const block = await client.getBlock({ blockTag: "latest" }).catch(() => null as any);
-          const base = BigInt(block?.baseFeePerGas ?? 0n);
+          // Refresh tip only every N blocks to avoid spamming RPC.
+          blockCounter++;
+          if (blockCounter % (PUBLIC_CONFIG.FEE_REFRESH_BLOCKS ?? 5) === 0) {
+            const e = await (client as any).estimateFeesPerGas?.().catch(() => null);
+            if (e?.maxPriorityFeePerGas != null) {
+              maxPrio = BigInt(e.maxPriorityFeePerGas);
+              lastMaxPrioRef.current = maxPrio;
+            } else {
+              const gp = await client.getGasPrice().catch(() => null);
+              if (gp != null) {
+                // Roughly estimate tip if we only have a legacy price; safe, conservative.
+                maxPrio = BigInt(gp) / 3n;
+                lastMaxPrioRef.current = maxPrio;
+              }
+            }
+          }
 
-          // Effective = min(maxFeePerGas, baseFee + maxPriority)
-          const effective = (base + maxPrio) > maxFee ? maxFee : (base + maxPrio);
-
+          const effective = base + maxPrio;
           if (!dead) {
             setFees({
               type: "eip1559",
-              maxFeePerGasWei: maxFee,
-              maxPriorityFeePerGasWei: maxPrio,
               baseFeePerGasWei: base,
+              maxPriorityFeePerGasWei: maxPrio,
+              maxFeePerGasWei: effective,
               effectiveGasPriceWei: effective,
               lastUpdated: Date.now(),
               source: "estimateFeesPerGas",
             });
           }
-          return;
-        }
-
-        // Fallback to legacy getGasPrice
-        const gp = await client.getGasPrice();
-        if (!dead) {
-          setFees({
-            type: "legacy",
-            gasPriceWei: gp,
-            effectiveGasPriceWei: gp,
-            lastUpdated: Date.now(),
-            source: "getGasPrice",
-          });
+        } else {
+          // Legacy path: single RPC.
+          const gp = await client.getGasPrice();
+          if (!dead) {
+            setFees({
+              type: "legacy",
+              gasPriceWei: gp,
+              effectiveGasPriceWei: gp,
+              lastUpdated: Date.now(),
+              source: "getGasPrice",
+            });
+          }
         }
       } catch {
         if (!dead) {
@@ -80,12 +92,22 @@ export function useNetworkFees(refreshMs = PUBLIC_CONFIG.FEE_REFRESH_MS) {
       }
     }
 
-    load();
-    timer = setInterval(load, refreshMs);
-    return () => { dead = true; clearInterval(timer); };
+    // Prefer WS; falls back to periodic polling via pollingInterval if WS is not available.
+    unwatch = (client as any).watchBlocks?.({
+      onBlock: (b: any) => { void updateFromBlock(b); },
+      pollingInterval: refreshMs,
+    });
+
+    // Seed once on mount.
+    (async () => {
+      try {
+        const latest = await client.getBlock({ blockTag: "latest" }).catch(() => null as any);
+        if (latest) await updateFromBlock(latest);
+      } catch { /* no-op */ }
+    })();
+
+    return () => { dead = true; unwatch?.(); };
   }, [client, refreshMs]);
 
-  // Memo just in case a parent renders frequently
   return useMemo(() => fees, [fees]);
 }
-
