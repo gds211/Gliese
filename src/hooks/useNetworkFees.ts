@@ -26,7 +26,7 @@ export function useNetworkFees(refreshMs = PUBLIC_CONFIG.FEE_REFRESH_MS) {
   useEffect(() => {
     if (!client) return;
     let dead = false;
-    let timer: any;
+    
 
     async function load() {
       try {
@@ -81,9 +81,11 @@ export function useNetworkFees(refreshMs = PUBLIC_CONFIG.FEE_REFRESH_MS) {
     }
 
     load();
-    timer = setInterval(load, refreshMs);
-    return () => { dead = true; clearInterval(timer); };
-  }, [client, refreshMs]);
+    const unwatch = client.watchBlockNumber({
+      onBlockNumber: () => { if (!dead) load(); }
+    });
+    return () => { dead = true; unwatch?.(); };
+  }, [client]);
 
   // Memo just in case a parent renders frequently
   return useMemo(() => fees, [fees]);
