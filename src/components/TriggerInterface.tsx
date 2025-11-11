@@ -512,17 +512,24 @@ const filteredTokens: TokenLite[] = useMemo(() => {
               OPTIMIZED
             </button>
             
-            <Slider
-              min={0}
-              max={1}
-              step={1}
-              value={[tradeMode === "optimized" ? 0 : 1]}
-              onValueChange={(value) => {
-                setTradeMode(value[0] === 0 ? "optimized" : "exact");
+            <div 
+              onClick={() => {
+                setTradeMode(tradeMode === "optimized" ? "exact" : "optimized");
               }}
-              className="w-14"
-              aria-label="Toggle trade mode"
-            />
+              className="cursor-pointer"
+            >
+              <Slider
+                min={0}
+                max={1}
+                step={1}
+                value={[tradeMode === "optimized" ? 0 : 1]}
+                onValueChange={(value) => {
+                  setTradeMode(value[0] === 0 ? "optimized" : "exact");
+                }}
+                className="w-12 pointer-events-none"
+                aria-label="Toggle trade mode"
+              />
+            </div>
             
             <button
               type="button"
