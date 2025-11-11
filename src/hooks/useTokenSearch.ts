@@ -60,15 +60,12 @@ export function useTokenSearch(query: string, limit: number = 20) {
             // 1) Direct 0x address → read metadata on the connected chain 
       if (q.startsWith("0x") && isAddress(q)) {
         try {
-          const results = await client.multicall({
-            contracts: [
-              { address: q as Address, abi: ERC20_META_ABI, functionName: "symbol" },
-              { address: q as Address, abi: ERC20_META_ABI, functionName: "name" },
-            ],
-            allowFailure: true,
-          });
-          const symbol = (results[0] as any)?.result as string | undefined;
-          const name   = (results[1] as any)?.result as string | undefined;
+          const [symbolResult, nameResult] = await Promise.all([
+            client.readContract({ address: q as Address, abi: ERC20_META_ABI, functionName: "symbol" }).catch(() => undefined),
+            client.readContract({ address: q as Address, abi: ERC20_META_ABI, functionName: "name" }).catch(() => undefined),
+          ]);
+          const symbol = symbolResult as string | undefined;
+          const name = nameResult as string | undefined;
           return [{ symbol, name, address: q as Address, source: "address" }];
         } catch {
           return [{ symbol: "ERC20", name: undefined, address: q as Address, source: "address" }];

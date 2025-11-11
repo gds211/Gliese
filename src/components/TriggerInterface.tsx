@@ -3,6 +3,7 @@ import { Address } from "viem";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
+import { Slider } from "@/components/ui/slider";
 import { useTokenBalance } from "@/hooks/useTokenBalance";
 import {
   Select,
@@ -499,29 +500,41 @@ const filteredTokens: TokenLite[] = useMemo(() => {
         <div className="flex justify-between items-center text-sm">
           <span className="text-muted-foreground">Buying</span>
           <div className="flex items-center gap-2">
-            <span className="text-[10px] text-muted-foreground">
-              OPTIMIZED
-            </span>
             <button
               type="button"
-              onClick={() => setTradeMode(tradeMode === "optimized" ? "exact" : "optimized")}
-              className="relative w-12 h-3 bg-white/20 rounded-full cursor-pointer transition-all duration-200 hover:bg-white/30"
-              aria-label={`Toggle trade mode. Currently: ${tradeMode}`}
+              onClick={() => setTradeMode("optimized")}
+              className={`text-[10px] transition-colors duration-200 ${
+                tradeMode === "optimized" 
+                  ? "text-white/80 font-medium" 
+                  : "text-white/40"
+              }`}
             >
-              <span
-                className={`absolute top-1/2 -translate-y-1/2 h-4 w-4 bg-[#1a2332] rounded-full transition-all duration-200 ease-in-out shadow-lg ${
-                  tradeMode === "optimized" 
-                    ? "left-0 -translate-x-1" 
-                    : "right-0 translate-x-1"
-                }`}
-                style={{
-                  border: "2px solid #f97316"
-                }}
-              />
+              OPTIMIZED
             </button>
-            <span className="text-[10px] text-muted-foreground">
+            
+            <Slider
+              min={0}
+              max={1}
+              step={1}
+              value={[tradeMode === "optimized" ? 0 : 1]}
+              onValueChange={(value) => {
+                setTradeMode(value[0] === 0 ? "optimized" : "exact");
+              }}
+              className="w-14"
+              aria-label="Toggle trade mode"
+            />
+            
+            <button
+              type="button"
+              onClick={() => setTradeMode("exact")}
+              className={`text-[10px] transition-colors duration-200 ${
+                tradeMode === "exact" 
+                  ? "text-white/80 font-medium" 
+                  : "text-white/40"
+              }`}
+            >
               EXACT
-            </span>
+            </button>
           </div>
         </div>
 
