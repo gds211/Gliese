@@ -1,5 +1,6 @@
 import Navigation from "@/components/Navigation";
 import SwapInterface from "@/components/SwapInterface";
+import EmptyCard from "@/components/EmptyCard";
 import cosmicBackground from "@/assets/cosmic-background.jpg";
 
 const Index = () => {
@@ -19,8 +20,11 @@ const Index = () => {
         <Navigation />
         
         {/* Main Content Area */}
-        <div className="flex justify-center items-start pt-[calc(50vh-300px)] min-h-[calc(100vh-80px)]">
-          <SwapInterface />
+        <div className="flex justify-center items-start pt-[calc(50vh-300px)] min-h-[calc(100vh-80px)] px-4">
+          <div className="flex flex-col lg:flex-row items-start gap-4">
+            <SwapInterface />
+            <EmptyCard />
+          </div>
         </div>
       </div>
     </div>
