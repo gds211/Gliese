@@ -107,8 +107,19 @@ const TokenBalanceDisplay = ({
   );
 };
 
+// -------------------- Component Props --------------------
+type TabKey = "instant" | "trigger" | "recurring";
+
+type SwapInterfaceProps = {
+  activeTab?: TabKey;
+  onTabChange?: (tab: TabKey) => void;
+};
+
 // -------------------- Component --------------------
-const SwapInterface = () => {
+const SwapInterface = ({ 
+  activeTab: externalActiveTab, 
+  onTabChange 
+}: SwapInterfaceProps = {}) => {
   const { address, isConnected } = useAccount();
   const { openConnectModal } = useConnectModal();
   const { toast } = useToast();
@@ -117,8 +128,16 @@ const SwapInterface = () => {
   const { effectiveGasPriceWei } = useNetworkFees(PUBLIC_CONFIG.FEE_REFRESH_MS);
 
   // Which tab is active: controls when the bottom swap button shows
-  type TabKey = "instant" | "trigger" | "recurring";
-  const [activeTab, setActiveTab] = useState<TabKey>("instant");
+  const [internalActiveTab, setInternalActiveTab] = useState<TabKey>("instant");
+  const activeTab = externalActiveTab || internalActiveTab;
+  
+  const handleTabChange = (v: TabKey) => {
+    if (onTabChange) {
+      onTabChange(v);
+    } else {
+      setInternalActiveTab(v);
+    }
+  };
 
 
   // --- Token list (your current list) ---
@@ -735,7 +754,7 @@ const selectToken = (picked: string | TokenObj) => {
     <Card className="w-full max-w-md mx-auto bg-muted/40 backdrop-blur-md border border-muted/60 shadow-2xl">
       <div className="p-4 space-y-4">
         {/* Tabs */}
-        <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as TabKey)} className="w-full">
+        <Tabs value={activeTab} onValueChange={(v) => handleTabChange(v as TabKey)} className="w-full">
           <TabsList className="grid w-full grid-cols-3 bg-muted/40 h-10">
             <TabsTrigger value="instant" className="text-sm flex items-center gap-2 h-8 data-[state=active]:text-primary data-[state=inactive]:text-muted-foreground">
               <span>⚡</span> Instant
