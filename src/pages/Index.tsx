@@ -34,7 +34,7 @@ const Index = () => {
             
             {/* Empty Card - appears to the right when Trigger is active */}
             {activeTab === "trigger" && (
-              <div className="absolute left-[calc(100%+16px)] top-0 animate-slide-in-right">
+              <div className="absolute left-[calc(100%+16px)] top-0 animate-slide-in-bottom">
                 <EmptyCard />
               </div>
             )}
