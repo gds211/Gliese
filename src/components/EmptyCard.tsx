@@ -8,9 +8,9 @@ const EmptyCard = () => {
   return (
     <Card className="w-[448px] bg-muted/40 backdrop-blur-md border border-muted/60 shadow-2xl">
       <div className="p-4 space-y-3 min-h-[350px] flex flex-col">
-        {/* Header - glassmorphic design matching TabsList */}
-        <div className="h-10 bg-background/40 backdrop-blur-sm rounded-lg border border-white/10 flex items-center justify-center">
-          <span className="text-sm font-semibold text-foreground/90">All Trigger Orders</span>
+        {/* Header - glassmorphic design with better spacing */}
+        <div className="h-10 bg-background/40 backdrop-blur-sm rounded-lg border border-white/10 flex items-center justify-center px-4">
+          <span className="text-sm font-semibold text-foreground/90 tracking-wide">All Trigger Orders</span>
         </div>
         
         {/* Content area */}
@@ -24,18 +24,11 @@ const EmptyCard = () => {
                   <span className="text-4xl">📋</span>
                 </div>
                 
-                {/* Text Content with Better Hierarchy */}
+                {/* Text Content - cleaner, no extra hint */}
                 <div className="space-y-2">
                   <p className="text-base font-semibold text-foreground/90">No Active Orders</p>
                   <p className="text-sm text-muted-foreground/80 max-w-[240px] mx-auto leading-relaxed">
                     Your trigger orders will appear here once created
-                  </p>
-                </div>
-                
-                {/* Subtle Hint */}
-                <div className="mt-2 pt-4 border-t border-white/5">
-                  <p className="text-xs text-muted-foreground/60">
-                    Create your first order in the Trigger tab
                   </p>
                 </div>
               </div>
