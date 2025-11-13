@@ -1,39 +1,52 @@
 import { Card } from "@/components/ui/card";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 const EmptyCard = () => {
   // In future: const hasOrders = triggerOrders.length > 0;
   const hasOrders = false; // placeholder
 
   return (
-    <Card className="w-[448px] bg-muted/60 backdrop-blur-md border border-muted/60 shadow-2xl">
-      <div className="p-4 space-y-4 min-h-[350px] flex flex-col">
-        {/* Header aligned with trigger tab's navbar */}
-        <div className="h-10 rounded-md flex items-center justify-center bg-zinc-400">
-          <span className="text-sm font-medium text-foreground">All trigger orders</span>
+    <Card className="w-[448px] bg-muted/40 backdrop-blur-md border border-muted/60 shadow-2xl">
+      <div className="p-4 space-y-3 min-h-[350px] flex flex-col">
+        {/* Header - glassmorphic design matching TabsList */}
+        <div className="h-10 bg-background/40 backdrop-blur-sm rounded-lg border border-white/10 flex items-center justify-center">
+          <span className="text-sm font-semibold text-foreground/90">All Trigger Orders</span>
         </div>
         
         {/* Content area */}
         <div className="flex-1 flex flex-col">
           {!hasOrders ? (
-            /* Empty State */
-            <div className="flex-1 flex flex-col items-center justify-center py-8 px-4">
-              <div className="text-center space-y-3">
-                <div className="w-16 h-16 mx-auto rounded-full bg-muted/40 flex items-center justify-center border border-white/10">
-                  <span className="text-3xl">📋</span>
+            /* Enhanced Empty State */
+            <div className="flex-1 flex flex-col items-center justify-center py-12 px-6">
+              <div className="text-center space-y-4">
+                {/* Glassmorphic Icon Container */}
+                <div className="w-20 h-20 mx-auto rounded-2xl bg-background/40 backdrop-blur-sm flex items-center justify-center border border-white/10 shadow-lg">
+                  <span className="text-4xl">📋</span>
                 </div>
-                <div className="space-y-1">
-                  <p className="text-sm font-medium text-foreground">No active orders</p>
-                  <p className="text-xs text-muted-foreground max-w-[200px] mx-auto">
+                
+                {/* Text Content with Better Hierarchy */}
+                <div className="space-y-2">
+                  <p className="text-base font-semibold text-foreground/90">No Active Orders</p>
+                  <p className="text-sm text-muted-foreground/80 max-w-[240px] mx-auto leading-relaxed">
                     Your trigger orders will appear here once created
+                  </p>
+                </div>
+                
+                {/* Subtle Hint */}
+                <div className="mt-2 pt-4 border-t border-white/5">
+                  <p className="text-xs text-muted-foreground/60">
+                    Create your first order in the Trigger tab
                   </p>
                 </div>
               </div>
             </div>
           ) : (
-            /* Orders List - for future implementation */
-            <div className="space-y-2 overflow-y-auto">
-              {/* Order items will be mapped here */}
-            </div>
+            /* Orders List with ScrollArea */
+            <ScrollArea className="flex-1">
+              <div className="space-y-2 pr-2">
+                {/* Future: Order items will be mapped here with proper styling */}
+              </div>
+            </ScrollArea>
           )}
         </div>
       </div>
