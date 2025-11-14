@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Navigation from "@/components/Navigation";
 import SwapInterface from "@/components/SwapInterface";
 import EmptyCard from "@/components/EmptyCard";
@@ -6,6 +6,23 @@ import cosmicBackground from "@/assets/cosmic-background.jpg";
 
 const Index = () => {
   const [activeTab, setActiveTab] = useState<"instant" | "trigger" | "recurring">("instant");
+  const [showPanel, setShowPanel] = useState(false);
+  const [isExiting, setIsExiting] = useState(false);
+
+  useEffect(() => {
+    if (activeTab === "trigger") {
+      setShowPanel(true);
+      setIsExiting(false);
+    } else if (showPanel) {
+      setIsExiting(true);
+      const timer = setTimeout(() => {
+        setShowPanel(false);
+        setIsExiting(false);
+      }, 400);
+      
+      return () => clearTimeout(timer);
+    }
+  }, [activeTab, showPanel]);
 
   return (
     <div className="min-h-screen relative overflow-hidden">
@@ -33,8 +50,10 @@ const Index = () => {
             />
             
             {/* Empty Card - appears to the right when Trigger is active */}
-            {activeTab === "trigger" && (
-              <div className="absolute left-[calc(100%+16px)] top-0 animate-slide-in-bottom">
+            {showPanel && (
+              <div className={`absolute left-[calc(100%+16px)] top-0 ${
+                isExiting ? 'animate-slide-out-bottom' : 'animate-slide-in-bottom'
+              }`}>
                 <EmptyCard />
               </div>
             )}
