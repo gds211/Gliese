@@ -854,13 +854,7 @@ const selectToken = (picked: string | TokenObj) => {
                         {sellUsdText}
                     </div>
                 </div>
-                <div className="text-right text-sm text-muted-foreground pr-3 pb-3">
-                  {(() => {
-                    const num = sellAmount || "0";
-                    return calculateUSDValue(num, selectedSellToken?.symbol || "");
-                  })()}
-                </div>
-              </div>
+             </div>
             </div>
 
             {/* Swap Arrow */}
@@ -926,9 +920,7 @@ const selectToken = (picked: string | TokenObj) => {
                   </div>
 
                 </div>
-                <div className="text-right text-sm text-muted-foreground pr-3 pb-3">
-                  {calculateUSDValue(buyAmountDerived, selectedBuyToken?.symbol || "")}
-                </div>
+                
               </div>
 
               <div className="flex items-center justify-between text-xs text-muted-foreground">
