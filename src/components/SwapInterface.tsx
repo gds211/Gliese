@@ -18,6 +18,8 @@ import { useNetworkFees } from "@/hooks/useNetworkFees";
 import { getDecimals } from "@/lib/decimals";
 import { YAK_ROUTER_ABI } from "@/abi/yakRouter";
 import { useDynamicSlippageBps } from "@/hooks/useDynamicSlippage";
+import { useQuoteToStable } from "@/hooks/useQuoteToStable";
+
 
 import { ArrowUpDown, Wallet, Search, ChevronDown, Loader2 } from "lucide-react";
 import glieseLogo from "@/assets/gliese-logo.png";
@@ -140,17 +142,8 @@ const SwapInterface = ({
   };
 
 
-  // --- Token list (your current list) ---
-  const cryptoPrices = {
-    MON: 0.00215,
-    USDC: 1.0,
-    USDT: 1.0,
-    CHOG: 16.0,
-    DAK: 2650.0,
-    aprMON: 0.00214,
-  };
-
-  const tokens = [
+    // --- Token list (your current list) ---
+    const tokens = [
     { symbol: "MON", name: "monad" }, // native (no address)
     { symbol: "USDC", name: "Circle USD", address: "0xf817257fed379853cDe0fa4F97AB987181B1E5Ea" as `0x${string}` },
     { symbol: "USDT", name: "Tether USD", address: "0x88b8E2161DEDC77EF4ab7585569D2415a1C1055D" as `0x${string}` },
@@ -424,12 +417,17 @@ const filteredTokens: TokenLite[] = useMemo(() => {
     ),
   });
 
-const notionalUsd = useMemo(() => {
-  const amt = Number(sellAmount);
-  const p = (cryptoPrices as any)[selectedSellToken?.symbol];
-  if (!Number.isFinite(amt) || !Number.isFinite(p)) return null;
-  return amt * p;
-}, [sellAmount, selectedSellToken?.symbol]);
+// USD quote-to-stable (cached, minimal RPC)
+const { toUsdText } = useQuoteToStable({
+  router,
+  tokenA: tokenInArg || null,
+  tokenB: tokenOutArg || null,
+});
+
+// Precomputed USD strings for the UI (≈ amounts)
+const sellUsdText = toUsdText(tokenInArg || null, sellAmount || null);
+const buyUsdText  = toUsdText(tokenOutArg || null, quote?.outFormatted || null);
+
 
 const dynamicSlippage = useDynamicSlippageBps({
   enabled: autoSlippage,
@@ -577,14 +575,7 @@ const buyAmountDerived = (() => {
     return cleaned;
   };
 
-  // USD helpers (for your current UI)
-  const calculateUSDValue = (amount: string, token: string): string => {
-    const numAmount = parseFloat(amount) || 0;
-    const price = (cryptoPrices as any)[token] || 0;
-    const usdValue = numAmount * price;
-    return usdValue < 0.01 && usdValue > 0 ? `$${usdValue.toFixed(6)}` : `$${usdValue.toFixed(2)}`;
-  };
-
+  
   // ------------ ADDED: precise, safe post-swap refresh ------------
   const refreshBalances = async () => {
     // 1) Hard refresh the currently displayed SELL token balance (wallet icon near input)
@@ -717,10 +708,10 @@ const selectToken = (picked: string | TokenObj) => {
         },
         {
           onWalletConfirmed: () => {
-            // 🎵 Audio plays 0.5 seconds after wallet confirmation
+            // 🎵 Audio plays 0.2 seconds after wallet confirmation
             setTimeout(() => {
               swapAudioPlayer.play();
-            }, 500);
+            }, 200);
           },
         }
       );
@@ -852,6 +843,10 @@ const selectToken = (picked: string | TokenObj) => {
                     style={{ color: isExceeding ? "#ef4444" : undefined }}
                     placeholder="0.00"
                   />
+                    {/* USD under Sell */}
+                    <div className="mt-1 text-xs text-muted-foreground select-none">
+                        {sellUsdText}
+                    </div>
                 </div>
                 <div className="text-right text-sm text-muted-foreground pr-3 pb-3">
                   {(() => {
@@ -919,6 +914,11 @@ const selectToken = (picked: string | TokenObj) => {
                     className="!border-none !bg-transparent text-right flex-1 !text-24 font-medium tracking-tight pr-2 h-auto text-foreground !shadow-none !ring-0 !ring-offset-0"
                     placeholder="0.00"
                   />
+                  {/* USD under Receive */}
+                  <div className="mt-1 text-xs text-muted-foreground select-none">
+                    {buyUsdText}
+                  </div>
+
                 </div>
                 <div className="text-right text-sm text-muted-foreground pr-3 pb-3">
                   {calculateUSDValue(buyAmountDerived, selectedBuyToken?.symbol || "")}
