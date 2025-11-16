@@ -18,8 +18,6 @@ import { useNetworkFees } from "@/hooks/useNetworkFees";
 import { getDecimals } from "@/lib/decimals";
 import { YAK_ROUTER_ABI } from "@/abi/yakRouter";
 import { useDynamicSlippageBps } from "@/hooks/useDynamicSlippage";
-import { useQuoteToStable } from "@/hooks/useQuoteToStable";
-
 
 import { ArrowUpDown, Wallet, Search, ChevronDown, Loader2 } from "lucide-react";
 import glieseLogo from "@/assets/gliese-logo.png";
@@ -142,8 +140,17 @@ const SwapInterface = ({
   };
 
 
-    // --- Token list (your current list) ---
-    const tokens = [
+  // --- Token list (your current list) ---
+  const cryptoPrices = {
+    MON: 0.00215,
+    USDC: 1.0,
+    USDT: 1.0,
+    CHOG: 16.0,
+    DAK: 2650.0,
+    aprMON: 0.00214,
+  };
+
+  const tokens = [
     { symbol: "MON", name: "monad" }, // native (no address)
     { symbol: "USDC", name: "Circle USD", address: "0xf817257fed379853cDe0fa4F97AB987181B1E5Ea" as `0x${string}` },
     { symbol: "USDT", name: "Tether USD", address: "0x88b8E2161DEDC77EF4ab7585569D2415a1C1055D" as `0x${string}` },
@@ -179,7 +186,7 @@ const SwapInterface = ({
   const [sellAmount, setSellAmount] = useState("");
   const [sellToken, setSellToken] = useState<string | null>(null); // null = native MON
   const [buyToken, setBuyToken] = useState<string | null>("0xf817257fed379853cDe0fa4F97AB987181B1E5Ea"); // USDC address
-  
+  const [priceRate, setPriceRate] = useState("1 MON = 0.00215 USDC");
 
   const [showTokenModal, setShowTokenModal] = useState(false);
   const [tokenSelectionType, setTokenSelectionType] = useState<"sell" | "buy">("sell");
@@ -417,23 +424,12 @@ const filteredTokens: TokenLite[] = useMemo(() => {
     ),
   });
 
-// USD quote-to-stable (cached, minimal RPC)
-const { toUsd, toUsdText } = useQuoteToStable({
-  router,
-  tokenA: tokenInArg || null,
-  tokenB: tokenOutArg || null,
-});
-
-// Precomputed USD strings for the UI (≈ amounts)
-const sellUsdText = toUsdText(tokenInArg || null, sellAmount || null);
-const buyUsdText  = toUsdText(tokenOutArg || null, quote?.outFormatted || null);
-
-// Numeric notional in USD for MEV cushion calibration
-const notionalUsd = useMemo(
-  () => toUsd(tokenInArg || null, sellAmount || null).value,
-  [toUsd, tokenInArg, sellAmount]
-);
-
+const notionalUsd = useMemo(() => {
+  const amt = Number(sellAmount);
+  const p = (cryptoPrices as any)[selectedSellToken?.symbol];
+  if (!Number.isFinite(amt) || !Number.isFinite(p)) return null;
+  return amt * p;
+}, [sellAmount, selectedSellToken?.symbol]);
 
 const dynamicSlippage = useDynamicSlippageBps({
   enabled: autoSlippage,
@@ -533,12 +529,27 @@ const buyAmountDerived = (() => {
        }
      }
 
-    // No quote available yet
-    return "—";
-   }, [quote, unitQuote, buyAmountDerived, sellAmount, selectedSellToken, selectedBuyToken]);
+    // Fallback to your mock when no on-chain path yet
+    return priceRate;
+  }, [quote, unitQuote, buyAmountDerived, sellAmount, selectedSellToken, selectedBuyToken, priceRate]);
 
+  // Keep your existing mock updater as a fallback when no quote yet
+  useEffect(() => {
+    const updatePriceRate = () => {
+      const sellPrice = (cryptoPrices as any)[selectedSellToken?.symbol] || 0;
+      const buyPrice = (cryptoPrices as any)[selectedBuyToken?.symbol] || 0;
+      if (sellPrice > 0 && buyPrice > 0) {
+        const exchangeRate = sellPrice / buyPrice;
+        const variation = (Math.random() - 0.5) * (exchangeRate * 0.001);
+        const newRate = (exchangeRate + variation).toFixed(5);
+        setPriceRate(`1 ${selectedSellToken?.symbol} = ${newRate} ${selectedBuyToken?.symbol}`);
+      }
+    };
+    updatePriceRate();
+    const interval = setInterval(updatePriceRate, 20000);
+    return () => clearInterval(interval);
+  }, [selectedSellToken?.symbol, selectedBuyToken?.symbol]);
 
-  
   // Reset input values when switching tabs
   useEffect(() => {
     setSellAmount("");
@@ -566,7 +577,14 @@ const buyAmountDerived = (() => {
     return cleaned;
   };
 
-  
+  // USD helpers (for your current UI)
+  const calculateUSDValue = (amount: string, token: string): string => {
+    const numAmount = parseFloat(amount) || 0;
+    const price = (cryptoPrices as any)[token] || 0;
+    const usdValue = numAmount * price;
+    return usdValue < 0.01 && usdValue > 0 ? `$${usdValue.toFixed(6)}` : `$${usdValue.toFixed(2)}`;
+  };
+
   // ------------ ADDED: precise, safe post-swap refresh ------------
   const refreshBalances = async () => {
     // 1) Hard refresh the currently displayed SELL token balance (wallet icon near input)
@@ -699,10 +717,10 @@ const selectToken = (picked: string | TokenObj) => {
         },
         {
           onWalletConfirmed: () => {
-            // 🎵 Audio plays 0.2 seconds after wallet confirmation
+            // 🎵 Audio plays 0.5 seconds after wallet confirmation
             setTimeout(() => {
               swapAudioPlayer.play();
-            }, 200);
+            }, 500);
           },
         }
       );
@@ -834,12 +852,14 @@ const selectToken = (picked: string | TokenObj) => {
                     style={{ color: isExceeding ? "#ef4444" : undefined }}
                     placeholder="0.00"
                   />
-                    {/* USD under Sell */}
-                    <div className="mt-1 text-xs text-muted-foreground select-none">
-                        {sellUsdText}
-                    </div>
                 </div>
-             </div>
+                <div className="text-right text-sm text-muted-foreground pr-3 pb-3">
+                  {(() => {
+                    const num = sellAmount || "0";
+                    return calculateUSDValue(num, selectedSellToken?.symbol || "");
+                  })()}
+                </div>
+              </div>
             </div>
 
             {/* Swap Arrow */}
@@ -899,13 +919,10 @@ const selectToken = (picked: string | TokenObj) => {
                     className="!border-none !bg-transparent text-right flex-1 !text-24 font-medium tracking-tight pr-2 h-auto text-foreground !shadow-none !ring-0 !ring-offset-0"
                     placeholder="0.00"
                   />
-                  {/* USD under Receive */}
-                  <div className="mt-1 text-xs text-muted-foreground select-none">
-                    {buyUsdText}
-                  </div>
-
                 </div>
-                
+                <div className="text-right text-sm text-muted-foreground pr-3 pb-3">
+                  {calculateUSDValue(buyAmountDerived, selectedBuyToken?.symbol || "")}
+                </div>
               </div>
 
               <div className="flex items-center justify-between text-xs text-muted-foreground">

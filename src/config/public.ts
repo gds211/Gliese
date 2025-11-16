@@ -21,10 +21,6 @@ export const PUBLIC_CONFIG = {
 
   // Wrapped native (WMON) address on Monad testnet (from your notes)
   WRAPPED_NATIVE: "0x760AfE86e5de5fa0Ee542fc7B7B713e1c5425701",
-  STABLE_SYMBOL: "USDC",
-  STABLE_TOKEN: "0xf817257fed379853cDe0fa4F97AB987181B1E5Ea" as `0x${string}`,
-  STABLE_DECIMALS: 6, // fallback only; decimals are fetched on-chain & cached
-  QUOTE_TO_STABLE_TTL_MS: 25_000,      // refresh per-token USD price every 25s
 
   // --- Quote behaviour (UI polling, slippage, thresholds) ---
   MAX_STEPS: 4,
