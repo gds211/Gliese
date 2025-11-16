@@ -598,22 +598,7 @@ const buyAmountDerived = (() => {
   }, [quote, unitQuote, buyAmountDerived, sellAmount, selectedSellToken, selectedBuyToken]);
 
   
-  // Keep your existing mock updater as a fallback when no quote yet
-  useEffect(() => {
-    const updatePriceRate = () => {
-      const sellPrice = (cryptoPrices as any)[selectedSellToken?.symbol] || 0;
-      const buyPrice = (cryptoPrices as any)[selectedBuyToken?.symbol] || 0;
-      if (sellPrice > 0 && buyPrice > 0) {
-        const exchangeRate = sellPrice / buyPrice;
-        const variation = (Math.random() - 0.5) * (exchangeRate * 0.001);
-        const newRate = (exchangeRate + variation).toFixed(5);
-        setPriceRate(`1 ${selectedSellToken?.symbol} = ${newRate} ${selectedBuyToken?.symbol}`);
-      }
-    };
-    updatePriceRate();
-    const interval = setInterval(updatePriceRate, 20000);
-    return () => clearInterval(interval);
-  }, [selectedSellToken?.symbol, selectedBuyToken?.symbol]);
+  
 
   // Reset input values when switching tabs
   useEffect(() => {
@@ -642,14 +627,12 @@ const buyAmountDerived = (() => {
     return cleaned;
   };
 
-  // USD helpers (for your current UI)
-  const calculateUSDValue = (amount: string, token: string): string => {
-    const numAmount = parseFloat(amount) || 0;
-    const price = (cryptoPrices as any)[token] || 0;
-    const usdValue = numAmount * price;
-    return usdValue < 0.01 && usdValue > 0 ? `$${usdValue.toFixed(6)}` : `$${usdValue.toFixed(2)}`;
+  const formatUsd = (usd: number): string => {
+    if (!Number.isFinite(usd) || usd <= 0) return "$0.00";
+    return usd < 0.01 ? `$${usd.toFixed(6)}` : `$${usd.toFixed(2)}`;
   };
 
+  
   // ------------ ADDED: precise, safe post-swap refresh ------------
   const refreshBalances = async () => {
     // 1) Hard refresh the currently displayed SELL token balance (wallet icon near input)
@@ -919,10 +902,7 @@ const selectToken = (picked: string | TokenObj) => {
                   />
                 </div>
                 <div className="text-right text-sm text-muted-foreground pr-3 pb-3">
-                  {(() => {
-                    const num = sellAmount || "0";
-                    return calculateUSDValue(num, selectedSellToken?.symbol || "");
-                  })()}
+                   {sellUsdDisplay}
                 </div>
               </div>
             </div>
@@ -986,7 +966,7 @@ const selectToken = (picked: string | TokenObj) => {
                   />
                 </div>
                 <div className="text-right text-sm text-muted-foreground pr-3 pb-3">
-                  {calculateUSDValue(buyAmountDerived, selectedBuyToken?.symbol || "")}
+                  {buyUsdDisplay}
                 </div>
               </div>
 
