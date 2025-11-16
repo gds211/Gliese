@@ -418,7 +418,7 @@ const filteredTokens: TokenLite[] = useMemo(() => {
   });
 
 // USD quote-to-stable (cached, minimal RPC)
-const { toUsdText } = useQuoteToStable({
+const { toUsd, toUsdText } = useQuoteToStable({
   router,
   tokenA: tokenInArg || null,
   tokenB: tokenOutArg || null,
@@ -427,6 +427,12 @@ const { toUsdText } = useQuoteToStable({
 // Precomputed USD strings for the UI (≈ amounts)
 const sellUsdText = toUsdText(tokenInArg || null, sellAmount || null);
 const buyUsdText  = toUsdText(tokenOutArg || null, quote?.outFormatted || null);
+
+// Numeric notional in USD for MEV cushion calibration
+const notionalUsd = useMemo(
+  () => toUsd(tokenInArg || null, sellAmount || null).value,
+  [toUsd, tokenInArg, sellAmount]
+);
 
 
 const dynamicSlippage = useDynamicSlippageBps({
