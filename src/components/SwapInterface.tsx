@@ -417,54 +417,6 @@ const filteredTokens: TokenLite[] = useMemo(() => {
   });
 
 
-  // === USD valuation via on-chain Yak → Stable (minimal RPC) ===
-// Prefer USDC; fall back to USDT if needed
-const stableUSDC = tokens.find(t => t.symbol === "USDC" && t.address) as { address: `0x${string}` } | undefined;
-const stableUSDT = tokens.find(t => t.symbol === "USDT" && t.address) as { address: `0x${string}` } | undefined;
-const stableAddr: `0x${string}` | undefined = (stableUSDC?.address ?? stableUSDT?.address) as any;
-
-// SELL → USD (per 1 SELL)
-const sellToStableUnit = useYakQuote({
-  router,
-  tokenIn: tokenInArg,
-  tokenOut: stableAddr,
-  amountInHuman: "1",
-  // Skip quote when SELL is the stable itself (no RPC)
-  enabled: Boolean(
-    stableAddr &&
-    selectedSellToken &&
-    selectedSellToken.address?.toLowerCase() !== (stableAddr as string)?.toLowerCase()
-  ),
-});
-
-// USDT fallback only if USDC fails or doesn’t exist
-const sellToStableUnitFallback = useYakQuote({
-  router,
-  tokenIn: tokenInArg,
-  tokenOut: stableUSDT?.address,
-  amountInHuman: "1",
-  enabled:
-    Boolean(!stableUSDC && stableUSDT && selectedSellToken) ||
-    Boolean(stableUSDT && (Number(sellToStableUnit?.outFormatted ?? "0") === 0)),
-});
-
-// USD per 1 SELL token
-const sellUsdPerUnit = (() => {
-  const isSellStable = Boolean(
-    stableAddr && selectedSellToken?.address &&
-    selectedSellToken.address.toLowerCase() === (stableAddr as string)?.toLowerCase()
-  );
-  if (isSellStable) return 1;
-
-  const pri = Number(sellToStableUnit?.outFormatted ?? "0");
-  if (Number.isFinite(pri) && pri > 0) return pri;
-
-  const fb = Number(sellToStableUnitFallback?.outFormatted ?? "0");
-  return Number.isFinite(fb) && fb > 0 ? fb : 0;
-})();
-
-
-
 
    // === USD valuation via on-chain Yak → Stable (minimal RPC) ===
   // Pick a preferred USD stable (USDC if present; else USDT).
@@ -510,26 +462,11 @@ const sellUsdPerUnit = (() => {
 
   // Derive USD per 1 BUY token using the live SELL→BUY unit rate to avoid a second RPC.
   const buyUsdPerUnit = (() => {
-  // Prefer the *effective* trade rate at the user's current size (size-aware).
-  if (!Number.isFinite(sellUsdPerUnit) || sellUsdPerUnit <= 0) return 0;
-
-  const amtSell = Number(sellAmount);
-  const outBuy  = Number(quote?.outFormatted ?? NaN);
-
-  // If we have a live quote at the user's size: use it
-  if (
-    Number.isFinite(amtSell) && amtSell > 0 &&
-    Number.isFinite(outBuy)  && outBuy  > 0
-  ) {
-    const rEff = outBuy / amtSell; // BUY per 1 SELL at current size
-    return rEff > 0 ? sellUsdPerUnit / rEff : 0;
-  }
-
-  // Before typing (or no quote yet): use the 1‑unit rate
-  const rUnit = Number(unitQuote?.outFormatted ?? "0"); // BUY per 1 SELL for 1 unit
-  return rUnit > 0 ? sellUsdPerUnit / rUnit : 0;
-})();
-
+    const r = Number(unitQuote?.outFormatted ?? "0"); // how many BUY per 1 SELL
+    if (!Number.isFinite(r) || r <= 0) return 0;
+    if (!Number.isFinite(sellUsdPerUnit) || sellUsdPerUnit <= 0) return 0;
+    return sellUsdPerUnit / r;
+  })();
 
   // Derived buy amount from the active quote (do NOT apply slippage)
 const buyAmountDerived = (() => {
@@ -547,13 +484,15 @@ const buyAmountDerived = (() => {
   })();
 
   const buyUsdDisplay = (() => {
-  const amt = Number(buyAmountDerived || "0");
-  const usd = (Number.isFinite(amt) && Number.isFinite(buyUsdPerUnit) && buyUsdPerUnit > 0)
-    ? amt * buyUsdPerUnit
-    : 0;
-  return formatUsd(usd);
-})();
-
+    const amt = Number(buyAmountDerived || "0");
+    const usdPer = Number.isFinite(buyUsdPerUnit) && buyUsdPerUnit > 0
+      ? buyUsdPerUnit
+      : (Number.isFinite(sellUsdPerUnit) && Number.isFinite(Number(unitQuote?.outFormatted ?? "0")) && Number(unitQuote?.outFormatted ?? "0") > 0
+          ? sellUsdPerUnit / Number(unitQuote?.outFormatted ?? "0")
+          : 0);
+    const usd = Number.isFinite(amt) ? amt * usdPer : 0;
+    return formatUsd(usd);
+  })();
 
   
 const notionalUsd = useMemo(() => {
