@@ -627,10 +627,19 @@ const buyAmountDerived = (() => {
     return cleaned;
   };
 
-  const formatUsd = (usd: number): string => {
-    if (!Number.isFinite(usd) || usd <= 0) return "$0.00";
-    return usd < 0.01 ? `$${usd.toFixed(6)}` : `$${usd.toFixed(2)}`;
-  };
+
+
+  /** Formats a USD value for display.
+ *  - $0.00 for non-finite or <= 0
+ *  - 6 decimals when < $0.01 to show micro prices
+ *  - 2 decimals otherwise
+ */
+function formatUsd(usd: number): string {
+  if (!Number.isFinite(usd) || usd <= 0) return "$0.00";
+  return usd < 0.01 ? `$${usd.toFixed(6)}` : `$${usd.toFixed(2)}`;
+}
+
+  
 
   
   // ------------ ADDED: precise, safe post-swap refresh ------------
