@@ -179,7 +179,7 @@ const SwapInterface = ({
   const [sellAmount, setSellAmount] = useState("");
   const [sellToken, setSellToken] = useState<string | null>(null); // null = native MON
   const [buyToken, setBuyToken] = useState<string | null>("0xf817257fed379853cDe0fa4F97AB987181B1E5Ea"); // USDC address
-  const [priceRate, setPriceRate] = useState("1 MON = 0.00215 USDC");
+  
 
   const [showTokenModal, setShowTokenModal] = useState(false);
   const [tokenSelectionType, setTokenSelectionType] = useState<"sell" | "buy">("sell");
@@ -533,27 +533,12 @@ const buyAmountDerived = (() => {
        }
      }
 
-    // Fallback to your mock when no on-chain path yet
-    return priceRate;
-  }, [quote, unitQuote, buyAmountDerived, sellAmount, selectedSellToken, selectedBuyToken, priceRate]);
+    // No quote available yet
+    return "—";
+   }, [quote, unitQuote, buyAmountDerived, sellAmount, selectedSellToken, selectedBuyToken]);
 
-  // Keep your existing mock updater as a fallback when no quote yet
-  useEffect(() => {
-    const updatePriceRate = () => {
-      const sellPrice = (cryptoPrices as any)[selectedSellToken?.symbol] || 0;
-      const buyPrice = (cryptoPrices as any)[selectedBuyToken?.symbol] || 0;
-      if (sellPrice > 0 && buyPrice > 0) {
-        const exchangeRate = sellPrice / buyPrice;
-        const variation = (Math.random() - 0.5) * (exchangeRate * 0.001);
-        const newRate = (exchangeRate + variation).toFixed(5);
-        setPriceRate(`1 ${selectedSellToken?.symbol} = ${newRate} ${selectedBuyToken?.symbol}`);
-      }
-    };
-    updatePriceRate();
-    const interval = setInterval(updatePriceRate, 20000);
-    return () => clearInterval(interval);
-  }, [selectedSellToken?.symbol, selectedBuyToken?.symbol]);
 
+  
   // Reset input values when switching tabs
   useEffect(() => {
     setSellAmount("");
