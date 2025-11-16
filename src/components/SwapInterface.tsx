@@ -468,6 +468,14 @@ const filteredTokens: TokenLite[] = useMemo(() => {
     return sellUsdPerUnit / r;
   })();
 
+  // Derived buy amount from the active quote (do NOT apply slippage)
+const buyAmountDerived = (() => {
+  const baseOut = Number(quote?.outFormatted ?? NaN);
+  if (!Number.isFinite(baseOut) || baseOut <= 0) return "0.00";
+  return baseOut.toString();
+})();
+
+
   // Display strings (no UI change)
   const sellUsdDisplay = (() => {
     const amt = Number(sellAmount || "0");
@@ -529,15 +537,8 @@ const minOutRawDynamic =
   quote?.outRaw != null ? (quote.outRaw * (10_000n - SLIP)) / 10_000n : 0n;
 
 
-  // Derived buy amount (minOut) 
-const buyAmountDerived = (() => {
-  // For display, show the raw quoted output (do NOT apply slippage reduction)
-  const baseOut = Number(quote?.outFormatted ?? NaN);
-  if (!Number.isFinite(baseOut) || baseOut <= 0) return "0.00";
-  return baseOut.toString();
-})();
+ 
 
-  
   // Display version limited to 6 decimals for UI
   const buyAmountDisplay = useMemo(() => {
     const num = Number(buyAmountDerived);
