@@ -141,15 +141,7 @@ const SwapInterface = ({
 
 
   // --- Token list (your current list) ---
-  const cryptoPrices = {
-    MON: 0.00215,
-    USDC: 1.0,
-    USDT: 1.0,
-    CHOG: 16.0,
-    DAK: 2650.0,
-    aprMON: 0.00214,
-  };
-
+  
   const tokens = [
     { symbol: "MON", name: "monad" }, // native (no address)
     { symbol: "USDC", name: "Circle USD", address: "0xf817257fed379853cDe0fa4F97AB987181B1E5Ea" as `0x${string}` },
@@ -186,7 +178,7 @@ const SwapInterface = ({
   const [sellAmount, setSellAmount] = useState("");
   const [sellToken, setSellToken] = useState<string | null>(null); // null = native MON
   const [buyToken, setBuyToken] = useState<string | null>("0xf817257fed379853cDe0fa4F97AB987181B1E5Ea"); // USDC address
-  const [priceRate, setPriceRate] = useState("1 MON = 0.00215 USDC");
+  
 
   const [showTokenModal, setShowTokenModal] = useState(false);
   const [tokenSelectionType, setTokenSelectionType] = useState<"sell" | "buy">("sell");
@@ -424,12 +416,84 @@ const filteredTokens: TokenLite[] = useMemo(() => {
     ),
   });
 
+
+
+   // === USD valuation via on-chain Yak → Stable (minimal RPC) ===
+  // Pick a preferred USD stable (USDC if present; else USDT).
+  const stableUSDC = tokens.find(t => t.symbol === "USDC" && t.address) as { address: `0x${string}` } | undefined;
+  const stableUSDT = tokens.find(t => t.symbol === "USDT" && t.address) as { address: `0x${string}` } | undefined;
+  const stableAddr: `0x${string}` | undefined = (stableUSDC?.address ?? stableUSDT?.address) as any;
+
+  // Per‑unit USD price for the SELL token (1 tokenIn → stable), cached & refreshed on new blocks.
+  // We quote per-unit and multiply locally — avoids re-quoting on every keystroke.
+  const sellToStableUnit = useYakQuote({
+    router,
+    tokenIn: tokenInArg,
+    tokenOut: stableAddr,
+    amountInHuman: "1",
+    // Skip calling Yak when SELL is already the stable (saves an RPC).
+    enabled: Boolean(
+      stableAddr && selectedSellToken && (selectedSellToken.address?.toLowerCase() !== (stableAddr as string)?.toLowerCase())
+    ),
+  });
+
+  // If USDC path failed (rare), lazily enable a USDT fallback without adding an extra call when USDC works.
+  const sellToStableUnitFallback = useYakQuote({
+    router,
+    tokenIn: tokenInArg,
+    tokenOut: stableUSDT?.address,
+    amountInHuman: "1",
+    enabled: Boolean(!stableUSDC && stableUSDT && selectedSellToken) ||
+             Boolean(stableUSDT && (Number(sellToStableUnit?.outFormatted ?? "0") === 0)),
+  });
+
+  // Numeric USD per 1 SELL token
+  const sellUsdPerUnit = (() => {
+    const isSellStable = Boolean(
+      stableAddr && selectedSellToken?.address &&
+      selectedSellToken.address.toLowerCase() === (stableAddr as string)?.toLowerCase()
+    );
+    if (isSellStable) return 1;
+    const pri = Number(sellToStableUnit?.outFormatted ?? "0");
+    if (Number.isFinite(pri) && pri > 0) return pri;
+    const fb  = Number(sellToStableUnitFallback?.outFormatted ?? "0");
+    return Number.isFinite(fb) && fb > 0 ? fb : 0;
+  })();
+
+  // Derive USD per 1 BUY token using the live SELL→BUY unit rate to avoid a second RPC.
+  const buyUsdPerUnit = (() => {
+    const r = Number(unitQuote?.outFormatted ?? "0"); // how many BUY per 1 SELL
+    if (!Number.isFinite(r) || r <= 0) return 0;
+    if (!Number.isFinite(sellUsdPerUnit) || sellUsdPerUnit <= 0) return 0;
+    return sellUsdPerUnit / r;
+  })();
+
+  // Display strings (no UI change)
+  const sellUsdDisplay = (() => {
+    const amt = Number(sellAmount || "0");
+    const usd = amt * (Number.isFinite(sellUsdPerUnit) ? sellUsdPerUnit : 0);
+    return formatUsd(usd);
+  })();
+
+  const buyUsdDisplay = (() => {
+    const amt = Number(buyAmountDerived || "0");
+    const usdPer = Number.isFinite(buyUsdPerUnit) && buyUsdPerUnit > 0
+      ? buyUsdPerUnit
+      : (Number.isFinite(sellUsdPerUnit) && Number.isFinite(Number(unitQuote?.outFormatted ?? "0")) && Number(unitQuote?.outFormatted ?? "0") > 0
+          ? sellUsdPerUnit / Number(unitQuote?.outFormatted ?? "0")
+          : 0);
+    const usd = Number.isFinite(amt) ? amt * usdPer : 0;
+    return formatUsd(usd);
+  })();
+
+  
 const notionalUsd = useMemo(() => {
   const amt = Number(sellAmount);
-  const p = (cryptoPrices as any)[selectedSellToken?.symbol];
-  if (!Number.isFinite(amt) || !Number.isFinite(p)) return null;
+  const p = Number(sellUsdPerUnit);
+  if (!Number.isFinite(amt) || !Number.isFinite(p) || p <= 0) return null;
   return amt * p;
-}, [sellAmount, selectedSellToken?.symbol]);
+}, [sellAmount, sellUsdPerUnit]);
+
 
 const dynamicSlippage = useDynamicSlippageBps({
   enabled: autoSlippage,
@@ -529,10 +593,11 @@ const buyAmountDerived = (() => {
        }
      }
 
-    // Fallback to your mock when no on-chain path yet
-    return priceRate;
-  }, [quote, unitQuote, buyAmountDerived, sellAmount, selectedSellToken, selectedBuyToken, priceRate]);
+    // Nothing yet
+    return "—";
+  }, [quote, unitQuote, buyAmountDerived, sellAmount, selectedSellToken, selectedBuyToken]);
 
+  
   // Keep your existing mock updater as a fallback when no quote yet
   useEffect(() => {
     const updatePriceRate = () => {
