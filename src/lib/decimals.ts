@@ -6,7 +6,7 @@ const decimalsCache = new Map<string, number>();
 
 export async function getDecimals(client: PublicClient, token?: string): Promise<number> {
   if (!token) return 18;
-  if (token in ["", undefined, null] as any) return 18;
+  if (["", undefined, null].includes(token as any)) return 18;
   const key = token.toLowerCase();
   if (decimalsCache.has(key)) return decimalsCache.get(key)!;
 
