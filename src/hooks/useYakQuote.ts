@@ -8,8 +8,6 @@ import { PUBLIC_CONFIG } from "@/config/public";
 import { getDecimals } from "@/lib/decimals";
 import { changedByAtLeastBps } from "@/lib/math";
 import { useNetworkFees } from "@/hooks/useNetworkFees";
-import { useBlockNumber } from "@/providers/BlockNumberProvider";
-
 
 
 // local helpers (keep types shallow)
@@ -181,23 +179,16 @@ async function getDecimalsCached(addr: Address, native: boolean): Promise<number
     // initial fetch
     load();
 
-    const { blockNumber } = useBlockNumber();
+    // update on every new block (WS if available, HTTP if not)
+    const unwatch = client.watchBlockNumber({
+      emitOnBegin: false,
+      onBlockNumber: () => { if (!cancelled) load(); },
+      onError: () => {},
+    });
 
-useEffect(() => {
-  if (!polling || !enabled) return;
-  if (!router || !tokenInAddr || !tokenOutAddr) return;
-
-  let cancelled = false;
-
-  (async () => {
-    try {
-      await load();     // your existing loader function in this hook
-    } catch {}
-  })();
-
-  return () => { cancelled = true; };
-// eslint-disable-next-line react-hooks/exhaustive-deps
-}, [blockNumber, polling, enabled, router, tokenInAddr, tokenOutAddr, amountInHuman]);
+    return () => { cancelled = true; unwatch?.(); };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [polling, enabled, router, tokenInAddr, tokenOutAddr, amountInHuman]);
 
   return quote;
 }

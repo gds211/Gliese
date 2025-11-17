@@ -595,7 +595,7 @@ const minOutRawDynamic =
      }
 
     // Nothing yet
-    return `1 ${selectedSellToken.symbol} = 0.000000 ${selectedBuyToken.symbol}`;
+    return "—";
   }, [quote, unitQuote, buyAmountDerived, sellAmount, selectedSellToken, selectedBuyToken]);
 
   
@@ -775,10 +775,10 @@ const selectToken = (picked: string | TokenObj) => {
         },
         {
           onWalletConfirmed: () => {
-            // 🎵 Audio plays 0.2 seconds after wallet confirmation
+            // 🎵 Audio plays 0.5 seconds after wallet confirmation
             setTimeout(() => {
               swapAudioPlayer.play();
-            }, 200);
+            }, 500);
           },
         }
       );
