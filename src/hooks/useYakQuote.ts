@@ -3,6 +3,7 @@ import { useEffect, useRef, useState } from "react";
 import type { Address } from "viem";
 import { formatUnits, parseUnits } from "viem";
 import { usePublicClient } from "wagmi";
+import { onNewBlock } from "@/lib/sharedBlockWatcher";
 import { YAK_ROUTER_ABI } from "@/abi/yakRouter";
 import { PUBLIC_CONFIG } from "@/config/public";
 import { getDecimals } from "@/lib/decimals";
@@ -179,14 +180,9 @@ async function getDecimalsCached(addr: Address, native: boolean): Promise<number
     // initial fetch
     load();
 
-    // update on every new block (WS if available, HTTP if not)
-    const unwatch = client.watchBlockNumber({
-      emitOnBegin: false,
-      onBlockNumber: () => { if (!cancelled) load(); },
-      onError: () => {},
-    });
-
-    return () => { cancelled = true; unwatch?.(); };
+    // update on every new block (shared singleton to avoid >1 eth_subscribe)
+    const off = onNewBlock(client, () => { if (!cancelled) load(); });
+    return () => { cancelled = true; off?.(); };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [polling, enabled, router, tokenInAddr, tokenOutAddr, amountInHuman]);
 
