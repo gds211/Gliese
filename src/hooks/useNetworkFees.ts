@@ -1,6 +1,7 @@
 // src/hooks/useNetworkFees.ts
 import { useEffect, useMemo, useState } from "react";
 import { usePublicClient } from "wagmi";
+import { onNewBlock } from "@/lib/sharedBlockWatcher";
 import { PUBLIC_CONFIG } from "@/config/public";
 
 type FeeState = {
@@ -81,10 +82,8 @@ export function useNetworkFees(refreshMs = PUBLIC_CONFIG.FEE_REFRESH_MS) {
     }
 
     load();
-    const unwatch = client.watchBlockNumber({
-      onBlockNumber: () => { if (!dead) load(); }
-    });
-    return () => { dead = true; unwatch?.(); };
+    const off = onNewBlock(client, () => { if (!dead) load(); });
+    return () => { dead = true; off?.(); };
   }, [client]);
 
   // Memo just in case a parent renders frequently
