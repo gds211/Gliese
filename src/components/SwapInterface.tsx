@@ -22,6 +22,7 @@ import { useDynamicSlippageBps } from "@/hooks/useDynamicSlippage";
 import { ArrowUpDown, Wallet, Search, ChevronDown, Loader2 } from "lucide-react";
 import glieseLogo from "@/assets/gliese-logo.png";
 import verifiedBadge from "@/assets/verified-badge.svg";
+import externalLinkIcon from "@/assets/external-link.png";
 
 import { PUBLIC_CONFIG } from "@/config/public";
 import { useYakQuote } from "@/hooks/useYakQuote";
@@ -786,9 +787,24 @@ const selectToken = (picked: string | TokenObj) => {
 
       // Show toast immediately when transaction is confirmed
       const toastTitle: React.ReactNode = (
-        <div className="flex items-center gap-2">
-          <span className="text-lg">✅</span>
-          <span>Swap confirmed</span>
+        <div className="flex items-center justify-between w-full pr-8">
+          <div className="flex items-center gap-2">
+            <span className="text-base">✅</span>
+            <span>Swap confirmed</span>
+          </div>
+          <a
+            href={`https://monad-testnet.socialscan.io/tx/${receipt.transactionHash}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex-shrink-0 hover:opacity-80 transition-opacity"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <img 
+              src={externalLinkIcon} 
+              alt="View transaction" 
+              className="w-4 h-4 opacity-70 hover:opacity-100"
+            />
+          </a>
         </div>
       );
       
