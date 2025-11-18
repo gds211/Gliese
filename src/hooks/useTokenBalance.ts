@@ -14,8 +14,8 @@ export const useTokenBalance = ({ address, token }: UseTokenBalanceProps) => {
     // We do not `watch` here to avoid per-block RPCs; swaps explicitly call `refetch()`.
     query: {
       enabled: Boolean(address) && Boolean(token),
-      staleTime: 30_000,           // 30s: keeps balance "fresh enough" but avoids duplicate mounts
-      gcTime: 5 * 60_000,          // 5m: retain data to dedupe navigations
+      staleTime: 12_000,           // 12s: keeps balance "fresh enough" but avoids duplicate mounts
+      gcTime: 60_000,          // 1m: retain data to dedupe navigations
       refetchOnWindowFocus: false,
       refetchOnReconnect: false,
       retry: 1,
