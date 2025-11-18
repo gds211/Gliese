@@ -809,7 +809,7 @@ const selectToken = (picked: string | TokenObj) => {
       toast({
         title: toastTitle,
         description: `Tx: ${receipt.transactionHash.slice(0, 10)}…`,
-        duration: 5000,
+        duration: 10000,
       });
 
       // Instant balance refresh
