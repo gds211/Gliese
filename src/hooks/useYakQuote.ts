@@ -3,6 +3,7 @@ import { useEffect, useRef, useState } from "react";
 import type { Address } from "viem";
 import { formatUnits, parseUnits } from "viem";
 import { usePublicClient } from "wagmi";
+import { usePageVisible } from "@/hooks/usePageVisible";
 import { onNewBlock } from "@/lib/sharedBlockWatcher";
 import { YAK_ROUTER_ABI } from "@/abi/yakRouter";
 import { PUBLIC_CONFIG } from "@/config/public";
@@ -39,6 +40,9 @@ type Params = {
 };
 
 export function useYakQuote({ router, tokenIn, tokenOut, amountInHuman, enabled = true, slippageBpsOverride  }: Params) {
+  const isVisible = usePageVisible();
+  const POLL_MS = Number((PUBLIC_CONFIG as any).QUOTE_POLL_MS ?? 1000);
+
   const client = usePublicClient();
   const { effectiveGasPriceWei } = useNetworkFees(PUBLIC_CONFIG.FEE_REFRESH_MS);
   const FALLBACK = PUBLIC_CONFIG.GAS_PRICE_WEI_FALLBACK;
@@ -177,14 +181,24 @@ async function getDecimalsCached(addr: Address, native: boolean): Promise<number
       }
     }
 
-    // initial fetch
+  // initial fetch (fast path)
     load();
 
-    // update on every new block (shared singleton to avoid >1 eth_subscribe)
-    const off = onNewBlock(client, () => { if (!cancelled) load(); });
-    return () => { cancelled = true; off?.(); };
+    // Throttled poller + block-coalescing
+    let dirty = true;
+    const tick = setInterval(() => {
+      if (cancelled) return;
+      if (!isVisible || !enabled || !polling) return;
+      if (!dirty) return;
+      dirty = false;
+      load();
+    }, Math.max(350, POLL_MS));
+
+    // Mark dirty on every new block (shared singleton → 1 subscription total)
+    const off = onNewBlock(client, () => { if (!cancelled) dirty = true; });
+    return () => { cancelled = true; off?.(); clearInterval(tick); };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [polling, enabled, router, tokenInAddr, tokenOutAddr, amountInHuman]);
+  }, [polling, enabled, isVisible, router, tokenInAddr, tokenOutAddr, amountInHuman]);
 
   return quote;
 }
