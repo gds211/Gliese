@@ -32,6 +32,7 @@ import TokenAvatar from "@/components/TokenAvatar";
 import { useTokenSearch } from "@/hooks/useTokenSearch";
 import SlippageIcon from "@/assets/slippage.png";
 import TriggerInterface from "@/components/TriggerInterface";
+import RecurringInterface from "@/components/RecurringInterface";
 import { swapAudioPlayer } from "@/lib/audioPlayer";
 
 
@@ -1022,8 +1023,16 @@ const selectToken = (picked: string | TokenObj) => {
             />
           </TabsContent>
 
-          <TabsContent value="recurring">
-            <div className="text-center text-muted-foreground py-8">Recurring orders coming soon</div>
+          <TabsContent value="recurring" className="mt-0">
+            <RecurringInterface
+              tokens={tokens}
+              payToken={sellToken}
+              setPayToken={setSellToken}
+              receiveToken={buyToken}
+              setReceiveToken={setBuyToken}
+              extraTokens={extraTokens}
+              setExtraTokens={setExtraTokens}
+            />
           </TabsContent>
         </Tabs>
 
