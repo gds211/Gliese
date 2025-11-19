@@ -142,6 +142,12 @@ const RecurringInterface = ({
   };
 
   // Calculate per-order amount
+  // Get dynamic button width based on symbol length
+  const getButtonWidth = (symbol?: string) => {
+    if (!symbol) return "w-32";
+    return symbol.length > 4 ? "w-36" : "w-32";
+  };
+
   const calculatePerOrder = () => {
     if (!payAmount || !totalOrders) return "0.00";
     const perOrder = Number(payAmount) / Number(totalOrders);
