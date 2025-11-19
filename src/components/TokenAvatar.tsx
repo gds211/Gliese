@@ -1,95 +1,90 @@
-// src/components/TokenAvatar.tsx
-import React, { useMemo, useState } from "react"
+import React, { useState } from "react";
 
-/**
- * TokenAvatar
- * - Prefers LOCAL assets first (by address or symbol) to avoid remote repaint/flicker
- * - Falls back to remote `logoURI` if no local asset is available
- * - If remote fails to load -> letter badge fallback
- * - Keeps the chosen src stable for the life of a token (address/symbol) to prevent src ping‑pong
- *
- * Place local files in: src/assets/tokens/  (e.g., usdc.svg, usdc.png, 0xabc...png)
- */
 
-// Eagerly import local token logos at build time (Vite)
+// Eagerly import *local* token logos once at build time.
+// Put files in: src/assets/tokens/  (e.g., mon.svg, usdc.svg, 0xabc....png)
 const modules = import.meta.glob("../assets/tokens/*.{svg,png,webp}", {
   eager: true,
-}) as Record<string, { default: string }>
+}) as Record<string, { default: string }>;
 
-const byBase: Record<string, string> = {}
+const byBase: Record<string, string> = {};
 for (const [path, mod] of Object.entries(modules)) {
-  const file = path.split("/").pop()! // e.g. usdc.svg
-  const base = file.replace(/\.(svg|png|webp)$/i, "").toLowerCase()
-  // On some bundlers the module is the string itself; on Vite it's { default: url }
-  // @ts-ignore
-  byBase[base] = (mod?.default ?? (mod as any)) as string
+  const file = path.split("/").pop()!;                           // e.g. usdc.svg
+  const base = file.replace(/\.(svg|png|webp)$/i, "").toLowerCase();
+  byBase[base] = mod.default;
 }
 
 type Props = {
-  symbol?: string
-  address?: `0x${string}` | string
-  title?: string
-  size?: number
-  className?: string
-  rounded?: boolean
-  logoURI?: string
-  /** Set to true for the primary, on-screen selected tokens to decode sooner */
-  eager?: boolean
-}
+  symbol?: string;
+  address?: `0x${string}` | string;
+  logoURI?: string;     // NEW: external icon URL
+  size?: number;        // px
+  className?: string;
+  rounded?: boolean;    // default circle
+  title?: string;       // optional tooltip text
+};
+
 
 export default function TokenAvatar({
   symbol,
   address,
-  title,
-  size = 20,
+  logoURI,              // NEW
+  size = 18,
   className = "",
   rounded = true,
-  logoURI,
-  eager = false,
+  title,
 }: Props) {
-  // Normalize candidates once for stable lookup
-  const candidates = useMemo(() => {
-    const out: string[] = []
-    if (address) out.push(String(address).toLowerCase())
-    if (symbol) out.push(String(symbol).toLowerCase())
-    return out
-  }, [address, symbol])
+  const [externalFailed, setExternalFailed] = useState(false);
 
-  const localSrc = useMemo(() => {
-    for (const key of candidates) {
-      if (byBase[key]) return byBase[key]
-    }
-    return undefined
-  }, [candidates])
-
-  const [externalFailed, setExternalFailed] = useState(false)
-
-  // Choose a final src ONCE per token identity (address/symbol)
-  // Prefer local (no network), then remote logoURI if available and not failed.
-  const finalSrc = localSrc ?? (!externalFailed && logoURI ? logoURI : undefined)
-
-  if (finalSrc) {
-    const isRemote = finalSrc === logoURI && !!logoURI
+  // 1) External logo (highest priority)
+  if (logoURI && !externalFailed) {
     return (
       <img
-        src={finalSrc}
+        src={logoURI}
         alt={symbol || (address as string) || "token"}
         width={size}
         height={size}
         title={title}
         className={`block object-cover ${rounded ? "rounded-full" : ""} ${className}`}
         draggable={false}
-        loading={eager ? "eager" : "lazy"}
-        decoding="async"
-        onError={isRemote ? () => setExternalFailed(true) : undefined}
+        onError={() => setExternalFailed(true)}
       />
-    )
+    );
   }
 
-  // Fallback: single letter badge
+  // 2) Local logos (by address or symbol)
+  const candidates: string[] = [];
+  // Prioritize address first since most icons are named by address
+
+  if (address) candidates.push(String(address).toLowerCase());
+  if (symbol) candidates.push(String(symbol).toLowerCase());
+
+  let src: string | undefined;
+  for (const key of candidates) {
+    if (byBase[key]) {
+      src = byBase[key];
+      break;
+    }
+  }
+
+  if (src) {
+    return (
+      <img
+        src={src}
+        alt={symbol || (address as string) || "token"}
+        width={size}
+        height={size}
+        title={title}
+        className={`block object-cover ${rounded ? "rounded-full" : ""} ${className}`}
+        draggable={false}
+      />
+    );
+  }
+
+  // Fallback: letter badge
   const letter = (symbol || (address ? String(address).slice(2, 3) : "?"))
     .slice(0, 1)
-    .toUpperCase()
+    .toUpperCase();
 
   return (
     <div
@@ -100,5 +95,5 @@ export default function TokenAvatar({
     >
       {letter}
     </div>
-  )
+  );
 }

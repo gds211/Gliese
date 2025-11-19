@@ -663,7 +663,7 @@ const filteredTokens: TokenLite[] = useMemo(() => {
       {/* Token Selection Modal */}
       <Dialog open={showTokenModal} onOpenChange={setShowTokenModal}>
         <DialogOverlay />
-        <DialogContent className="sm:max-w-md bg-[#0b0f17]/95 border border-white/10 text-white" forceMount>
+        <DialogContent className="sm:max-w-md bg-[#0b0f17]/95 border border-white/10 text-white">
           <DialogHeader>
             <DialogTitle className="text-white">
               Select a token to {tokenSelectionType === "pay" ? "sell" : "buy"}

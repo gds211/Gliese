@@ -841,7 +841,7 @@ const selectToken = (picked: string | TokenObj) => {
             </TabsTrigger>
           </TabsList>
 
-          <TabsContent value="instant" className="mt-4 space-y-3" forceMount>
+          <TabsContent value="instant" className="mt-4 space-y-3">
             {/* Selling Section */}
             <div className="space-y-3">
               <div className="flex items-center justify-between">
@@ -1009,7 +1009,7 @@ const selectToken = (picked: string | TokenObj) => {
             </div>
           </TabsContent>
 
-          <TabsContent value="trigger" className="mt-4" forceMount>
+          <TabsContent value="trigger" className="mt-4">
             <TriggerInterface 
                tokens={tokens}
                payToken={sellToken}
@@ -1022,7 +1022,7 @@ const selectToken = (picked: string | TokenObj) => {
             />
           </TabsContent>
 
-          <TabsContent value="recurring" forceMount>
+          <TabsContent value="recurring">
             <div className="text-center text-muted-foreground py-8">Recurring orders coming soon</div>
           </TabsContent>
         </Tabs>
@@ -1065,7 +1065,7 @@ const selectToken = (picked: string | TokenObj) => {
       {/* Token Selection Modal */}
       <Dialog open={showTokenModal} onOpenChange={setShowTokenModal}>
         <DialogOverlay />
-        <DialogContent className="sm:max-w-md bg-[#0b0f17]/95 border border-white/10 text-white" forceMount>
+        <DialogContent className="sm:max-w-md bg-[#0b0f17]/95 border border-white/10 text-white">
           <DialogHeader>
             <DialogTitle className="text-white">
               Select a token to {tokenSelectionType === "sell" ? "sell" : "buy"}
