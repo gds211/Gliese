@@ -23,7 +23,7 @@ import { ArrowUpDown, Wallet, Search, ChevronDown, Loader2 } from "lucide-react"
 import glieseLogo from "@/assets/gliese-logo.png";
 import verifiedBadge from "@/assets/verified-badge.svg";
 import externalLinkIcon from "@/assets/external-link.png";
-import checkmarkIcon from "@/assets/checkmark-icon.svg";
+import checkmarkIcon from "@/assets/checkmark-icon.png";
 
 import { PUBLIC_CONFIG } from "@/config/public";
 import { useYakQuote } from "@/hooks/useYakQuote";
@@ -806,7 +806,7 @@ const selectToken = (picked: string | TokenObj) => {
       // Show toast immediately when transaction is confirmed
       const toastTitle: React.ReactNode = (
         <div className="flex items-center gap-2 w-full pr-8">
-          <img src={checkmarkIcon} alt="Confirmed" className="w-5 h-5" />
+          <img src={checkmarkIcon} alt="Confirmed" className="w-6 h-6" />
           <span className="leading-none">Swap confirmed</span>
           <a
             href={`https://monad-testnet.socialscan.io/tx/${receipt.transactionHash}`}
