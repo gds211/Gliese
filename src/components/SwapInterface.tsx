@@ -98,11 +98,11 @@ const TokenBalanceDisplay = ({
     token: tokenAddress,
   });
 
-  if (!walletAddress) return <span className="text-xs text-white/50 font-medium tabular-nums">0.00</span>;
-  if (isLoading) return <span className="text-xs text-white/50 font-medium tabular-nums">...</span>;
+  if (!walletAddress) return <span className="text-xs text-white font-medium tabular-nums">0.00</span>;
+  if (isLoading) return <span className="text-xs text-white font-medium tabular-nums">...</span>;
   
   return (
-    <span className="text-xs text-white/50 font-medium tabular-nums">
+    <span className="text-xs text-white font-medium tabular-nums">
       {formatted ? parseFloat(formatted).toFixed(2) : "0.00"}
     </span>
   );
@@ -846,7 +846,7 @@ const selectToken = (picked: string | TokenObj) => {
             <div className="space-y-3">
               <div className="flex items-center justify-between">
                 <label className="text-sm text-muted-foreground">Selling</label>
-                <div className="flex items-center gap-2 text-xs text-white">
+                <div className="flex items-center gap-2 text-xs text-muted-foreground">
                   <span className="flex items-center gap-1">
                     <Wallet className="h-3 w-3" />
                     {sellBalLoading ? "…" : sellBal ? (() => {
