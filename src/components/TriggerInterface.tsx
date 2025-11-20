@@ -58,11 +58,11 @@ const TokenBalanceDisplay = ({
     token: tokenAddress,
   });
 
-  if (!walletAddress) return <span className="text-xs text-white/50 font-medium tabular-nums">0.00</span>;
-  if (isLoading) return <span className="text-xs text-white/50 font-medium tabular-nums">...</span>;
+  if (!walletAddress) return <span className="text-xs text-white font-medium tabular-nums">0.00</span>;
+  if (isLoading) return <span className="text-xs text-white font-medium tabular-nums">...</span>;
   
   return (
-    <span className="text-xs text-white/50 font-medium tabular-nums">
+    <span className="text-xs text-white font-medium tabular-nums">
       {formatted ? parseFloat(formatted).toFixed(2) : "0.00"}
     </span>
   );
@@ -425,7 +425,7 @@ const filteredTokens: TokenLite[] = useMemo(() => {
       <div className="space-y-2">
         <div className="flex justify-between items-center text-sm">
           <span className="text-muted-foreground">Selling</span>
-          <div className="flex items-center gap-2 text-xs text-white">
+          <div className="flex items-center gap-2 text-xs text-muted-foreground">
             <span className="flex items-center gap-1">
               <Wallet className="h-3 w-3" />
               {payBalance && Number(payBalance.formatted) > 0 ? (() => {
