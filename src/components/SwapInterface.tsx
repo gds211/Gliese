@@ -600,8 +600,25 @@ const minOutRawDynamic =
 
   }, [quote, unitQuote, buyAmountDerived, sellAmount, selectedSellToken, selectedBuyToken]);
 
-  
-  
+  // Determine if there's no valid route (rate = 0)
+  const hasNoRoute = useMemo(() => {
+    // Same tokens always have a valid 1:1 rate
+    if (selectedSellToken && selectedBuyToken && selectedSellToken.symbol === selectedBuyToken.symbol) {
+      return false;
+    }
+    
+    const amt = Number(sellAmount);
+    
+    // User typed amount: check if output is 0
+    if (Number.isFinite(amt) && amt > 0) {
+      const out = Number(buyAmountDerived);
+      return !Number.isFinite(out) || out <= 0;
+    }
+    
+    // No amount typed: check 1-unit quote rate
+    const unitRate = Number(unitQuote?.outFormatted ?? 0);
+    return !Number.isFinite(unitRate) || unitRate <= 0;
+  }, [selectedSellToken, selectedBuyToken, sellAmount, buyAmountDerived, unitQuote]);
 
   // Reset input values when switching tabs
   useEffect(() => {
@@ -1046,11 +1063,10 @@ const selectToken = (picked: string | TokenObj) => {
             disabled={
               isConnected && (
                 !sellAmount ||
-                sellAmount === "0" ||
-                sellAmount === "0.0" ||
+                Number(sellAmount) === 0 ||
+                sellAmount === "." ||
                 isExceeding ||
-                !quote ||
-                quote.minOutRaw === 0n
+                hasNoRoute
               )
             }
             onClick={() => {
@@ -1062,9 +1078,9 @@ const selectToken = (picked: string | TokenObj) => {
               ? "Connect Wallet"
               : isExceeding
               ? "Amount exceeds balance"
-              : !sellAmount || sellAmount === "0" || sellAmount === "0.0"
+              : !sellAmount || Number(sellAmount) === 0 || sellAmount === "."
               ? "Enter an amount"
-              : !quote || quote.minOutRaw === 0n
+              : hasNoRoute
               ? "No route"
               : "Swap"}
           </Button>
