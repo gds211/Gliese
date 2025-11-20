@@ -806,7 +806,7 @@ const selectToken = (picked: string | TokenObj) => {
       // Show toast immediately when transaction is confirmed
       const toastTitle: React.ReactNode = (
         <div className="flex items-center gap-2 w-full pr-8">
-          <img src={checkmarkIcon} alt="Confirmed" className="w-6 h-6" />
+          <img src={checkmarkIcon} alt="Confirmed" className="h-6 w-auto" />
           <span className="leading-none">Swap confirmed</span>
           <a
             href={`https://monad-testnet.socialscan.io/tx/${receipt.transactionHash}`}
