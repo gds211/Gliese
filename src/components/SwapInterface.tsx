@@ -846,12 +846,22 @@ const selectToken = (picked: string | TokenObj) => {
             <div className="space-y-3">
               <div className="flex items-center justify-between">
                 <label className="text-sm text-muted-foreground">Selling</label>
-                <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                <div className="flex items-center gap-2 text-xs text-white">
                   <span className="flex items-center gap-1">
                     <Wallet className="h-3 w-3" />
                     {sellBalLoading ? "…" : sellBal ? (() => {
                       const num = Number(sellBal.formatted);
-                      const formatted = num === 0 ? "0.00" : num.toFixed(4);
+                      if (num === 0) return `0.00 ${selectedSellToken?.symbol}`;
+                      
+                      // Dynamic decimals: 4 for <100, then decrease by 1
+                      let decimals;
+                      if (num < 100) decimals = 4;
+                      else if (num < 1000) decimals = 3;
+                      else if (num < 10000) decimals = 2;
+                      else if (num < 100000) decimals = 1;
+                      else decimals = 0;
+                      
+                      const formatted = num.toFixed(decimals).replace(/\.?0+$/, '');
                       return `${formatted} ${selectedSellToken?.symbol}`;
                     })() : `0.00 ${selectedSellToken?.symbol}`}
                   </span>

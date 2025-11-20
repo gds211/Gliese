@@ -425,12 +425,23 @@ const filteredTokens: TokenLite[] = useMemo(() => {
       <div className="space-y-2">
         <div className="flex justify-between items-center text-sm">
           <span className="text-muted-foreground">Selling</span>
-          <div className="flex items-center gap-2 text-xs text-muted-foreground">
+          <div className="flex items-center gap-2 text-xs text-white">
             <span className="flex items-center gap-1">
               <Wallet className="h-3 w-3" />
-              {payBalance && Number(payBalance.formatted) > 0
-                ? `${Number(payBalance.formatted).toFixed(6).replace(/\.?0+$/, '')} ${selectedPayToken?.symbol}` 
-                : `0.00 ${selectedPayToken?.symbol}`}
+              {payBalance && Number(payBalance.formatted) > 0 ? (() => {
+                const num = Number(payBalance.formatted);
+                
+                // Dynamic decimals: 4 for <100, then decrease by 1
+                let decimals;
+                if (num < 100) decimals = 4;
+                else if (num < 1000) decimals = 3;
+                else if (num < 10000) decimals = 2;
+                else if (num < 100000) decimals = 1;
+                else decimals = 0;
+                
+                const formatted = num.toFixed(decimals).replace(/\.?0+$/, '');
+                return `${formatted} ${selectedPayToken?.symbol}`;
+              })() : `0.00 ${selectedPayToken?.symbol}`}
             </span>
             <Button
               variant="ghost"
