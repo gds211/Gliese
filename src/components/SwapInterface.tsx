@@ -1037,30 +1037,6 @@ const selectToken = (picked: string | TokenObj) => {
           </TabsContent>
         </Tabs>
 
-        {/* Compute "No Route" state: only true when the exchange rate is actually 0 */}
-        {useMemo(() => {
-          const hasNoRoute = (() => {
-            // Same tokens always have a valid 1:1 rate
-            if (selectedSellToken && selectedBuyToken && selectedSellToken.symbol === selectedBuyToken.symbol) {
-              return false;
-            }
-            
-            const amt = Number(sellAmount);
-            
-            // User typed amount: check if output is 0
-            if (Number.isFinite(amt) && amt > 0) {
-              const out = Number(buyAmountDerived);
-              return !Number.isFinite(out) || out <= 0;
-            }
-            
-            // No amount typed: check 1-unit quote rate
-            const unitRate = Number(unitQuote?.outFormatted ?? 0);
-            return !Number.isFinite(unitRate) || unitRate <= 0;
-          })();
-
-          return null;
-        }, [selectedSellToken, selectedBuyToken, sellAmount, buyAmountDerived, unitQuote])}
-
         {/* Connect/Swap Button */}
       {activeTab === "instant" && (
         <div className="w-full mt-4">
@@ -1073,18 +1049,8 @@ const selectToken = (picked: string | TokenObj) => {
                 sellAmount === "0" ||
                 sellAmount === "0.0" ||
                 isExceeding ||
-                (() => {
-                  if (selectedSellToken && selectedBuyToken && selectedSellToken.symbol === selectedBuyToken.symbol) {
-                    return false;
-                  }
-                  const amt = Number(sellAmount);
-                  if (Number.isFinite(amt) && amt > 0) {
-                    const out = Number(buyAmountDerived);
-                    return !Number.isFinite(out) || out <= 0;
-                  }
-                  const unitRate = Number(unitQuote?.outFormatted ?? 0);
-                  return !Number.isFinite(unitRate) || unitRate <= 0;
-                })()
+                !quote ||
+                quote.minOutRaw === 0n
               )
             }
             onClick={() => {
@@ -1098,18 +1064,7 @@ const selectToken = (picked: string | TokenObj) => {
               ? "Amount exceeds balance"
               : !sellAmount || sellAmount === "0" || sellAmount === "0.0"
               ? "Enter an amount"
-              : (() => {
-                  if (selectedSellToken && selectedBuyToken && selectedSellToken.symbol === selectedBuyToken.symbol) {
-                    return false;
-                  }
-                  const amt = Number(sellAmount);
-                  if (Number.isFinite(amt) && amt > 0) {
-                    const out = Number(buyAmountDerived);
-                    return !Number.isFinite(out) || out <= 0;
-                  }
-                  const unitRate = Number(unitQuote?.outFormatted ?? 0);
-                  return !Number.isFinite(unitRate) || unitRate <= 0;
-                })()
+              : !quote || quote.minOutRaw === 0n
               ? "No route"
               : "Swap"}
           </Button>
