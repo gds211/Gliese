@@ -828,7 +828,7 @@ const selectToken = (picked: string | TokenObj) => {
         title: toastTitle,
         description: (
           <div className="flex items-center gap-3">
-            <span className="w-4 flex-shrink-0"></span>
+            <img src={checkmarkIcon} alt="" className="h-4 w-auto invisible flex-shrink-0" />
             <span>Tx: {receipt.transactionHash.slice(0, 10)}…</span>
           </div>
         ),
