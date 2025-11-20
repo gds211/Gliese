@@ -836,7 +836,7 @@ const selectToken = (picked: string | TokenObj) => {
             <TabsTrigger value="trigger" className="text-sm flex items-center gap-2 h-8 data-[state=active]:text-primary data-[state=inactive]:text-muted-foreground">
               <span>🔫</span> Trigger
             </TabsTrigger>
-            <TabsTrigger value="recurring" className="text-sm flex items-center gap-2 h-8 data-[state=active]:text-primary data-[state=inactive]:text-muted-foreground">
+            <TabsTrigger value="recurring" disabled className="text-sm flex items-center gap-2 h-8 data-[state=active]:text-primary data-[state=inactive]:text-muted-foreground disabled:opacity-100">
               <span>🔄</span> Recurring
             </TabsTrigger>
           </TabsList>
