@@ -465,7 +465,7 @@ const filteredTokens: TokenLite[] = useMemo(() => {
             <Button
               variant="ghost"
               onClick={() => openTokenModal("pay")}
-              className="relative w-auto min-w-[8rem] h-10 bg-muted/60 rounded-full text-foreground border border-white/10 hover:border-white hover:bg-muted/80 hover:text-white flex items-center"
+              className="relative w-auto min-w-[8rem] pl-14 pr-10 h-10 bg-muted/60 rounded-full text-foreground border border-white/10 hover:border-white hover:bg-muted/80 hover:text-white flex items-center"
               aria-label="Select pay token"
             >
               {/* Left logo */}
@@ -479,7 +479,7 @@ const filteredTokens: TokenLite[] = useMemo(() => {
               </span>
 
               {/* Label centered between logo and chevron */}
-              <span className="absolute inset-y-0 left-[2.75rem] right-[2.5rem] flex items-center justify-center pointer-events-none truncate">
+              <span className="text-sm font-medium whitespace-nowrap">
                 {selectedPayToken?.symbol}
               </span>
 
@@ -559,7 +559,7 @@ const filteredTokens: TokenLite[] = useMemo(() => {
             <Button
               variant="ghost"
               onClick={() => openTokenModal("receive")}
-              className="relative w-auto min-w-[8rem] h-10 bg-muted/60 rounded-full text-foreground border border-white/10 hover:border-white hover:bg-muted/80 hover:text-white flex items-center"
+              className="relative w-auto min-w-[8rem] pl-14 pr-10 h-10 bg-muted/60 rounded-full text-foreground border border-white/10 hover:border-white hover:bg-muted/80 hover:text-white flex items-center"
               aria-label="Select receive token"
             >
               {/* Left logo */}
@@ -573,7 +573,7 @@ const filteredTokens: TokenLite[] = useMemo(() => {
               </span>
 
               {/* Label centered between logo and chevron */}
-              <span className="absolute inset-y-0 left-[2.75rem] right-[2.5rem] flex items-center justify-center pointer-events-none truncate">
+              <span className="text-sm font-medium whitespace-nowrap">
                 {selectedReceiveToken?.symbol}
               </span>
 
