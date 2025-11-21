@@ -153,10 +153,7 @@ const selectedReceiveToken = useMemo(() => {
   }, [isConnected, payBalance?.value, payBalance?.decimals, payAmount]);
 
   // Get dynamic button width based on symbol length
-  const getButtonWidth = (symbol?: string) => {
-    if (!symbol) return "w-32";
-    return symbol.length > 4 ? "w-36" : "w-32";
-  };
+  // Removed getButtonWidth - buttons now use w-auto min-w-[8rem] for dynamic sizing
 
   // --- search normalization helpers ---
 const normalize = (s?: string) =>
@@ -468,7 +465,7 @@ const filteredTokens: TokenLite[] = useMemo(() => {
             <Button
               variant="ghost"
               onClick={() => openTokenModal("pay")}
-              className={`relative ${getButtonWidth(selectedPayToken?.symbol)} h-10 bg-muted/60 rounded-full text-foreground border border-white/10 hover:border-white hover:bg-muted/80 hover:text-white flex items-center`}
+              className="relative w-auto min-w-[8rem] h-10 bg-muted/60 rounded-full text-foreground border border-white/10 hover:border-white hover:bg-muted/80 hover:text-white flex items-center"
               aria-label="Select pay token"
             >
               {/* Left logo */}
@@ -562,7 +559,7 @@ const filteredTokens: TokenLite[] = useMemo(() => {
             <Button
               variant="ghost"
               onClick={() => openTokenModal("receive")}
-              className={`relative ${getButtonWidth(selectedReceiveToken?.symbol)} h-10 bg-muted/60 rounded-full text-foreground border border-white/10 hover:border-white hover:bg-muted/80 hover:text-white flex items-center`}
+              className="relative w-auto min-w-[8rem] h-10 bg-muted/60 rounded-full text-foreground border border-white/10 hover:border-white hover:bg-muted/80 hover:text-white flex items-center"
               aria-label="Select receive token"
             >
               {/* Left logo */}
