@@ -32,6 +32,7 @@ import { formatBalanceWithScale } from "@/lib/utils";
 
 import TokenAvatar from "@/components/TokenAvatar";
 import { useTokenSearch } from "@/hooks/useTokenSearch";
+import { useDebouncedValue } from "@/hooks/useDebouncedValue";
 import SlippageIcon from "@/assets/slippage.png";
 import TriggerInterface from "@/components/TriggerInterface";
 import { swapAudioPlayer } from "@/lib/audioPlayer";
@@ -184,10 +185,14 @@ const SwapInterface = ({
   const [tokenSelectionType, setTokenSelectionType] = useState<"sell" | "buy">("sell");
   const [searchTerm, setSearchTerm] = useState("");
   const [extraTokens, setExtraTokens] = useState<
-  Array<{ symbol: string; name?: string; address?: `0x${string}`; logoURI?: string }>
+    Array<{ symbol: string; name?: string; address?: `0x${string}`; logoURI?: string }>
   >([]);
 
-  const { data: searchResults = [], isLoading: searching } = useTokenSearch(searchTerm);
+  // Debounce the user input before hitting external search APIs
+  const debouncedSearchTerm = useDebouncedValue(searchTerm, 250);
+
+  const { data: searchResults = [], isLoading: searching } = useTokenSearch(debouncedSearchTerm);
+
   const [autoSlippage, setAutoSlippage] = useState(
     Boolean((PUBLIC_CONFIG as any).AUTO_SLIPPAGE?.ENABLED_BY_DEFAULT ?? true)
   );
@@ -247,6 +252,9 @@ const filteredTokens: TokenLite[] = useMemo(() => {
   // Show curated defaults when empty
   if (!q) return tokens;
 
+  const isAddressQuery = is0x(raw);
+  const isShortQuery = !isAddressQuery && fq.length < 2; // keep in sync with useTokenSearch
+
   // Precompute curated membership for the priority boost
   const curatedAddr = new Set(
     tokens.map(t => t.address?.toLowerCase()).filter(Boolean) as string[]
@@ -262,41 +270,66 @@ const filteredTokens: TokenLite[] = useMemo(() => {
     const symF = fold(t.symbol);
     const nameF = fold(t.name);
     const addr = t.address?.toLowerCase() || "";
-    // address search only when input looks like 0x…
-    const addrHit = is0x(raw) && addr.includes(raw.toLowerCase());
+
+    // Address search only when input looks like 0x…
+    const addrHit = isAddressQuery && addr.includes(raw.toLowerCase());
+
     return (
-      symF.includes(fq) ||
-      nameF.includes(fq) ||
+      (!!fq && (symF.includes(fq) || nameF.includes(fq))) ||
       addrHit
     );
   };
 
   // 1) curated first (we will still score/sort, but they get a large boost)
   for (const t of tokens) {
-    const tk: TokenLite = { symbol: t.symbol, name: t.name, address: t.address, logoURI: (t as any).logoURI };
+    const tk: TokenLite = {
+      symbol: t.symbol,
+      name: t.name,
+      address: t.address,
+      logoURI: (t as any).logoURI,
+    };
     if (shouldKeep(tk)) candidates.push({ ...tk, __source: "curated" });
   }
 
-  // 2) extra tokens (user-added)
+  // 2) extra tokens (user‑added)
   for (const t of extraTokens) {
-    const tk: TokenLite = { symbol: t.symbol, name: t.name, address: t.address, logoURI: t.logoURI };
+    const tk: TokenLite = {
+      symbol: t.symbol,
+      name: t.name,
+      address: t.address,
+      logoURI: t.logoURI,
+    };
     if (shouldKeep(tk)) candidates.push({ ...tk, __source: "extra" });
   }
 
-  // 3) remote results from the hook
-  for (const t of (searchResults as any[])) {
-    const tk: TokenLite = { symbol: t.symbol || "", name: t.name, address: t.address as any, logoURI: t.logoURI };
-    if (shouldKeep(tk)) candidates.push({ ...tk, __source: "remote" });
+  // 3) remote results from the hook — only for "long enough" queries or address‑like queries
+  if (!isShortQuery) {
+    for (const t of (searchResults as any[])) {
+      const tk: TokenLite = {
+        symbol: t.symbol || "",
+        name: t.name,
+        address: t.address as any,
+        logoURI: t.logoURI,
+      };
+      if (shouldKeep(tk)) candidates.push({ ...tk, __source: "remote" });
+    }
   }
 
   // De‑duplicate: first by address (ERC‑20), then by native symbol
   const seen = new Set<string>();
   const deduped: TokenLite[] = [];
   for (const t of candidates) {
-    const key = t.address ? `addr:${t.address.toLowerCase()}` : `sym:${(t.symbol || "").toUpperCase()}`;
+    const key = t.address
+      ? `addr:${t.address.toLowerCase()}`
+      : `sym:${(t.symbol || "").toUpperCase()}`;
     if (seen.has(key)) continue;
     seen.add(key);
-    deduped.push({ symbol: t.symbol, name: t.name, address: t.address, logoURI: t.logoURI });
+    deduped.push({
+      symbol: t.symbol,
+      name: t.name,
+      address: t.address,
+      logoURI: t.logoURI,
+    });
   }
 
   const scoreOf = (t: TokenLite): number => {
@@ -311,9 +344,9 @@ const filteredTokens: TokenLite[] = useMemo(() => {
     let s = 0;
 
     // 1) address typed → exact match on top
-    if (is0x(raw)) {
+    if (isAddressQuery) {
       if (addr === raw.toLowerCase()) s += 10000;
-      if (addr.includes(raw.toLowerCase())) s += 9000;
+      if (addr && addr.includes(raw.toLowerCase())) s += 9000;
     }
 
     // 2) exact symbol / exact name
@@ -354,6 +387,7 @@ const filteredTokens: TokenLite[] = useMemo(() => {
 
   return deduped;
 }, [searchTerm, tokens, extraTokens, searchResults]);
+
 
   // --- Quote from Yak (every 2s, 5% slippage, threshold ≥ 0.1%) ---
   const router = PUBLIC_CONFIG.YAK_ROUTER as Address;
