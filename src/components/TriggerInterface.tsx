@@ -59,7 +59,7 @@ const TokenBalanceDisplay = ({
     token: tokenAddress,
   });
 
-  if (!walletAddress) return <span className="text-xs text-white font-medium tabular-nums">0.00</span>;
+  if (!walletAddress) return <span className="text-xs text-white font-medium tabular-nums">0.0000</span>;
   if (isLoading) return <span className="text-xs text-white font-medium tabular-nums">...</span>;
   
   return (
