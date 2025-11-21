@@ -15,6 +15,7 @@ import {
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogOverlay } from "@/components/ui/dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useTokenSearch } from "@/hooks/useTokenSearch";
+import { useDebouncedValue } from "@/hooks/useDebouncedValue";
 import { useConnectModal } from "@rainbow-me/rainbowkit";
 
 import { ChevronDown, Wallet, Search, Loader2 } from "lucide-react";
@@ -89,9 +90,11 @@ const TriggerInterface = ({
   const [searchTerm, setSearchTerm] = useState("");
   const [tradeMode, setTradeMode] = useState<"optimized" | "exact">("optimized");
   
-  
-  const { data: searchResults = [], isLoading: searching } = useTokenSearch(searchTerm);
+  const debouncedSearchTerm = useDebouncedValue(searchTerm, 250);
+  const { data: searchResults = [], isLoading: searching } = useTokenSearch(debouncedSearchTerm);
+
   const combinedTokens = useMemo(() => [...tokens, ...extraTokens], [tokens, extraTokens]);
+
 
 
   const selectedPayToken = useMemo(() => {
@@ -179,6 +182,7 @@ type TokenLite = {
   logoURI?: string;
 };
 
+
 const filteredTokens: TokenLite[] = useMemo(() => {
   const raw = (searchTerm ?? "").trim();
   const q = normalize(raw);
@@ -186,6 +190,9 @@ const filteredTokens: TokenLite[] = useMemo(() => {
 
   // When empty → show curated defaults (same behavior as SwapInterface)
   if (!q) return tokens;
+
+  const isAddressQuery = is0x(raw);
+  const isShortQuery = !isAddressQuery && fq.length < 2; // keep in sync with useTokenSearch
 
   // Precompute curated membership for the priority boost
   const curatedAddr = new Set(
@@ -195,44 +202,73 @@ const filteredTokens: TokenLite[] = useMemo(() => {
     tokens.filter(t => !t.address).map(t => (t.symbol || "").toUpperCase())
   );
 
-  // Collect candidates from: curated (tokens), user‑added (extraTokens), and remote searchResults
+  // Collect candidates from: curated (tokens), extraTokens (user‑added), and remote searchResults
   const candidates: Array<TokenLite & { __source: "curated" | "extra" | "remote" }> = [];
 
   const shouldKeep = (t: TokenLite) => {
     const symF = fold(t.symbol);
     const nameF = fold(t.name);
     const addr = t.address?.toLowerCase() || "";
-    // address search only when input looks like 0x…
-    const addrHit = is0x(raw) && addr.includes(raw.toLowerCase());
-    return symF.includes(fq) || nameF.includes(fq) || addrHit;
+
+    // Address search only when input looks like 0x…
+    const addrHit = isAddressQuery && addr.includes(raw.toLowerCase());
+
+    return (
+      (!!fq && (symF.includes(fq) || nameF.includes(fq))) ||
+      addrHit
+    );
   };
 
   // 1) curated first (still scored—but they get a large boost)
   for (const t of tokens) {
-    const tk: TokenLite = { symbol: t.symbol, name: t.name, address: t.address, logoURI: (t as any).logoURI };
+    const tk: TokenLite = {
+      symbol: t.symbol,
+      name: t.name,
+      address: t.address,
+      logoURI: (t as any).logoURI,
+    };
     if (shouldKeep(tk)) candidates.push({ ...tk, __source: "curated" });
   }
 
   // 2) extra tokens (user‑added)
   for (const t of extraTokens) {
-    const tk: TokenLite = { symbol: t.symbol, name: t.name, address: t.address, logoURI: t.logoURI };
+    const tk: TokenLite = {
+      symbol: t.symbol,
+      name: t.name,
+      address: t.address,
+      logoURI: t.logoURI,
+    };
     if (shouldKeep(tk)) candidates.push({ ...tk, __source: "extra" });
   }
 
-  // 3) remote results from the hook
-  for (const t of (searchResults as any[])) {
-    const tk: TokenLite = { symbol: t.symbol || "", name: t.name, address: t.address as any, logoURI: t.logoURI };
-    if (shouldKeep(tk)) candidates.push({ ...tk, __source: "remote" });
+  // 3) remote results from the hook — only for "long enough" queries or address‑like queries
+  if (!isShortQuery) {
+    for (const t of (searchResults as any[])) {
+      const tk: TokenLite = {
+        symbol: t.symbol || "",
+        name: t.name,
+        address: t.address as any,
+        logoURI: t.logoURI,
+      };
+      if (shouldKeep(tk)) candidates.push({ ...tk, __source: "remote" });
+    }
   }
 
   // De‑duplicate: first by address (ERC‑20), then by native symbol
   const seen = new Set<string>();
   const deduped: TokenLite[] = [];
   for (const t of candidates) {
-    const key = t.address ? `addr:${t.address.toLowerCase()}` : `sym:${(t.symbol || "").toUpperCase()}`;
+    const key = t.address
+      ? `addr:${t.address.toLowerCase()}`
+      : `sym:${(t.symbol || "").toUpperCase()}`;
     if (seen.has(key)) continue;
     seen.add(key);
-    deduped.push({ symbol: t.symbol, name: t.name, address: t.address, logoURI: t.logoURI });
+    deduped.push({
+      symbol: t.symbol,
+      name: t.name,
+      address: t.address,
+      logoURI: t.logoURI,
+    });
   }
 
   const scoreOf = (t: TokenLite): number => {
@@ -247,9 +283,9 @@ const filteredTokens: TokenLite[] = useMemo(() => {
     let s = 0;
 
     // 1) address typed → exact match on top
-    if (is0x(raw)) {
+    if (isAddressQuery) {
       if (addr === raw.toLowerCase()) s += 10000;
-      if (addr.includes(raw.toLowerCase())) s += 9000;
+      if (addr && addr.includes(raw.toLowerCase())) s += 9000;
     }
 
     // 2) exact symbol / exact name
@@ -282,7 +318,6 @@ const filteredTokens: TokenLite[] = useMemo(() => {
   deduped.sort((a, b) => {
     const d = scoreOf(b) - scoreOf(a);
     if (d !== 0) return d;
-    // Stable, deterministic secondary order
     const aKey = (a.symbol || "") + "|" + (a.address || "");
     const bKey = (b.symbol || "") + "|" + (b.address || "");
     return aKey.localeCompare(bKey);
