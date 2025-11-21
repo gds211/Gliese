@@ -23,6 +23,7 @@ import { useAccount, useBalance } from "wagmi";
 import { parseUnits } from "viem";
 import glieseLogo from "@/assets/gliese-logo.png";
 import verifiedBadge from "@/assets/verified-badge.svg";
+import { formatBalanceWithScale } from "@/lib/utils";
 
 interface Token {
   symbol: string;
@@ -63,7 +64,7 @@ const TokenBalanceDisplay = ({
   
   return (
     <span className="text-xs text-white font-medium tabular-nums">
-      {formatted ? parseFloat(formatted).toFixed(2) : "0.00"}
+      {formatted ? formatBalanceWithScale(parseFloat(formatted)) : "0.0000"}
     </span>
   );
 };

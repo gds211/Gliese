@@ -28,6 +28,7 @@ import checkmarkIcon from "@/assets/checkmark-icon.png";
 import { PUBLIC_CONFIG } from "@/config/public";
 import { useYakQuote } from "@/hooks/useYakQuote";
 import { performSwap } from "@/lib/swap";
+import { formatBalanceWithScale } from "@/lib/utils";
 
 import TokenAvatar from "@/components/TokenAvatar";
 import { useTokenSearch } from "@/hooks/useTokenSearch";
@@ -104,7 +105,7 @@ const TokenBalanceDisplay = ({
   
   return (
     <span className="text-xs text-white font-medium tabular-nums">
-      {formatted ? parseFloat(formatted).toFixed(2) : "0.00"}
+      {formatted ? formatBalanceWithScale(parseFloat(formatted)) : "0.0000"}
     </span>
   );
 };
