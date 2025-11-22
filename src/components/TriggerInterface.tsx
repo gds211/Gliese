@@ -424,7 +424,6 @@ const filteredTokens: TokenLite[] = useMemo(() => {
     // Normal assignment - store address or null for native
     if (tokenSelectionType === "pay") {
       setPayToken(token.address ?? null);
-      setPayAmount("");
     } else {
       setReceiveToken(token.address ?? null);
     }

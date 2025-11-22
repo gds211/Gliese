@@ -788,7 +788,6 @@ const selectToken = (picked: string | TokenObj) => {
   // Normal assignment - store address or null for native
   if (tokenSelectionType === "sell") {
     setSellToken(tokenObj.address ?? null);
-    setSellAmount("");        // keep your reset
   } else {
     setBuyToken(tokenObj.address ?? null);
   }

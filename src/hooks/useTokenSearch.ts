@@ -56,7 +56,7 @@ export function useTokenSearch(rawQuery: string, limit: number = 20) {
     refetchOnReconnect: false,
     refetchOnMount: false,
     retry: 1,                    // do not hammer the API on errors
-    keepPreviousData: true,
+    placeholderData: (previousData) => previousData,
     queryFn: async () => {
       const q = query;
       if (!q) return [];
