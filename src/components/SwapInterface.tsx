@@ -553,18 +553,12 @@ const dynamicSlippage = useDynamicSlippageBps({
 });
 
 
-// Clamp chosen slippage to both config cap and a hard 100% ceiling.
+// Clamp chosen slippage to global cap (covers both auto/manual)
 const capBps = BigInt(
   (PUBLIC_CONFIG as any).AUTO_SLIPPAGE?.MAX_BPS ?? Number(PUBLIC_CONFIG.SLIPPAGE_BPS)
 );
-const MAX_BPS_HARD = 10_000n; // 100%
-
 const slipRaw = autoSlippage ? (dynamicSlippage.bps ?? 0n) : PUBLIC_CONFIG.SLIPPAGE_BPS;
-
-// First respect the config cap, then enforce an absolute 100% seatbelt
-const boundedByConfig = slipRaw > capBps ? capBps : slipRaw;
-const SLIP = boundedByConfig > MAX_BPS_HARD ? MAX_BPS_HARD : boundedByConfig;
-
+const SLIP = slipRaw > capBps ? capBps : slipRaw;
 // --- UI: formatted slippage for the indicator (one decimal, rounds) ---
 const slippageDisplay = useMemo(() => {
   const bps = Number(SLIP ?? 0n);           // bigint -> number (safe; bps is small)
@@ -813,7 +807,7 @@ const selectToken = (picked: string | TokenObj) => {
         return;
       }
       if (!sellAmount || Number(sellAmount) <= 0) throw new Error("Enter an amount.");
-      if (!quote || quote.outRaw === 0n || !quote.path?.length) throw new Error("No route found.");
+      if (!quote || quote.minOutRaw === 0n || !quote.path?.length) throw new Error("No route found.");
       if (!selectedSellToken || !selectedBuyToken) throw new Error("Select tokens.");
 
       const inDec = sellBal?.decimals ?? 18;

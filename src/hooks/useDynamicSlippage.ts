@@ -8,7 +8,7 @@ export type SimpleQuote = {
   outFormatted?: string | number | null;
   // optional: updatedAtMs?: number;
 };
-//probably stable
+//probably stabl
 
 export type UseDynamicSlippageArgs = {
   enabled: boolean;
@@ -165,17 +165,6 @@ export function useDynamicSlippageBps({
 
   // Preferred price source for volatility: unit quote; fallback to normalized user quote
   const priceSource = unitPerUnit ?? userPerUnit ?? null;
-    // Track size history within this trade context so that size-based slippage
-  // does not decrease when the user increases their effective size.
-  const lastSizeRef = useRef<number | null>(null);
-  const sizeFloorRef = useRef(0);
-
-  useEffect(() => {
-    // Reset between pairs/directions/routes
-    lastSizeRef.current = null;
-    sizeFloorRef.current = 0;
-  }, [resetKey]);
-
 
   // ---- Volatility (robust) ----
   const sigma = useEwmaSigma(enabled, priceSource, EWMA_ALPHA, resetKey);
@@ -187,41 +176,16 @@ export function useDynamicSlippageBps({
   const volBpsQ = enabled ? Math.ceil(VOL_SCALE * 10_000 * qAbs) : 0;
   const volBps = Math.max(volBpsEWMA, volBpsQ);
 
-    // ---- Size impact (two modes) ----
+  // ---- Size impact (two modes) ----
   // Fallback: per-unit vs per-unit (1-unit vs user)
   let sizeImpactBps = 0;
-  if (
-    enabled &&
-    unitPerUnit &&
-    unitPerUnit > 0 &&
-    userPerUnit &&
-    userPerUnit > 0 &&
-    userIn &&
-    userIn > 0
-  ) {
+  if (enabled && unitPerUnit && unitPerUnit > 0 && userPerUnit && userPerUnit > 0) {
     const impact = (unitPerUnit - userPerUnit) / unitPerUnit;
-    const rawSizeBps = Math.max(0, Math.ceil(SIZE_FACTOR * impact * 10_000));
-
-    const sizeNow = userIn;
-    const lastSize = lastSizeRef.current ?? 0;
-
-    if (sizeNow > lastSize) {
-      // User increased the trade size → update the monotone floor.
-      sizeFloorRef.current = Math.max(sizeFloorRef.current, rawSizeBps);
-      lastSizeRef.current = sizeNow;
-    } else if (sizeNow < lastSize) {
-      // User reduced the size → allow instantaneous estimate to pull us down over time.
-      lastSizeRef.current = sizeNow;
-      // We don't reset sizeFloorRef here; the global cool-off & hysteresis
-      // will decay the overall target toward the new conditions.
-    }
-
-    sizeImpactBps = Math.max(rawSizeBps, sizeFloorRef.current);
+    sizeImpactBps = Math.max(0, Math.ceil(SIZE_FACTOR * impact * 10_000));
   }
 
   // Optional local elasticity probe improves size estimate for curved CLMM segments
   const [probeBps, setProbeBps] = useState<number | null>(null);
-
   const lastProbeAt = useRef<number>(0);
   // Clear probe state on context change to avoid stale carry-over
   useEffect(() => { setProbeBps(null); lastProbeAt.current = 0; }, [resetKey]);

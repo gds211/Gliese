@@ -21,7 +21,9 @@ const toQuoteAddr = (v?: string) =>
 
 export type QuoteState = {
   outRaw: bigint;
+  minOutRaw: bigint;
   outFormatted: string;
+  minOutFormatted: string;
   path: Address[];
   adapters: Address[];
   gasUsed: bigint;
@@ -33,9 +35,11 @@ type Params = {
   tokenOut?: string;
   amountInHuman: string;
   enabled?: boolean;
+  /** Optional override for slippage (in bps). If omitted, falls back to PUBLIC_CONFIG.SLIPPAGE_BPS. */
+  slippageBpsOverride?: bigint;
 };
 
-export function useYakQuote({ router, tokenIn, tokenOut, amountInHuman, enabled = true }: Params) {
+export function useYakQuote({ router, tokenIn, tokenOut, amountInHuman, enabled = true, slippageBpsOverride  }: Params) {
   const isVisible = usePageVisible();
   const POLL_MS = Number((PUBLIC_CONFIG as any).QUOTE_POLL_MS ?? 1000);
 
@@ -141,42 +145,33 @@ async function getDecimalsCached(addr: Address, native: boolean): Promise<number
 
         // ⚠️ Returns a single tuple struct
         const formatted = await (client as any).readContract({
-  address: router,
-  abi: YAK_ROUTER_ABI,
-  functionName: "findBestPathWithGas",
-  args: [amountIn, tokenInAddr, tokenOutAddr, BigInt(PUBLIC_CONFIG.MAX_STEPS), gasWei],
-});
+          address: router,
+          abi: YAK_ROUTER_ABI,
+          functionName: "findBestPathWithGas",
+          args: [ amountIn, tokenInAddr, tokenOutAddr, BigInt(PUBLIC_CONFIG.MAX_STEPS), gasWei ],
+        });
 
-// robust destructure (works whether viem returns object or array)
-const amounts: bigint[]   = formatted?.amounts     ?? formatted?.[0] ?? [];
-const adapters: Address[] = formatted?.adapters    ?? formatted?.[1] ?? [];
-const path: Address[]     = formatted?.path        ?? formatted?.[2] ?? [];
-const gasEstimate: bigint = formatted?.gasEstimate ?? formatted?.[3] ?? 0n;
+        // robust destructure (works whether viem returns object or array)
+        const amounts: bigint[]   = formatted?.amounts   ?? formatted?.[0] ?? [];
+        const adapters: Address[] = formatted?.adapters  ?? formatted?.[1] ?? [];
+        const path: Address[]     = formatted?.path      ?? formatted?.[2] ?? [];
+        const gasEstimate: bigint = formatted?.gasEstimate ?? formatted?.[3] ?? 0n;
 
-const outRaw = amounts.length ? amounts[amounts.length - 1] : 0n;
+        const outRaw = amounts.length ? amounts[amounts.length - 1] : 0n;
+        const SLIP = (slippageBpsOverride ?? PUBLIC_CONFIG.SLIPPAGE_BPS);
+        const minOutRaw = (outRaw * (10_000n - SLIP)) / 10_000n;
 
-// Throttle UI updates based on relative change in raw out amount
-if (!changedByAtLeastBps(
-      lastMinOutRef.current,
-      outRaw,
-      PUBLIC_CONFIG.UPDATE_THRESHOLD_BPS
-    )) {
-  // skip UI update
-} else {
-  const outFormatted = formatUnits(outRaw, outDec);
+        if (!changedByAtLeastBps(lastMinOutRef.current, minOutRaw, PUBLIC_CONFIG.UPDATE_THRESHOLD_BPS)) {
+          // skip UI update
+        } else {
+          const outFormatted     = formatUnits(outRaw, outDec);
+          const minOutFormatted  = formatUnits(minOutRaw, outDec);
 
-  if (myReq === reqCounter.current && !cancelled) {
-    setQuote({
-      outRaw,
-      outFormatted,
-      path,
-      adapters,
-      gasUsed: gasEstimate,
-    });
-    lastMinOutRef.current = outRaw;
-  }
-}
-
+          if (myReq === reqCounter.current && !cancelled) {
+            setQuote({ outRaw, minOutRaw, outFormatted, minOutFormatted, path, adapters, gasUsed: gasEstimate });
+            lastMinOutRef.current = minOutRaw;
+          }
+        }
       } catch {
         if (myReq === reqCounter.current && !cancelled) {
           if (!quote) setQuote(null);
