@@ -122,6 +122,9 @@ async function getDecimalsCached(addr: Address, native: boolean): Promise<number
   }
 
     let cancelled = false;
+    // Track whether a fresh quote is needed and whether one is already in-flight
+    let dirty = true;
+    let inFlight = false;
 
     async function load() {
       const myReq = ++reqCounter.current;
@@ -177,25 +180,30 @@ async function getDecimalsCached(addr: Address, native: boolean): Promise<number
           if (!quote) setQuote(null);
         }
       } finally {
-        // no userland timer scheduling; updates come from new blocks
+        // Mark this request as done; next block can schedule a fresh one.
+        inFlight = false;
+        dirty = false;
+        
       }
     }
 
-  // initial fetch (fast path)
+    // initial fetch (fast path)
     load();
 
     // Throttled poller + block-coalescing
-    let dirty = true;
     const tick = setInterval(() => {
       if (cancelled) return;
       if (!isVisible || !enabled || !polling) return;
-      if (!dirty) return;
-      dirty = false;
+      // Only hit Yak if we know something changed and no quote is already in flight
+      if (!dirty || inFlight) return;
       load();
     }, Math.max(350, POLL_MS));
 
     // Mark dirty on every new block (shared singleton → 1 subscription total)
-    const off = onNewBlock(client, () => { if (!cancelled) dirty = true; });
+    const off = onNewBlock(client, () => {
+      if (!cancelled) dirty = true;
+    });
+
     return () => { cancelled = true; off?.(); clearInterval(tick); };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [polling, enabled, isVisible, router, tokenInAddr, tokenOutAddr, amountInHuman]);
