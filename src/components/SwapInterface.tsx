@@ -544,12 +544,32 @@ const dynamicSlippage = useDynamicSlippageBps({
   userInHuman: sellAmount || null,                // <<< critical for size awareness
   pathLength: quote?.path?.length ?? 1,
   notionalUsd,                                    // MEV cushion calibration
+  // Use the live quote for the current size and only hit Yak once for the bumped size.
+  // This keeps the elasticity probe fast and avoids extra RPC volume.
   probePerUnit: async (amountHuman) => {
+    const amtNum  = Number(amountHuman);
+    const baseNum = Number(sellAmount || 0);
+
+    // When probing exactly at the user's input size, reuse the existing quote.
+    if (
+      quote &&
+      Number.isFinite(amtNum) &&
+      Number.isFinite(baseNum) &&
+      baseNum > 0 &&
+      Math.abs(amtNum - baseNum) / baseNum < 1e-9
+    ) {
+      const out = Number(quote.outFormatted ?? "0");
+      if (Number.isFinite(out) && out > 0) {
+        return out / baseNum;
+      }
+    }
+
     const q = await getYakQuotePerUnit(amountHuman);
     return q?.perUnitOut ?? null;
   },
-  // reset when the trading context changes (address if available, else symbol)
-  resetKey: `${selectedSellToken?.address ?? sellToken}->${selectedBuyToken?.address ?? buyToken}`,
+
+  // Reset when the trading context changes (pair or effective path shape)
+  resetKey: `${selectedSellToken?.address ?? sellToken}->${selectedBuyToken?.address ?? buyToken}::${quote?.path?.length ?? 1}`,
 });
 
 
