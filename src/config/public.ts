@@ -40,7 +40,7 @@ export const PUBLIC_CONFIG = {
     MAX_BPS: 500,               // 5.00% hard cap (seatbelt)
 
     // --- Volatility model (runs on per-unit returns) ---
-    EWMA_ALPHA: 0.25,           // weight on newest return; 
+    EWMA_ALPHA: 0.20,           // weight on newest return; if you want to mirror old EWMA_LAMBDA=0.85, set 0.15
     QRET_WINDOW: 48,            // number of recent returns to keep for robust tail
     QRET_QUANTILE: 0.95,        // tail quantile of |returns| to guard against bursts
     VOL_SCALE: 1.0,             // global knob to scale volatility contribution
