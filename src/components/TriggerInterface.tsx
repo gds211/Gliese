@@ -17,6 +17,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { useTokenSearch } from "@/hooks/useTokenSearch";
 import { useDebouncedValue } from "@/hooks/useDebouncedValue";
 import { useConnectModal } from "@rainbow-me/rainbowkit";
+import { useQueryClient } from "@tanstack/react-query";
 
 import { ChevronDown, Wallet, Search, Loader2 } from "lucide-react";
 import TokenAvatar from "@/components/TokenAvatar";
@@ -25,6 +26,7 @@ import { parseUnits } from "viem";
 import glieseLogo from "@/assets/gliese-logo.png";
 import verifiedBadge from "@/assets/verified-badge.svg";
 import { formatBalanceWithScale } from "@/lib/utils";
+import { PUBLIC_CONFIG } from "@/config/public";
 
 interface Token {
   symbol: string;
@@ -81,6 +83,7 @@ const TriggerInterface = ({
 }: TriggerInterfaceProps) => {
   const { address, isConnected } = useAccount();
   const { openConnectModal } = useConnectModal();
+  const queryClient = useQueryClient();
   
   const [payAmount, setPayAmount] = useState("");
   const [rate, setRate] = useState("");
@@ -188,8 +191,43 @@ const filteredTokens: TokenLite[] = useMemo(() => {
   const q = normalize(raw);
   const fq = fold(raw);
 
-  // When empty → show curated defaults (same behavior as SwapInterface)
-  if (!q) return tokens;
+  // When empty → show curated defaults, sorted by balance if wallet connected
+  if (!q) {
+    const filtered = tokens.filter(
+      (t) =>
+        isVerifiedToken(t) &&
+        t.symbol !== selectedPayToken?.symbol &&
+        t.symbol !== selectedReceiveToken?.symbol
+    );
+    
+    // Sort by balance when wallet is connected
+    if (isConnected && address) {
+      const tokensWithBalance: TokenLite[] = [];
+      const tokensWithoutBalance: TokenLite[] = [];
+      
+      for (const token of filtered) {
+        // Access cached balance data from React Query
+        const balanceQueryKey = ['balance', { 
+          address, 
+          token: token.address,
+          chainId: PUBLIC_CONFIG.CHAIN_ID 
+        }];
+        const cachedBalance = queryClient.getQueryData(balanceQueryKey) as any;
+        
+        const hasBalance = cachedBalance?.value && cachedBalance.value > 0n;
+        
+        if (hasBalance) {
+          tokensWithBalance.push(token);
+        } else {
+          tokensWithoutBalance.push(token);
+        }
+      }
+      
+      return [...tokensWithBalance, ...tokensWithoutBalance];
+    }
+    
+    return filtered;
+  }
 
   const isAddressQuery = is0x(raw);
   const isShortQuery = !isAddressQuery && fq.length < 2; // keep in sync with useTokenSearch
@@ -324,7 +362,7 @@ const filteredTokens: TokenLite[] = useMemo(() => {
   });
 
   return deduped;
-}, [searchTerm, tokens, extraTokens, searchResults]);
+}, [searchTerm, tokens, extraTokens, searchResults, isConnected, address, queryClient, selectedPayToken, selectedReceiveToken]);
 
 
 
