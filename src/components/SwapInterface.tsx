@@ -3,10 +3,8 @@ import { useState, useMemo, useEffect } from "react";
 import { Address, parseUnits, formatUnits } from "viem";
 import { useAccount, useBalance } from "wagmi";
 import { useConnectModal } from "@rainbow-me/rainbowkit";
-import { useQueryClient } from "@tanstack/react-query";
-import { getBalanceQueryKey } from "wagmi/query";
+import { useQueryClient } from "@tanstack/react-query"; // <-- ADDED
 import { useTokenBalance } from "@/hooks/useTokenBalance";
-import { useMultiTokenBalances } from "@/hooks/useMultiTokenBalances";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -160,9 +158,6 @@ const SwapInterface = ({
     { symbol: "WBTC", name: "Wrapped BTC", address: "0xcf5a6076cfa32686c0Df13aBaDa2b40dec133F1d" as `0x${string}` },
   ];
 
-  // Pre-fetch balances for all tokens when wallet is connected
-  const { isLoading: balancesLoading, balanceQueries } = useMultiTokenBalances(tokens);
-
   // Helper to check if token is verified (in our tokens list)
   const isVerifiedToken = (token: { symbol: string; address?: `0x${string}` }) => {
     return tokens.some(t => {
@@ -254,59 +249,8 @@ const filteredTokens: TokenLite[] = useMemo(() => {
   const q = normalize(raw);
   const fq = fold(raw);
 
-  // Show curated defaults when empty, sorted by balance if wallet connected
-  if (!q) {
-    const filtered = tokens.filter((t) => isVerifiedToken(t));
-
-    // If we don't have wallet or balance data yet, fall back to the static list.
-    if (!isConnected || !address || !balanceQueries?.length) {
-      return filtered;
-    }
-
-    // Build a lookup from (symbol + address) -> on‑chain balance for quick access.
-    const balanceMap = new Map<string, bigint>();
-
-    tokens.forEach((token, index) => {
-      const query = balanceQueries[index];
-      const value = (query?.data as any)?.value as bigint | undefined;
-
-      if (typeof value === "bigint" && value > 0n) {
-        const key =
-          `${(token.symbol || "").toUpperCase()}|${token.address?.toLowerCase() ?? ""}`;
-        balanceMap.set(key, value);
-      }
-    });
-
-    const tokensWithBalance: TokenLite[] = [];
-    const tokensWithoutBalance: TokenLite[] = [];
-
-    for (const token of filtered) {
-      const key =
-        `${(token.symbol || "").toUpperCase()}|${token.address?.toLowerCase() ?? ""}`;
-      const value = balanceMap.get(key);
-
-      if (value && value > 0n) {
-        tokensWithBalance.push(token);
-      } else {
-        tokensWithoutBalance.push(token);
-      }
-    }
-
-    // Sort tokens that actually have a balance in descending order.
-    tokensWithBalance.sort((a, b) => {
-      const keyA =
-        `${(a.symbol || "").toUpperCase()}|${a.address?.toLowerCase() ?? ""}`;
-      const keyB =
-        `${(b.symbol || "").toUpperCase()}|${b.address?.toLowerCase() ?? ""}`;
-      const valueA = balanceMap.get(keyA) ?? 0n;
-      const valueB = balanceMap.get(keyB) ?? 0n;
-
-      if (valueA === valueB) return 0;
-      return valueA > valueB ? -1 : 1;
-    });
-
-    return [...tokensWithBalance, ...tokensWithoutBalance];
-  }
+  // Show curated defaults when empty
+  if (!q) return tokens;
 
   const isAddressQuery = is0x(raw);
   const isShortQuery = !isAddressQuery && fq.length < 2; // keep in sync with useTokenSearch
@@ -442,7 +386,7 @@ const filteredTokens: TokenLite[] = useMemo(() => {
   });
 
   return deduped;
-}, [searchTerm, tokens, extraTokens, searchResults, isConnected, address, queryClient, selectedSellToken, selectedBuyToken, balancesLoading, balanceQueries]);
+}, [searchTerm, tokens, extraTokens, searchResults]);
 
 
   // --- Quote from Yak (every 2s, 5% slippage, threshold ≥ 0.1%) ---

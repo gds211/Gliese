@@ -17,9 +17,6 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { useTokenSearch } from "@/hooks/useTokenSearch";
 import { useDebouncedValue } from "@/hooks/useDebouncedValue";
 import { useConnectModal } from "@rainbow-me/rainbowkit";
-import { useQueryClient } from "@tanstack/react-query";
-import { getBalanceQueryKey } from "wagmi/query";
-import { useMultiTokenBalances } from "@/hooks/useMultiTokenBalances";
 
 import { ChevronDown, Wallet, Search, Loader2 } from "lucide-react";
 import TokenAvatar from "@/components/TokenAvatar";
@@ -28,7 +25,6 @@ import { parseUnits } from "viem";
 import glieseLogo from "@/assets/gliese-logo.png";
 import verifiedBadge from "@/assets/verified-badge.svg";
 import { formatBalanceWithScale } from "@/lib/utils";
-import { PUBLIC_CONFIG } from "@/config/public";
 
 interface Token {
   symbol: string;
@@ -85,7 +81,6 @@ const TriggerInterface = ({
 }: TriggerInterfaceProps) => {
   const { address, isConnected } = useAccount();
   const { openConnectModal } = useConnectModal();
-  const queryClient = useQueryClient();
   
   const [payAmount, setPayAmount] = useState("");
   const [rate, setRate] = useState("");
@@ -100,8 +95,7 @@ const TriggerInterface = ({
 
   const combinedTokens = useMemo(() => [...tokens, ...extraTokens], [tokens, extraTokens]);
 
-  // Pre-fetch balances for all tokens when wallet is connected
-  const { isLoading: balancesLoading, balanceQueries } = useMultiTokenBalances(combinedTokens);
+
 
   const selectedPayToken = useMemo(() => {
   if (payToken === null) return combinedTokens.find(t => !t.address);
@@ -194,59 +188,8 @@ const filteredTokens: TokenLite[] = useMemo(() => {
   const q = normalize(raw);
   const fq = fold(raw);
 
-  // When empty → show curated defaults, sorted by balance if wallet connected
-  if (!q) {
-    const filtered = tokens.filter((t) => isVerifiedToken(t));
-
-    // If we don't have wallet or balance data yet, fall back to the static list.
-    if (!isConnected || !address || !balanceQueries?.length) {
-      return filtered;
-    }
-
-    // Build a lookup from (symbol + address) -> on‑chain balance for quick access.
-    const balanceMap = new Map<string, bigint>();
-
-    combinedTokens.forEach((token, index) => {
-      const query = balanceQueries[index];
-      const value = (query?.data as any)?.value as bigint | undefined;
-
-      if (typeof value === "bigint" && value > 0n) {
-        const key =
-          `${(token.symbol || "").toUpperCase()}|${token.address?.toLowerCase() ?? ""}`;
-        balanceMap.set(key, value);
-      }
-    });
-
-    const tokensWithBalance: TokenLite[] = [];
-    const tokensWithoutBalance: TokenLite[] = [];
-
-    for (const token of filtered) {
-      const key =
-        `${(token.symbol || "").toUpperCase()}|${token.address?.toLowerCase() ?? ""}`;
-      const value = balanceMap.get(key);
-
-      if (value && value > 0n) {
-        tokensWithBalance.push(token);
-      } else {
-        tokensWithoutBalance.push(token);
-      }
-    }
-
-    // Sort tokens that actually have a balance in descending order.
-    tokensWithBalance.sort((a, b) => {
-      const keyA =
-        `${(a.symbol || "").toUpperCase()}|${a.address?.toLowerCase() ?? ""}`;
-      const keyB =
-        `${(b.symbol || "").toUpperCase()}|${b.address?.toLowerCase() ?? ""}`;
-      const valueA = balanceMap.get(keyA) ?? 0n;
-      const valueB = balanceMap.get(keyB) ?? 0n;
-
-      if (valueA === valueB) return 0;
-      return valueA > valueB ? -1 : 1;
-    });
-
-    return [...tokensWithBalance, ...tokensWithoutBalance];
-  }
+  // When empty → show curated defaults (same behavior as SwapInterface)
+  if (!q) return tokens;
 
   const isAddressQuery = is0x(raw);
   const isShortQuery = !isAddressQuery && fq.length < 2; // keep in sync with useTokenSearch
@@ -381,7 +324,7 @@ const filteredTokens: TokenLite[] = useMemo(() => {
   });
 
   return deduped;
-}, [searchTerm, tokens, extraTokens, searchResults, isConnected, address, queryClient, selectedPayToken, selectedReceiveToken, balancesLoading, balanceQueries]);
+}, [searchTerm, tokens, extraTokens, searchResults]);
 
 
 
