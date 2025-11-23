@@ -1,6 +1,9 @@
 import { useQueries } from '@tanstack/react-query';
-import { useAccount, useBalance } from 'wagmi';
+import { useAccount } from 'wagmi';
+import { getBalanceQueryOptions } from 'wagmi/query';
 import { Address } from 'viem';
+import { PUBLIC_CONFIG } from '@/config/public';
+import { wagmiConfig } from '@/lib/wagmiConfig';
 
 interface Token {
   address?: string;
@@ -8,43 +11,33 @@ interface Token {
 }
 
 export const useMultiTokenBalances = (tokens: Token[]) => {
-  const { address: walletAddress, isConnected } = useAccount();
+  const { address, isConnected } = useAccount();
 
+  // Pre-fetch balances for all tokens in parallel
   const balanceQueries = useQueries({
-    queries: tokens.map((token) => ({
-      queryKey: ['tokenBalance', walletAddress, token.address || token.symbol],
-      queryFn: async () => {
-        // This will be handled by wagmi's useBalance through the queries
-        return null;
-      },
-      enabled: false, // We'll use individual useBalance hooks instead
-    })),
+    queries: tokens.map((token) => {
+      const queryOptions = getBalanceQueryOptions(wagmiConfig, {
+        address: address!,
+        token: token.address as Address,
+        chainId: PUBLIC_CONFIG.CHAIN_ID,
+      });
+
+      return {
+        ...queryOptions,
+        enabled: Boolean(isConnected && address && token.address),
+        staleTime: 12_000,
+        gcTime: 60_000,
+        refetchOnWindowFocus: false,
+        refetchOnReconnect: false,
+      };
+    }),
   });
 
-  // Create a map of token address/symbol to balance
-  const balances = new Map<string, string>();
+  const isLoading = balanceQueries.some(q => q.isLoading);
 
-  // We'll use wagmi's built-in caching by calling useBalance for each token
-  // The actual fetching is done below with individual hooks
-  
-  return {
-    balances,
+  return { 
+    isLoading, 
     isConnected,
-    walletAddress,
-  };
-};
-
-// Simpler approach: return a function to get balance for a token
-export const useTokenBalanceMap = (tokens: Token[]) => {
-  const { address: walletAddress, isConnected } = useAccount();
-
-  // We can't call hooks conditionally, so we'll return a map builder function
-  // that components can use to check balances
-  
-  return {
-    isConnected,
-    walletAddress,
-    // Components will need to use useBalance individually for each token
-    // and build the sorting logic inline
+    balanceQueries,
   };
 };

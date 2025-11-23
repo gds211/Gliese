@@ -19,6 +19,7 @@ import { useDebouncedValue } from "@/hooks/useDebouncedValue";
 import { useConnectModal } from "@rainbow-me/rainbowkit";
 import { useQueryClient } from "@tanstack/react-query";
 import { getBalanceQueryKey } from "wagmi/query";
+import { useMultiTokenBalances } from "@/hooks/useMultiTokenBalances";
 
 import { ChevronDown, Wallet, Search, Loader2 } from "lucide-react";
 import TokenAvatar from "@/components/TokenAvatar";
@@ -99,7 +100,8 @@ const TriggerInterface = ({
 
   const combinedTokens = useMemo(() => [...tokens, ...extraTokens], [tokens, extraTokens]);
 
-
+  // Pre-fetch balances for all tokens when wallet is connected
+  useMultiTokenBalances(combinedTokens);
 
   const selectedPayToken = useMemo(() => {
   if (payToken === null) return combinedTokens.find(t => !t.address);
