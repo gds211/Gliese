@@ -251,12 +251,7 @@ const filteredTokens: TokenLite[] = useMemo(() => {
 
   // Show curated defaults when empty, sorted by balance if wallet connected
   if (!q) {
-    const filtered = tokens.filter(
-      (t) =>
-        isVerifiedToken(t) &&
-        !tokensEqual(t, selectedSellToken) &&
-        !tokensEqual(t, selectedBuyToken)
-    );
+    const filtered = tokens.filter((t) => isVerifiedToken(t));
     
     // Sort by balance when wallet is connected
     if (isConnected && address) {
@@ -280,6 +275,29 @@ const filteredTokens: TokenLite[] = useMemo(() => {
           tokensWithoutBalance.push(token);
         }
       }
+      
+      // Sort tokens with balance by balance amount (highest first)
+      tokensWithBalance.sort((a, b) => {
+        const balanceA = queryClient.getQueryData(['balance', { 
+          address, 
+          token: a.address,
+          chainId: PUBLIC_CONFIG.CHAIN_ID 
+        }]) as any;
+        
+        const balanceB = queryClient.getQueryData(['balance', { 
+          address, 
+          token: b.address,
+          chainId: PUBLIC_CONFIG.CHAIN_ID 
+        }]) as any;
+        
+        const valueA = balanceA?.value ?? 0n;
+        const valueB = balanceB?.value ?? 0n;
+        
+        // Descending order (highest balance first)
+        if (valueB > valueA) return 1;
+        if (valueB < valueA) return -1;
+        return 0;
+      });
       
       return [...tokensWithBalance, ...tokensWithoutBalance];
     }
