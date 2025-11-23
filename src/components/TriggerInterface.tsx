@@ -101,7 +101,7 @@ const TriggerInterface = ({
   const combinedTokens = useMemo(() => [...tokens, ...extraTokens], [tokens, extraTokens]);
 
   // Pre-fetch balances for all tokens when wallet is connected
-  useMultiTokenBalances(combinedTokens);
+  const { isLoading: balancesLoading } = useMultiTokenBalances(combinedTokens);
 
   const selectedPayToken = useMemo(() => {
   if (payToken === null) return combinedTokens.find(t => !t.address);
@@ -386,7 +386,7 @@ const filteredTokens: TokenLite[] = useMemo(() => {
   });
 
   return deduped;
-}, [searchTerm, tokens, extraTokens, searchResults, isConnected, address, queryClient, selectedPayToken, selectedReceiveToken]);
+}, [searchTerm, tokens, extraTokens, searchResults, isConnected, address, queryClient, selectedPayToken, selectedReceiveToken, balancesLoading]);
 
 
 

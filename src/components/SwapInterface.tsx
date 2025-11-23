@@ -161,7 +161,7 @@ const SwapInterface = ({
   ];
 
   // Pre-fetch balances for all tokens when wallet is connected
-  useMultiTokenBalances(tokens);
+  const { isLoading: balancesLoading } = useMultiTokenBalances(tokens);
 
   // Helper to check if token is verified (in our tokens list)
   const isVerifiedToken = (token: { symbol: string; address?: `0x${string}` }) => {
@@ -447,7 +447,7 @@ const filteredTokens: TokenLite[] = useMemo(() => {
   });
 
   return deduped;
-}, [searchTerm, tokens, extraTokens, searchResults, isConnected, address, queryClient, selectedSellToken, selectedBuyToken]);
+}, [searchTerm, tokens, extraTokens, searchResults, isConnected, address, queryClient, selectedSellToken, selectedBuyToken, balancesLoading]);
 
 
   // --- Quote from Yak (every 2s, 5% slippage, threshold ≥ 0.1%) ---
