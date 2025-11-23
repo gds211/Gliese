@@ -18,6 +18,7 @@ import { useTokenSearch } from "@/hooks/useTokenSearch";
 import { useDebouncedValue } from "@/hooks/useDebouncedValue";
 import { useConnectModal } from "@rainbow-me/rainbowkit";
 import { useQueryClient } from "@tanstack/react-query";
+import { getBalanceQueryKey } from "wagmi/query";
 
 import { ChevronDown, Wallet, Search, Loader2 } from "lucide-react";
 import TokenAvatar from "@/components/TokenAvatar";
@@ -201,12 +202,11 @@ const filteredTokens: TokenLite[] = useMemo(() => {
       const tokensWithoutBalance: TokenLite[] = [];
       
       for (const token of filtered) {
-        // Access cached balance data from React Query
-        const balanceQueryKey = ['balance', { 
-          address, 
-          token: token.address,
-          chainId: PUBLIC_CONFIG.CHAIN_ID 
-        }];
+        const balanceQueryKey = getBalanceQueryKey({
+          address,
+          token: token.address as Address,
+          chainId: PUBLIC_CONFIG.CHAIN_ID,
+        });
         const cachedBalance = queryClient.getQueryData(balanceQueryKey) as any;
         
         const hasBalance = cachedBalance?.value && cachedBalance.value > 0n;
@@ -220,17 +220,21 @@ const filteredTokens: TokenLite[] = useMemo(() => {
       
       // Sort tokens with balance by balance amount (highest first)
       tokensWithBalance.sort((a, b) => {
-        const balanceA = queryClient.getQueryData(['balance', { 
-          address, 
-          token: a.address,
-          chainId: PUBLIC_CONFIG.CHAIN_ID 
-        }]) as any;
+        const balanceA = queryClient.getQueryData(
+          getBalanceQueryKey({
+            address,
+            token: a.address as Address,
+            chainId: PUBLIC_CONFIG.CHAIN_ID,
+          })
+        ) as any;
         
-        const balanceB = queryClient.getQueryData(['balance', { 
-          address, 
-          token: b.address,
-          chainId: PUBLIC_CONFIG.CHAIN_ID 
-        }]) as any;
+        const balanceB = queryClient.getQueryData(
+          getBalanceQueryKey({
+            address,
+            token: b.address as Address,
+            chainId: PUBLIC_CONFIG.CHAIN_ID,
+          })
+        ) as any;
         
         const valueA = balanceA?.value ?? 0n;
         const valueB = balanceB?.value ?? 0n;
