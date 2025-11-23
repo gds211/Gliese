@@ -4,7 +4,6 @@ import App from "./App";
 import "./index.css";
 
 import "@rainbow-me/rainbowkit/styles.css";
-import "@wormhole-foundation/wormhole-connect/dist/main.css";
 import { WagmiProvider } from "wagmi";
 import { RainbowKitProvider } from "@rainbow-me/rainbowkit";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
