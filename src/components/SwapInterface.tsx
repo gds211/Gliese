@@ -249,8 +249,43 @@ const filteredTokens: TokenLite[] = useMemo(() => {
   const q = normalize(raw);
   const fq = fold(raw);
 
-  // Show curated defaults when empty
-  if (!q) return tokens;
+  // Show curated defaults when empty, sorted by balance if wallet connected
+  if (!q) {
+    const filtered = tokens.filter(
+      (t) =>
+        isVerifiedToken(t) &&
+        !tokensEqual(t, selectedSellToken) &&
+        !tokensEqual(t, selectedBuyToken)
+    );
+    
+    // Sort by balance when wallet is connected
+    if (isConnected && address) {
+      const tokensWithBalance: TokenLite[] = [];
+      const tokensWithoutBalance: TokenLite[] = [];
+      
+      for (const token of filtered) {
+        // Access cached balance data from React Query
+        const balanceQueryKey = ['balance', { 
+          address, 
+          token: token.address,
+          chainId: PUBLIC_CONFIG.CHAIN_ID 
+        }];
+        const cachedBalance = queryClient.getQueryData(balanceQueryKey) as any;
+        
+        const hasBalance = cachedBalance?.value && cachedBalance.value > 0n;
+        
+        if (hasBalance) {
+          tokensWithBalance.push(token);
+        } else {
+          tokensWithoutBalance.push(token);
+        }
+      }
+      
+      return [...tokensWithBalance, ...tokensWithoutBalance];
+    }
+    
+    return filtered;
+  }
 
   const isAddressQuery = is0x(raw);
   const isShortQuery = !isAddressQuery && fq.length < 2; // keep in sync with useTokenSearch
@@ -386,7 +421,7 @@ const filteredTokens: TokenLite[] = useMemo(() => {
   });
 
   return deduped;
-}, [searchTerm, tokens, extraTokens, searchResults]);
+}, [searchTerm, tokens, extraTokens, searchResults, isConnected, address, queryClient, selectedSellToken, selectedBuyToken]);
 
 
   // --- Quote from Yak (every 2s, 5% slippage, threshold ≥ 0.1%) ---
