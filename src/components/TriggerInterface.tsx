@@ -101,7 +101,7 @@ const TriggerInterface = ({
   const combinedTokens = useMemo(() => [...tokens, ...extraTokens], [tokens, extraTokens]);
 
   // Pre-fetch balances for all tokens when wallet is connected
-  const { isLoading: balancesLoading } = useMultiTokenBalances(combinedTokens);
+  const { isLoading: balancesLoading, balanceQueries } = useMultiTokenBalances(combinedTokens);
 
   const selectedPayToken = useMemo(() => {
   if (payToken === null) return combinedTokens.find(t => !t.address);
@@ -197,60 +197,55 @@ const filteredTokens: TokenLite[] = useMemo(() => {
   // When empty → show curated defaults, sorted by balance if wallet connected
   if (!q) {
     const filtered = tokens.filter((t) => isVerifiedToken(t));
-    
-    // Sort by balance when wallet is connected
-    if (isConnected && address) {
-      const tokensWithBalance: TokenLite[] = [];
-      const tokensWithoutBalance: TokenLite[] = [];
-      
-      for (const token of filtered) {
-        const balanceQueryKey = getBalanceQueryKey({
-          address,
-          token: token.address as Address,
-          chainId: PUBLIC_CONFIG.CHAIN_ID,
-        });
-        const cachedBalance = queryClient.getQueryData(balanceQueryKey) as any;
-        
-        const hasBalance = cachedBalance?.value && cachedBalance.value > 0n;
-        
-        if (hasBalance) {
-          tokensWithBalance.push(token);
-        } else {
-          tokensWithoutBalance.push(token);
-        }
-      }
-      
-      // Sort tokens with balance by balance amount (highest first)
-      tokensWithBalance.sort((a, b) => {
-        const balanceA = queryClient.getQueryData(
-          getBalanceQueryKey({
-            address,
-            token: a.address as Address,
-            chainId: PUBLIC_CONFIG.CHAIN_ID,
-          })
-        ) as any;
-        
-        const balanceB = queryClient.getQueryData(
-          getBalanceQueryKey({
-            address,
-            token: b.address as Address,
-            chainId: PUBLIC_CONFIG.CHAIN_ID,
-          })
-        ) as any;
-        
-        const valueA = balanceA?.value ?? 0n;
-        const valueB = balanceB?.value ?? 0n;
-        
-        // Descending order (highest balance first)
-        if (valueB > valueA) return 1;
-        if (valueB < valueA) return -1;
-        return 0;
-      });
-      
-      return [...tokensWithBalance, ...tokensWithoutBalance];
+
+    // If we don't have wallet or balance data yet, fall back to the static list.
+    if (!isConnected || !address || !balanceQueries?.length) {
+      return filtered;
     }
-    
-    return filtered;
+
+    // Build a lookup from (symbol + address) -> on‑chain balance for quick access.
+    const balanceMap = new Map<string, bigint>();
+
+    combinedTokens.forEach((token, index) => {
+      const query = balanceQueries[index];
+      const value = (query?.data as any)?.value as bigint | undefined;
+
+      if (typeof value === "bigint" && value > 0n) {
+        const key =
+          `${(token.symbol || "").toUpperCase()}|${token.address?.toLowerCase() ?? ""}`;
+        balanceMap.set(key, value);
+      }
+    });
+
+    const tokensWithBalance: TokenLite[] = [];
+    const tokensWithoutBalance: TokenLite[] = [];
+
+    for (const token of filtered) {
+      const key =
+        `${(token.symbol || "").toUpperCase()}|${token.address?.toLowerCase() ?? ""}`;
+      const value = balanceMap.get(key);
+
+      if (value && value > 0n) {
+        tokensWithBalance.push(token);
+      } else {
+        tokensWithoutBalance.push(token);
+      }
+    }
+
+    // Sort tokens that actually have a balance in descending order.
+    tokensWithBalance.sort((a, b) => {
+      const keyA =
+        `${(a.symbol || "").toUpperCase()}|${a.address?.toLowerCase() ?? ""}`;
+      const keyB =
+        `${(b.symbol || "").toUpperCase()}|${b.address?.toLowerCase() ?? ""}`;
+      const valueA = balanceMap.get(keyA) ?? 0n;
+      const valueB = balanceMap.get(keyB) ?? 0n;
+
+      if (valueA === valueB) return 0;
+      return valueA > valueB ? -1 : 1;
+    });
+
+    return [...tokensWithBalance, ...tokensWithoutBalance];
   }
 
   const isAddressQuery = is0x(raw);
@@ -386,7 +381,7 @@ const filteredTokens: TokenLite[] = useMemo(() => {
   });
 
   return deduped;
-}, [searchTerm, tokens, extraTokens, searchResults, isConnected, address, queryClient, selectedPayToken, selectedReceiveToken, balancesLoading]);
+}, [searchTerm, tokens, extraTokens, searchResults, isConnected, address, queryClient, selectedPayToken, selectedReceiveToken, balancesLoading, balanceQueries]);
 
 
 
