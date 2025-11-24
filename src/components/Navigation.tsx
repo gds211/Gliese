@@ -1,64 +1,80 @@
+import { useLocation, NavLink, Link } from "react-router-dom";
+import { useMemo } from "react";
+
 import { Button } from "@/components/ui/button";
-import { useState } from "react";
 import glieseLogo from "@/assets/gliese-logo.png";
-import WalletButton from "@/components/WalletButton"; // ⟵ use your custom RK-powered button
+import WalletButton from "@/components/WalletButton";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 
-const Navigation = () => {
-  const [activeTab, setActiveTab] = useState("Swap");
+type NavItem = {
+  name: string;
+  path: string;
+  available: boolean;
+};
 
-  const navItems = [
-    { name: "Swap", href: "#", available: true },
-    { name: "Perps", href: "#", available: false },
-    { name: "Markets", href: "#", available: false },
-    { name: "Stake", href: "#", available: false },
-    { name: "Bridge", href: "#", available: false },
-  ];
+const NAV_ITEMS: NavItem[] = [
+  { name: "Swap", path: "/", available: true },
+  { name: "Perps", path: "#", available: false },
+  { name: "Markets", path: "#", available: false },
+  { name: "Stake", path: "#", available: false },
+  { name: "Bridge", path: "/bridge", available: true },
+];
+
+const Navigation = () => {
+  const location = useLocation();
+
+  const activePath = useMemo(() => {
+    if (location.pathname === "/") return "/";
+    if (location.pathname.startsWith("/bridge")) return "/bridge";
+    return location.pathname;
+  }, [location.pathname]);
 
   return (
-    <nav className="flex items-center justify-between px-6 py-4 backdrop-blur-sm border-b-[0.3px] border-border">
-      {/* Logo */}
-      <div className="flex items-center gap-3 -translate-y-0.5">
-        <img
-          src={glieseLogo}
-          alt="Gliese"
-          className="w-8 h-8 rounded-full shadow-glow-cosmic"
-        />
-        <span className="text-xl font-bold text-foreground">GLIESE</span>
-      </div>
+    <nav className="flex items-center justify-between px-4 py-4 md:px-8">
+      <div className="flex items-center gap-6">
+        <Link to="/" className="flex items-center gap-2">
+          <img
+            src={glieseLogo}
+            alt="Gliese"
+            className="h-8 w-8 rounded-full border border-white/10"
+          />
+          <span className="hidden text-lg font-semibold tracking-tight text-white sm:inline">
+            Gliese
+          </span>
+        </Link>
 
-      {/* Navigation Links */}
-      <div className="flex items-center gap-1 bg-black rounded-lg p-1 backdrop-blur-sm">
-          {navItems.map((item) => {
+        <div className="flex items-center gap-1 rounded-full bg-white/5 p-1">
+          {NAV_ITEMS.map((item) => {
+            const isActive =
+              item.available && item.path !== "#" && activePath === item.path;
+
             const button = (
               <Button
                 key={item.name}
-                variant={activeTab === item.name ? "default" : "ghost"}
+                variant={isActive ? "default" : "ghost"}
                 size="sm"
-                onClick={() => item.available && setActiveTab(item.name)}
-                disabled={!item.available}
-                className={`
-                  px-4 py-2 transition-all duration-300
-                  ${!item.available && "opacity-50 cursor-not-allowed"}
-                  ${
-                    activeTab === item.name
-                      ? "bg-primary text-primary-foreground shadow-glow-cosmic"
-                      : "text-muted-foreground hover:text-foreground hover:bg-secondary/50"
-                  }
-                `}
+                className={`rounded-full px-3 py-1 text-xs md:px-4 md:text-sm ${
+                  !item.available ? "cursor-not-allowed opacity-60" : ""
+                }`}
+                asChild={item.available && item.path !== "#"}
               >
-                {item.name}
+                {item.available && item.path !== "#" ? (
+                  <NavLink to={item.path}>{item.name}</NavLink>
+                ) : (
+                  <span>{item.name}</span>
+                )}
               </Button>
             );
 
-            if (!item.available) {
+            // For disabled items, show a tooltip saying "Coming soon"
+            if (!item.available && item.path === "#") {
               return (
                 <Tooltip key={item.name}>
-                  <TooltipTrigger asChild>
-                    {button}
-                  </TooltipTrigger>
-                  <TooltipContent>
-                    <p>Under Construction</p>
+                  <TooltipTrigger asChild>{button}</TooltipTrigger>
+                  <TooltipContent side="bottom">
+                    <p className="text-xs text-muted-foreground">
+                      Coming soon
+                    </p>
                   </TooltipContent>
                 </Tooltip>
               );
@@ -67,8 +83,8 @@ const Navigation = () => {
             return button;
           })}
         </div>
+      </div>
 
-      {/* Connect Wallet (RainbowKit modal pops from this custom button) */}
       <WalletButton />
     </nav>
   );
