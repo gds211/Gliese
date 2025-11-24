@@ -62,7 +62,8 @@
     "vaul": "^0.9.3",
     "viem": "^2.9.32",
     "wagmi": "^2.5.7",
-    "zod": "^3.23.8"
+    "zod": "^3.23.8",
+    "@wormhole-foundation/wormhole-connect": "^4.0.0"
   },
   "devDependencies": {
     "@eslint/js": "^9.9.0",
