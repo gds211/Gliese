@@ -1,19 +1,31 @@
 import { Button } from "@/components/ui/button";
-import { useState } from "react";
 import glieseLogo from "@/assets/gliese-logo.png";
 import WalletButton from "@/components/WalletButton"; // ⟵ use your custom RK-powered button
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { useLocation, useNavigate } from "react-router-dom";
+
+type NavItem = {
+  name: "Swap" | "Perps" | "Markets" | "Stake" | "Bridge";
+  href: string;
+  available: boolean;
+};
 
 const Navigation = () => {
-  const [activeTab, setActiveTab] = useState("Swap");
+  const navigate = useNavigate();
+  const location = useLocation();
 
-  const navItems = [
-    { name: "Swap", href: "#", available: true },
+  const navItems: NavItem[] = [
+    { name: "Swap", href: "/", available: true },
     { name: "Perps", href: "#", available: false },
     { name: "Markets", href: "#", available: false },
     { name: "Stake", href: "#", available: false },
-    { name: "Bridge", href: "#", available: false },
+    { name: "Bridge", href: "/bridge", available: true },
   ];
+
+  const activeTab =
+    navItems.find(
+      (item) => item.href !== "#" && location.pathname.startsWith(item.href),
+    )?.name ?? "Swap";
 
   return (
     <nav className="flex items-center justify-between px-6 py-4 backdrop-blur-sm border-b-[0.3px] border-border">
@@ -29,44 +41,47 @@ const Navigation = () => {
 
       {/* Navigation Links */}
       <div className="flex items-center gap-1 bg-black rounded-lg p-1 backdrop-blur-sm">
-          {navItems.map((item) => {
-            const button = (
-              <Button
-                key={item.name}
-                variant={activeTab === item.name ? "default" : "ghost"}
-                size="sm"
-                onClick={() => item.available && setActiveTab(item.name)}
-                disabled={!item.available}
-                className={`
-                  px-4 py-2 transition-all duration-300
-                  ${!item.available && "opacity-50 cursor-not-allowed"}
-                  ${
-                    activeTab === item.name
-                      ? "bg-primary text-primary-foreground shadow-glow-cosmic"
-                      : "text-muted-foreground hover:text-foreground hover:bg-secondary/50"
-                  }
-                `}
-              >
-                {item.name}
-              </Button>
+        {navItems.map((item) => {
+          const button = (
+            <Button
+              key={item.name}
+              variant={activeTab === item.name ? "default" : "ghost"}
+              size="sm"
+              onClick={() => {
+                if (!item.available) return;
+                if (item.href !== "#") {
+                  navigate(item.href);
+                }
+              }}
+              disabled={!item.available}
+              className={`
+                px-4 py-2 transition-all duration-300
+                ${!item.available && "opacity-50 cursor-not-allowed"}
+                ${
+                  activeTab === item.name
+                    ? "bg-primary text-primary-foreground shadow-glow-cosmic"
+                    : "text-muted-foreground hover:text-foreground hover:bg-secondary/50"
+                }
+              `}
+            >
+              {item.name}
+            </Button>
+          );
+
+          if (!item.available) {
+            return (
+              <Tooltip key={item.name}>
+                <TooltipTrigger asChild>{button}</TooltipTrigger>
+                <TooltipContent>
+                  <p>Under Construction</p>
+                </TooltipContent>
+              </Tooltip>
             );
+          }
 
-            if (!item.available) {
-              return (
-                <Tooltip key={item.name}>
-                  <TooltipTrigger asChild>
-                    {button}
-                  </TooltipTrigger>
-                  <TooltipContent>
-                    <p>Under Construction</p>
-                  </TooltipContent>
-                </Tooltip>
-              );
-            }
-
-            return button;
-          })}
-        </div>
+          return button;
+        })}
+      </div>
 
       {/* Connect Wallet (RainbowKit modal pops from this custom button) */}
       <WalletButton />
