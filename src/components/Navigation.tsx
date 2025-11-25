@@ -1,18 +1,29 @@
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
 import glieseLogo from "@/assets/gliese-logo.png";
-import WalletButton from "@/components/WalletButton"; // ⟵ use your custom RK-powered button
+import WalletButton from "@/components/WalletButton";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 
-const Navigation = () => {
+interface NavigationProps {
+  onNavChange?: (section: "Swap" | "Bridge") => void;
+}
+
+const Navigation = ({ onNavChange }: NavigationProps) => {
   const [activeTab, setActiveTab] = useState("Swap");
+
+  const handleTabClick = (name: string) => {
+    setActiveTab(name);
+    if (onNavChange && (name === "Swap" || name === "Bridge")) {
+      onNavChange(name);
+    }
+  };
 
   const navItems = [
     { name: "Swap", href: "#", available: true },
     { name: "Perps", href: "#", available: false },
     { name: "Markets", href: "#", available: false },
     { name: "Stake", href: "#", available: false },
-    { name: "Bridge", href: "#", available: false },
+    { name: "Bridge", href: "#", available: true },
   ];
 
   return (
@@ -35,7 +46,7 @@ const Navigation = () => {
                 key={item.name}
                 variant={activeTab === item.name ? "default" : "ghost"}
                 size="sm"
-                onClick={() => item.available && setActiveTab(item.name)}
+                onClick={() => item.available && handleTabClick(item.name)}
                 disabled={!item.available}
                 className={`
                   px-4 py-2 transition-all duration-300

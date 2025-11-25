@@ -1,0 +1,121 @@
+import { useState } from "react";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { ArrowUpDown, Copy, Wallet } from "lucide-react";
+
+const BridgeInterface = () => {
+  const [fromAmount, setFromAmount] = useState("");
+  const [toAmount, setToAmount] = useState("");
+  const isConnected = false; // TODO: Connect to wallet state
+
+  return (
+    <Card className="w-full max-w-md mx-auto bg-muted/40 backdrop-blur-md border border-muted/60 shadow-2xl">
+      <CardHeader className="pb-4">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <span className="text-lg">⚡</span>
+            <h2 className="text-lg font-semibold text-foreground">Bridge</h2>
+          </div>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-8 w-8 rounded-full bg-background/40 hover:bg-background/60 border border-white/10"
+          >
+            <Copy className="h-4 w-4" />
+          </Button>
+        </div>
+      </CardHeader>
+
+      <CardContent className="space-y-3">
+        {/* FROM Section */}
+        <div className="relative bg-background/60 rounded-2xl border border-white/10 p-4 space-y-3">
+          <div className="flex items-center justify-between">
+            <span className="text-xs text-muted-foreground uppercase tracking-wider">
+              From
+            </span>
+            <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+              <Wallet className="h-3.5 w-3.5" />
+              <span className="uppercase tracking-wide">Not Connected</span>
+            </div>
+          </div>
+
+          <div className="flex items-center justify-between gap-3">
+            <Button
+              variant="ghost"
+              className="h-11 bg-muted/60 rounded-full border border-white/10 hover:border-white/20 hover:bg-muted/80 transition-all pl-3 pr-4 gap-2"
+            >
+              <div className="w-6 h-6 rounded-full bg-muted flex items-center justify-center">
+                <span className="text-xs">•</span>
+              </div>
+              <span className="text-sm font-medium">Select</span>
+            </Button>
+
+            <Input
+              type="text"
+              value={fromAmount}
+              onChange={(e) => setFromAmount(e.target.value)}
+              placeholder="0"
+              className="flex-1 text-right text-2xl font-semibold bg-transparent border-none focus-visible:ring-0 focus-visible:ring-offset-0 px-0"
+            />
+          </div>
+        </div>
+
+        {/* Swap Direction Button */}
+        <div className="flex justify-center -my-1 relative z-10">
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-10 w-10 rounded-full bg-background/80 hover:bg-background border border-white/20 shadow-lg hover:scale-110 transition-transform"
+          >
+            <ArrowUpDown className="h-4 w-4" />
+          </Button>
+        </div>
+
+        {/* TO Section */}
+        <div className="relative bg-background/60 rounded-2xl border border-white/10 p-4 space-y-3">
+          <div className="flex items-center justify-between">
+            <span className="text-xs text-muted-foreground uppercase tracking-wider">
+              To
+            </span>
+            <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+              <Wallet className="h-3.5 w-3.5" />
+              <span className="uppercase tracking-wide">Not Connected</span>
+            </div>
+          </div>
+
+          <div className="flex items-center justify-between gap-3">
+            <Button
+              variant="ghost"
+              className="h-11 bg-muted/60 rounded-full border border-white/10 hover:border-white/20 hover:bg-muted/80 transition-all pl-3 pr-4 gap-2"
+            >
+              <div className="w-6 h-6 rounded-full bg-muted flex items-center justify-center">
+                <span className="text-xs">•</span>
+              </div>
+              <span className="text-sm font-medium">Select</span>
+            </Button>
+
+            <Input
+              type="text"
+              value={toAmount}
+              onChange={(e) => setToAmount(e.target.value)}
+              placeholder="0"
+              className="flex-1 text-right text-2xl font-semibold bg-transparent border-none focus-visible:ring-0 focus-visible:ring-offset-0 px-0"
+            />
+          </div>
+        </div>
+
+        {/* Action Button */}
+        <Button
+          size="lg"
+          className="w-full h-14 text-base font-semibold bg-primary hover:bg-primary/90 shadow-glow-cosmic"
+          disabled={!isConnected}
+        >
+          Connect Source Wallet
+        </Button>
+      </CardContent>
+    </Card>
+  );
+};
+
+export default BridgeInterface;
