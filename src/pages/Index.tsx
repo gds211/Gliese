@@ -1,16 +1,18 @@
 import { useState, useEffect } from "react";
 import Navigation from "@/components/Navigation";
 import SwapInterface from "@/components/SwapInterface";
+import BridgeInterface from "@/components/BridgeInterface";
 import EmptyCard from "@/components/EmptyCard";
 import cosmicBackground from "@/assets/cosmic-background.jpg";
 
 const Index = () => {
+  const [navSection, setNavSection] = useState<"Swap" | "Bridge">("Swap");
   const [activeTab, setActiveTab] = useState<"instant" | "trigger" | "recurring">("instant");
   const [showPanel, setShowPanel] = useState(false);
   const [isExiting, setIsExiting] = useState(false);
 
   useEffect(() => {
-    if (activeTab === "trigger") {
+    if (navSection === "Swap" && activeTab === "trigger") {
       setShowPanel(true);
       setIsExiting(false);
     } else if (showPanel) {
@@ -22,7 +24,7 @@ const Index = () => {
       
       return () => clearTimeout(timer);
     }
-  }, [activeTab, showPanel]);
+  }, [navSection, activeTab, showPanel]);
 
   return (
     <div className="min-h-screen relative overflow-hidden">
@@ -37,27 +39,30 @@ const Index = () => {
       
       {/* Content */}
       <div className="relative z-10">
-        <Navigation />
+        <Navigation onNavChange={setNavSection} />
         
-        {/* Main Content Area - SwapInterface stays centered */}
+        {/* Main Content Area */}
         <div className="flex justify-center items-start pt-[calc(50vh-300px)] min-h-[calc(100vh-80px)]">
-          {/* Wrapper with relative positioning */}
-          <div className="relative">
-            {/* Main Swap Card - always in the same position */}
-            <SwapInterface 
-              activeTab={activeTab} 
-              onTabChange={setActiveTab}
-            />
-            
-            {/* Empty Card - appears to the right when Trigger is active */}
-            {showPanel && (
-              <div className={`absolute left-[calc(100%+16px)] top-0 ${
-                isExiting ? 'animate-slide-out-bottom' : 'animate-slide-in-bottom'
-              }`}>
-                <EmptyCard />
-              </div>
-            )}
-          </div>
+          {navSection === "Swap" ? (
+            <div className="relative">
+              {/* Main Swap Card - always in the same position */}
+              <SwapInterface 
+                activeTab={activeTab} 
+                onTabChange={setActiveTab}
+              />
+              
+              {/* Empty Card - appears to the right when Trigger is active */}
+              {showPanel && (
+                <div className={`absolute left-[calc(100%+16px)] top-0 ${
+                  isExiting ? 'animate-slide-out-bottom' : 'animate-slide-in-bottom'
+                }`}>
+                  <EmptyCard />
+                </div>
+              )}
+            </div>
+          ) : (
+            <BridgeInterface />
+          )}
         </div>
       </div>
     </div>
