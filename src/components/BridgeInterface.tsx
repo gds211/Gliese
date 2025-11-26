@@ -2,7 +2,8 @@ import { useState } from "react";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { ArrowUpDown, Copy, Wallet } from "lucide-react";
+import { ArrowUpDown, Wallet } from "lucide-react";
+import bridgeIcon from "@/assets/bridge-icon.png";
 
 const BridgeInterface = () => {
   const [fromAmount, setFromAmount] = useState("");
@@ -12,18 +13,9 @@ const BridgeInterface = () => {
   return (
     <Card className="w-full max-w-md mx-auto bg-muted/40 backdrop-blur-md border border-muted/60 shadow-2xl">
       <CardHeader className="pb-4">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <span className="text-lg">⚡</span>
-            <h2 className="text-lg font-semibold text-foreground">Bridge</h2>
-          </div>
-          <Button
-            variant="ghost"
-            size="icon"
-            className="h-8 w-8 rounded-full bg-background/40 hover:bg-background/60 border border-white/10"
-          >
-            <Copy className="h-4 w-4" />
-          </Button>
+        <div className="flex items-center gap-2">
+          <img src={bridgeIcon} alt="Bridge" className="h-5 w-5" />
+          <h2 className="text-lg font-semibold text-foreground">Bridge</h2>
         </div>
       </CardHeader>
 
@@ -62,13 +54,13 @@ const BridgeInterface = () => {
         </div>
 
         {/* Swap Direction Button */}
-        <div className="flex justify-center -my-1 relative z-10">
+        <div className="flex justify-center -my-2 relative z-10">
           <Button
             variant="ghost"
-            size="icon"
-            className="h-10 w-10 rounded-full bg-background/80 hover:bg-background border border-white/20 shadow-lg hover:scale-110 transition-transform"
+            size="sm"
+            className="h-8 w-8 p-0 bg-background/60 hover:bg-white rounded-md border border-border/40 hover:border-2 hover:border-blue-600 transition-colors duration-200"
           >
-            <ArrowUpDown className="h-4 w-4" />
+            <ArrowUpDown className="h-4 w-4 text-blue-600" />
           </Button>
         </div>
 
