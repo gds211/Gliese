@@ -21,23 +21,23 @@ const BridgeInterface = () => {
 
       <CardContent className="space-y-3">
         {/* FROM Section */}
-        <div className="relative bg-background/60 rounded-2xl border border-white/10 p-4 space-y-3">
+        <div className="relative bg-background/60 rounded-2xl border border-white/10 p-5 space-y-4">
           <div className="flex items-center justify-between">
             <span className="text-xs text-muted-foreground uppercase tracking-wider">
               From
             </span>
-            <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-              <Wallet className="h-3.5 w-3.5" />
-              <span className="uppercase tracking-wide">Not Connected</span>
+            <div className="flex items-center gap-1 text-xs text-muted-foreground">
+              <Wallet className="h-3 w-3" />
+              <span>0.00</span>
             </div>
           </div>
 
           <div className="flex items-center justify-between gap-3">
             <Button
               variant="ghost"
-              className="h-11 bg-muted/60 rounded-full border border-white/10 hover:border-white/20 hover:bg-muted/80 transition-all pl-3 pr-4 gap-2"
+              className="h-12 bg-muted/60 rounded-full border border-white/10 hover:border-white/20 hover:bg-muted/80 transition-all pl-4 pr-5 gap-2.5"
             >
-              <div className="w-6 h-6 rounded-full bg-muted flex items-center justify-center">
+              <div className="w-7 h-7 rounded-full bg-muted flex items-center justify-center">
                 <span className="text-xs">•</span>
               </div>
               <span className="text-sm font-medium">Select</span>
@@ -65,23 +65,23 @@ const BridgeInterface = () => {
         </div>
 
         {/* TO Section */}
-        <div className="relative bg-background/60 rounded-2xl border border-white/10 p-4 space-y-3">
+        <div className="relative bg-background/60 rounded-2xl border border-white/10 p-5 space-y-4">
           <div className="flex items-center justify-between">
             <span className="text-xs text-muted-foreground uppercase tracking-wider">
               To
             </span>
-            <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-              <Wallet className="h-3.5 w-3.5" />
-              <span className="uppercase tracking-wide">Not Connected</span>
+            <div className="flex items-center gap-1 text-xs text-muted-foreground">
+              <Wallet className="h-3 w-3" />
+              <span>0.00</span>
             </div>
           </div>
 
           <div className="flex items-center justify-between gap-3">
             <Button
               variant="ghost"
-              className="h-11 bg-muted/60 rounded-full border border-white/10 hover:border-white/20 hover:bg-muted/80 transition-all pl-3 pr-4 gap-2"
+              className="h-12 bg-muted/60 rounded-full border border-white/10 hover:border-white/20 hover:bg-muted/80 transition-all pl-4 pr-5 gap-2.5"
             >
-              <div className="w-6 h-6 rounded-full bg-muted flex items-center justify-center">
+              <div className="w-7 h-7 rounded-full bg-muted flex items-center justify-center">
                 <span className="text-xs">•</span>
               </div>
               <span className="text-sm font-medium">Select</span>
