@@ -14,7 +14,7 @@ const BridgeInterface = () => {
     <Card className="w-full max-w-md mx-auto bg-muted/40 backdrop-blur-md border border-muted/60 shadow-2xl">
       <CardHeader className="pb-4">
         <div className="flex items-center gap-2">
-          <img src={bridgeIcon} alt="Bridge" className="h-5 w-5" />
+          <img src={bridgeIcon} alt="Bridge" className="h-6 w-7" />
           <h2 className="text-lg font-semibold text-foreground">Bridge</h2>
         </div>
       </CardHeader>
