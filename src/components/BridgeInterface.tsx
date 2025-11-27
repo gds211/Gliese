@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ArrowUpDown, Wallet } from "lucide-react";
-import bridgeIcon from "@/assets/bridge-icon.png";
+import bridgeIcon from "@/assets/bridge-icon.svg";
 
 const BridgeInterface = () => {
   const [fromAmount, setFromAmount] = useState("");
@@ -14,7 +14,7 @@ const BridgeInterface = () => {
     <Card className="w-full max-w-md mx-auto bg-muted/40 backdrop-blur-md border border-muted/60 shadow-2xl">
       <CardHeader className="pb-4">
         <div className="flex items-center gap-2">
-          <img src={bridgeIcon} alt="Bridge" className="h-7 w-8" />
+          <img src={bridgeIcon} alt="Bridge" className="h-8 w-9" />
           <h2 className="text-lg font-semibold text-foreground">Bridge</h2>
         </div>
       </CardHeader>
@@ -47,8 +47,8 @@ const BridgeInterface = () => {
               type="text"
               value={fromAmount}
               onChange={(e) => setFromAmount(e.target.value)}
-              placeholder="0"
-              className="flex-1 text-right text-2xl font-semibold bg-transparent border-none focus-visible:ring-0 focus-visible:ring-offset-0 px-0"
+              placeholder="0.00"
+              className="flex-1 text-right text-3xl font-semibold bg-transparent border-none focus-visible:ring-0 focus-visible:ring-offset-0 px-0"
             />
           </div>
         </div>
@@ -91,8 +91,8 @@ const BridgeInterface = () => {
               type="text"
               value={toAmount}
               onChange={(e) => setToAmount(e.target.value)}
-              placeholder="0"
-              className="flex-1 text-right text-2xl font-semibold bg-transparent border-none focus-visible:ring-0 focus-visible:ring-offset-0 px-0"
+              placeholder="0.00"
+              className="flex-1 text-right text-3xl font-semibold text-white bg-transparent border-none focus-visible:ring-0 focus-visible:ring-offset-0 px-0"
             />
           </div>
         </div>
