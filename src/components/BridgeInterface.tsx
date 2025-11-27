@@ -14,7 +14,7 @@ const BridgeInterface = () => {
     <Card className="w-full max-w-md mx-auto bg-muted/40 backdrop-blur-md border border-muted/60 shadow-2xl">
       <CardHeader className="pb-4">
         <div className="flex items-center gap-2">
-          <img src={bridgeIcon} alt="Bridge" className="h-10 w-10" loading="eager" />
+          <img src={bridgeIcon} alt="Bridge" className="h-16 w-12 object-contain" loading="eager" />
           <h2 className="text-lg font-semibold text-foreground">Bridge</h2>
         </div>
       </CardHeader>
@@ -48,7 +48,7 @@ const BridgeInterface = () => {
               value={fromAmount}
               onChange={(e) => setFromAmount(e.target.value)}
               placeholder="0.00"
-              className="flex-1 text-right text-5xl font-semibold bg-transparent border-none focus-visible:ring-0 focus-visible:ring-offset-0 px-0"
+              className="flex-1 text-right text-[3rem] font-semibold bg-transparent border-none focus-visible:ring-0 focus-visible:ring-offset-0 px-0"
             />
           </div>
         </div>
@@ -92,7 +92,7 @@ const BridgeInterface = () => {
               value={toAmount}
               onChange={(e) => setToAmount(e.target.value)}
               placeholder="0.00"
-              className="flex-1 text-right text-5xl font-semibold text-white bg-transparent border-none focus-visible:ring-0 focus-visible:ring-offset-0 px-0"
+              className="flex-1 text-right text-[3rem] font-semibold text-white bg-transparent border-none focus-visible:ring-0 focus-visible:ring-offset-0 px-0"
             />
           </div>
         </div>
