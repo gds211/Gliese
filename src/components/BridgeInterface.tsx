@@ -13,7 +13,8 @@ const BridgeInterface = () => {
           <img
             src={bridgeIcon}
             alt="Bridge"
-            className="h-6 w-6 rounded-full"
+            className="h-10 w-8"
+            loading="eager"
           />
           <div className="flex flex-col">
             <span className="text-sm font-semibold tracking-tight">
