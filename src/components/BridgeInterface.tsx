@@ -66,7 +66,7 @@ const BridgeInterface = () => {
         </div>
 
         {/* TO Section with Powered By info */}
-        <div className="space-y-3">
+        <div className="space-y-4">
           {/* TO Section */}
           <div className="relative bg-background/60 rounded-2xl border border-white/10 p-5 space-y-4">
             <div className="flex items-center justify-between">
@@ -101,7 +101,7 @@ const BridgeInterface = () => {
           </div>
 
           {/* Powered by Wormhole */}
-          <div className="flex items-center justify-between text-xs text-muted-foreground">
+          <div className="flex items-center justify-between text-xs text-muted-foreground pb-1">
             <div className="flex items-center gap-1.5">
               <span>Powered by</span>
               <img 
