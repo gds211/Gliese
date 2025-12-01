@@ -4,12 +4,23 @@ import SwapInterface from "@/components/SwapInterface";
 import BridgeInterface from "@/components/BridgeInterface";
 import EmptyCard from "@/components/EmptyCard";
 import cosmicBackground from "@/assets/cosmic-background.jpg";
+import bridgeIcon from "@/assets/bridge-icon.svg";
+import wormholeLogo from "@/assets/wormhole-logo.svg";
 
 const Index = () => {
   const [navSection, setNavSection] = useState<"Swap" | "Bridge">("Swap");
   const [activeTab, setActiveTab] = useState<"instant" | "trigger" | "recurring">("instant");
   const [showPanel, setShowPanel] = useState(false);
   const [isExiting, setIsExiting] = useState(false);
+
+  // Preload bridge assets for instant display when switching tabs
+  useEffect(() => {
+    const preloadImages = [bridgeIcon, wormholeLogo];
+    preloadImages.forEach((src) => {
+      const img = new Image();
+      img.src = src;
+    });
+  }, []);
 
   useEffect(() => {
     if (navSection === "Swap" && activeTab === "trigger") {
