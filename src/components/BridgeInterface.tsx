@@ -117,7 +117,7 @@ const BridgeInterface = () => {
         {/* Action Button */}
         <Button
           size="lg"
-          className="w-full h-14 text-base font-semibold bg-primary hover:bg-primary/90 shadow-glow-cosmic"
+          className="w-full h-12 text-base font-semibold bg-primary hover:bg-primary/90 shadow-glow-cosmic"
           disabled={!isConnected}
         >
           Connect Source Wallet
