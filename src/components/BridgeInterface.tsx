@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ArrowUpDown, Wallet } from "lucide-react";
 import bridgeIcon from "@/assets/bridge-icon.svg";
+import wormholeLogo from "@/assets/wormhole-logo.svg";
 
 const BridgeInterface = () => {
   const [fromAmount, setFromAmount] = useState("");
@@ -64,36 +65,52 @@ const BridgeInterface = () => {
           </Button>
         </div>
 
-        {/* TO Section */}
-        <div className="relative bg-background/60 rounded-2xl border border-white/10 p-5 space-y-4">
-          <div className="flex items-center justify-between">
-            <span className="text-xs text-muted-foreground uppercase tracking-wider">
-              To
-            </span>
-            <div className="flex items-center gap-1 text-xs text-muted-foreground">
-              <Wallet className="h-3 w-3" />
-              <span>0.00</span>
+        {/* TO Section with Powered By info */}
+        <div className="space-y-3">
+          {/* TO Section */}
+          <div className="relative bg-background/60 rounded-2xl border border-white/10 p-5 space-y-4">
+            <div className="flex items-center justify-between">
+              <span className="text-xs text-muted-foreground uppercase tracking-wider">
+                To
+              </span>
+              <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                <Wallet className="h-3 w-3" />
+                <span>0.00</span>
+              </div>
+            </div>
+
+            <div className="flex items-center justify-between gap-3">
+              <Button
+                variant="ghost"
+                className="h-12 bg-muted/60 rounded-full border border-white/10 hover:border-white/20 hover:bg-muted/80 transition-all pl-4 pr-5 gap-2.5"
+              >
+                <div className="w-7 h-7 rounded-full bg-muted flex items-center justify-center">
+                  <span className="text-xs">•</span>
+                </div>
+                <span className="text-sm font-medium">Select</span>
+              </Button>
+
+              <Input
+                type="text"
+                value={toAmount}
+                onChange={(e) => setToAmount(e.target.value)}
+                placeholder="0.00"
+                className="flex-1 text-right text-5xl font-semibold text-white bg-transparent border-none focus-visible:ring-0 focus-visible:ring-offset-0 px-0"
+              />
             </div>
           </div>
 
-          <div className="flex items-center justify-between gap-3">
-            <Button
-              variant="ghost"
-              className="h-12 bg-muted/60 rounded-full border border-white/10 hover:border-white/20 hover:bg-muted/80 transition-all pl-4 pr-5 gap-2.5"
-            >
-              <div className="w-7 h-7 rounded-full bg-muted flex items-center justify-center">
-                <span className="text-xs">•</span>
-              </div>
-              <span className="text-sm font-medium">Select</span>
-            </Button>
-
-            <Input
-              type="text"
-              value={toAmount}
-              onChange={(e) => setToAmount(e.target.value)}
-              placeholder="0.00"
-              className="flex-1 text-right text-5xl font-semibold text-white bg-transparent border-none focus-visible:ring-0 focus-visible:ring-offset-0 px-0"
-            />
+          {/* Powered by Wormhole */}
+          <div className="flex items-center justify-between text-xs text-muted-foreground">
+            <div className="flex items-center gap-1.5">
+              <span>Powered by</span>
+              <img 
+                src={wormholeLogo} 
+                alt="Wormhole" 
+                className="h-3.5 w-auto" 
+              />
+            </div>
+            <span>0% FEE</span>
           </div>
         </div>
 
