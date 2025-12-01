@@ -107,7 +107,7 @@ const BridgeInterface = () => {
               <img 
                 src={wormholeLogo} 
                 alt="Wormhole" 
-                className="h-3.5 w-auto" 
+                className="h-2.5 w-auto" 
               />
             </div>
             <span>0% FEE</span>
