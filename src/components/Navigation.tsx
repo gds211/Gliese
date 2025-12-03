@@ -20,9 +20,9 @@ const Navigation = ({ onNavChange }: NavigationProps) => {
 
   const navItems = [
     { name: "Swap", href: "#", available: true },
+    { name: "Explore", href: "#", available: false },
     { name: "Perps", href: "#", available: false },
     { name: "Markets", href: "#", available: false },
-    { name: "Stake", href: "#", available: false },
     { name: "Bridge", href: "#", available: true },
   ];
 
