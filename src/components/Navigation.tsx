@@ -39,7 +39,7 @@ const Navigation = ({ onNavChange }: NavigationProps) => {
       </div>
 
       {/* Navigation Links */}
-      <div className="flex items-center gap-1 bg-black rounded-lg p-1 backdrop-blur-sm">
+      <div className="flex items-center gap-1 bg-black/80 rounded-full px-2 py-1.5 backdrop-blur-sm border border-white/10">
           {navItems.map((item) => {
             const button = (
               <Button
@@ -49,12 +49,12 @@ const Navigation = ({ onNavChange }: NavigationProps) => {
                 onClick={() => item.available && handleTabClick(item.name)}
                 disabled={!item.available}
                 className={`
-                  px-4 py-2 transition-all duration-300
+                  px-5 py-1.5 rounded-full transition-all duration-300
                   ${!item.available && "opacity-50 cursor-not-allowed"}
                   ${
                     activeTab === item.name
                       ? "bg-primary text-primary-foreground shadow-glow-cosmic"
-                      : "text-muted-foreground hover:text-foreground hover:bg-secondary/50"
+                      : "text-muted-foreground hover:text-foreground hover:bg-white/10"
                   }
                 `}
               >
