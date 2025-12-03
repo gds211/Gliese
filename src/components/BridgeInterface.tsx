@@ -110,7 +110,7 @@ const BridgeInterface = () => {
                 className="h-2 w-auto" 
               />
             </div>
-            <span>0% FEE</span>
+            <span>0 ADDITIONAL FEE</span>
           </div>
         </div>
 
