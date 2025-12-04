@@ -18,7 +18,7 @@ export default function WalletButton() {
     return (
       <Button
         onClick={() => openConnectModal?.()}
-        className="bg-primary text-primary-foreground shadow-glow-cosmic hover:scale-105 rounded-full px-6"
+        className="bg-primary text-primary-foreground shadow-glow-cosmic hover:scale-105 rounded-full px-5"
         type="button"
       >
         Connect Wallet
