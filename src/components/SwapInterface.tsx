@@ -63,6 +63,14 @@ const tokensEqual = (a?: TokenPick | null, b?: TokenPick | null) => {
   return aSym !== "" && aSym === bSym;        // fallback for native/no-address
 };
 
+const tokenKey = (token: TokenPick | null | undefined, fallback?: string | null): string => {
+  const addr = token?.address;
+  const sym = token?.symbol;
+  const raw: string = (addr ?? fallback ?? sym ?? "NATIVE") as string;
+  return raw.toLowerCase();
+};
+
+
 
 // --- search normalization helpers ---
 const normalize = (s?: string) =>
@@ -536,6 +544,15 @@ const notionalUsd = useMemo(() => {
   return amt * p;
 }, [sellAmount, sellUsdPerUnit]);
 
+const dynamicSlippageResetKey = useMemo(() => {
+  const sellKey = tokenKey(selectedSellToken, sellToken);
+  const buyKey = tokenKey(selectedBuyToken, buyToken);
+
+  // Sort the two keys so A→B and B→A share the same key
+  return sellKey < buyKey ? `${sellKey}-${buyKey}` : `${buyKey}-${sellKey}`;
+}, [selectedSellToken, selectedBuyToken, sellToken, buyToken]);
+
+
 
 const dynamicSlippage = useDynamicSlippageBps({
   enabled: autoSlippage,
@@ -548,8 +565,9 @@ const dynamicSlippage = useDynamicSlippageBps({
     const q = await getYakQuotePerUnit(amountHuman);
     return q?.perUnitOut ?? null;
   },
-  // reset when the trading context changes (address if available, else symbol)
-  resetKey: `${selectedSellToken?.address ?? sellToken}->${selectedBuyToken?.address ?? buyToken}`,
+    // reset when the trading context changes (pair), direction-agnostic key
+  resetKey: dynamicSlippageResetKey,
+
 });
 
 
