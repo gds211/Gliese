@@ -18,7 +18,7 @@ export default function WalletButton() {
     return (
       <Button
         onClick={() => openConnectModal?.()}
-        className="bg-primary text-primary-foreground shadow-glow-cosmic hover:scale-105"
+        className="bg-primary text-primary-foreground shadow-glow-cosmic hover:scale-105 rounded-full"
         type="button"
       >
         Connect Wallet
@@ -33,7 +33,7 @@ export default function WalletButton() {
       <Button
         onClick={() => openChainModal?.()}
         variant="destructive"
-        className="shadow-glow-cosmic"
+        className="shadow-glow-cosmic rounded-full"
         type="button"
       >
         Wrong network — Switch
@@ -45,7 +45,7 @@ export default function WalletButton() {
   return (
     <Button
       onClick={() => openAccountModal?.()}
-      className="bg-primary text-primary-foreground shadow-glow-cosmic"
+      className="bg-primary text-primary-foreground shadow-glow-cosmic rounded-full"
       type="button"
     >
       {short(address)}
