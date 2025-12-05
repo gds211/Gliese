@@ -548,8 +548,8 @@ const dynamicSlippageResetKey = useMemo(() => {
   const sellKey = tokenKey(selectedSellToken, sellToken);
   const buyKey = tokenKey(selectedBuyToken, buyToken);
 
-  // Sort the two keys so A→B and B→A share the same key
-  return sellKey < buyKey ? `${sellKey}-${buyKey}` : `${buyKey}-${sellKey}`;
+  // Direction‑aware key so MON→USDC and USDC→MON have independent slippage state
+  return `${sellKey}->${buyKey}`;
 }, [selectedSellToken, selectedBuyToken, sellToken, buyToken]);
 
 
