@@ -213,7 +213,9 @@ async function getDecimalsCached(addr: Address, native: boolean): Promise<number
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [polling, enabled, isVisible, router, tokenInAddr, tokenOutAddr, amountInHuman]);
 
-  return quote;
+   const isCurrentPair = lastPairKeyRef.current === pairKey;
+   return isCurrentPair ? quote : null;
+
 }
 
 
