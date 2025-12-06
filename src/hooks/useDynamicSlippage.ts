@@ -172,7 +172,7 @@ export function useDynamicSlippageBps({
 
   const volOverride = toNum(volPriceSource);
   // Preferred price source for volatility: unit quote; fallback to normalized user quote
-  const priceSource = unitPerUnit ?? userPerUnit ?? null;
+  const priceSource = volOverride ?? unitPerUnit ?? userPerUnit ?? null;
 
   // ---- Volatility (robust) ----
   const sigma = useEwmaSigma(enabled, priceSource, EWMA_ALPHA, resetKey);
