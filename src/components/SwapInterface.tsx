@@ -558,8 +558,12 @@ const { slippagePairKey, isCanonicalDirection } = useMemo(() => {
   };
 }, [selectedSellToken, selectedBuyToken, sellToken, buyToken]);
 
-const dynamicSlippageResetKey = slippagePairKey;
+// Reset key should change when either the pair OR the trade direction changes,
+// so we don’t carry a spike from MON→USDC into USDC→MON.
+const dynamicSlippageResetKey =
+  `${slippagePairKey}:${sellToken ?? "native"}->${buyToken ?? "native"}`;
 
+  
 // Volatility price signal must be direction-invariant; otherwise swapping UI direction (p -> 1/p)
 // would look like an enormous price move and blow out the slippage estimate.
 const volPriceSource = useMemo(() => {
