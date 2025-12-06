@@ -544,19 +544,48 @@ const notionalUsd = useMemo(() => {
   return amt * p;
 }, [sellAmount, sellUsdPerUnit]);
 
-const dynamicSlippageResetKey = useMemo(() => {
+const { slippagePairKey, isCanonicalDirection } = useMemo(() => {
   const sellKey = tokenKey(selectedSellToken, sellToken);
   const buyKey = tokenKey(selectedBuyToken, buyToken);
 
-  // Direction‑aware key so MON→USDC and USDC→MON have independent slippage state
-  return `${sellKey}->${buyKey}`;
+  // Direction-agnostic key: keeps slippage/vol state stable when the user flips the pair with the arrow button.
+  const lo = sellKey < buyKey ? sellKey : buyKey;
+  const hi = sellKey < buyKey ? buyKey : sellKey;
+
+  return {
+    slippagePairKey: `${lo}<->${hi}`,
+    isCanonicalDirection: sellKey === lo,
+  };
 }, [selectedSellToken, selectedBuyToken, sellToken, buyToken]);
+
+const dynamicSlippageResetKey = slippagePairKey;
+
+// Volatility price signal must be direction-invariant; otherwise swapping UI direction (p -> 1/p)
+// would look like an enormous price move and blow out the slippage estimate.
+const volPriceSource = useMemo(() => {
+  // Prefer the 1-unit quote (most stable). unitQuote is "BUY per 1 SELL".
+  const u = Number(unitQuote?.outFormatted ?? NaN);
+  if (Number.isFinite(u) && u > 0) {
+    return isCanonicalDirection ? u : 1 / u;
+  }
+
+  // Fallback: derive from the live user-sized quote if available.
+  const out = Number(quote?.outFormatted ?? NaN);
+  const inp = Number(sellAmount);
+  if (Number.isFinite(out) && out > 0 && Number.isFinite(inp) && inp > 0) {
+    const per = out / inp;
+    if (Number.isFinite(per) && per > 0) return isCanonicalDirection ? per : 1 / per;
+  }
+
+  return null;
+}, [unitQuote?.outFormatted, quote?.outFormatted, sellAmount, isCanonicalDirection]);
 
 
 
 const dynamicSlippage = useDynamicSlippageBps({
   enabled: autoSlippage,
-  unitQuote,                                      // volatility source
+  unitQuote, // volatility source
+  volPriceSource,
   userOutFormatted: quote?.outFormatted ?? null,  // size-aware top-up
   userInHuman: sellAmount || null,                // <<< critical for size awareness
   pathLength: quote?.path?.length ?? 1,
