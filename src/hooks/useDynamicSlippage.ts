@@ -16,6 +16,12 @@ export type UseDynamicSlippageArgs = {
   /** Preferred volatility source: per-unit output for ~1 input unit. */
   unitQuote?: SimpleQuote | null;
 
+  /**
+   * Optional override for the volatility price signal (per-unit OUT for ~1 input unit).
+   * Use this when UI direction flips but you want volatility history to remain stable for the same pair.
+   */
+  volPriceSource?: number | string | null;
+
   /** User-sized total out (we normalize it to per-unit internally). */
   userOutFormatted?: string | number | null;
 
@@ -120,6 +126,7 @@ function mevBpsByUsd(usd: number | null | undefined, protectedFlow: boolean): nu
 export function useDynamicSlippageBps({
   enabled,
   unitQuote,
+  volPriceSource,
   userOutFormatted,
   userInHuman,
   pathLength = 1,
@@ -163,6 +170,7 @@ export function useDynamicSlippageBps({
     return null;
   }, [userOut, userIn]);
 
+  const volOverride = toNum(volPriceSource);
   // Preferred price source for volatility: unit quote; fallback to normalized user quote
   const priceSource = unitPerUnit ?? userPerUnit ?? null;
 
