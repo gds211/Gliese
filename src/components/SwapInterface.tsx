@@ -63,14 +63,6 @@ const tokensEqual = (a?: TokenPick | null, b?: TokenPick | null) => {
   return aSym !== "" && aSym === bSym;        // fallback for native/no-address
 };
 
-const tokenKey = (token: TokenPick | null | undefined, fallback?: string | null): string => {
-  const addr = token?.address;
-  const sym = token?.symbol;
-  const raw: string = (addr ?? fallback ?? sym ?? "NATIVE") as string;
-  return raw.toLowerCase();
-};
-
-
 
 // --- search normalization helpers ---
 const normalize = (s?: string) =>
@@ -544,52 +536,10 @@ const notionalUsd = useMemo(() => {
   return amt * p;
 }, [sellAmount, sellUsdPerUnit]);
 
-const { slippagePairKey, isCanonicalDirection } = useMemo(() => {
-  const sellKey = tokenKey(selectedSellToken, sellToken);
-  const buyKey = tokenKey(selectedBuyToken, buyToken);
-
-  // Direction-agnostic key: keeps slippage/vol state stable when the user flips the pair with the arrow button.
-  const lo = sellKey < buyKey ? sellKey : buyKey;
-  const hi = sellKey < buyKey ? buyKey : sellKey;
-
-  return {
-    slippagePairKey: `${lo}<->${hi}`,
-    isCanonicalDirection: sellKey === lo,
-  };
-}, [selectedSellToken, selectedBuyToken, sellToken, buyToken]);
-
-// Reset key should change when either the pair OR the trade direction changes,
-// so we don’t carry a spike from MON→USDC into USDC→MON.
-const dynamicSlippageResetKey =
-  `${slippagePairKey}:${sellToken ?? "native"}->${buyToken ?? "native"}`;
-
-  
-// Volatility price signal must be direction-invariant; otherwise swapping UI direction (p -> 1/p)
-// would look like an enormous price move and blow out the slippage estimate.
-const volPriceSource = useMemo(() => {
-  // Prefer the 1-unit quote (most stable). unitQuote is "BUY per 1 SELL".
-  const u = Number(unitQuote?.outFormatted ?? NaN);
-  if (Number.isFinite(u) && u > 0) {
-    return isCanonicalDirection ? u : 1 / u;
-  }
-
-  // Fallback: derive from the live user-sized quote if available.
-  const out = Number(quote?.outFormatted ?? NaN);
-  const inp = Number(sellAmount);
-  if (Number.isFinite(out) && out > 0 && Number.isFinite(inp) && inp > 0) {
-    const per = out / inp;
-    if (Number.isFinite(per) && per > 0) return isCanonicalDirection ? per : 1 / per;
-  }
-
-  return null;
-}, [unitQuote?.outFormatted, quote?.outFormatted, sellAmount, isCanonicalDirection]);
-
-
 
 const dynamicSlippage = useDynamicSlippageBps({
   enabled: autoSlippage,
-  unitQuote, // volatility source
-  volPriceSource,
+  unitQuote,                                      // volatility source
   userOutFormatted: quote?.outFormatted ?? null,  // size-aware top-up
   userInHuman: sellAmount || null,                // <<< critical for size awareness
   pathLength: quote?.path?.length ?? 1,
@@ -598,9 +548,8 @@ const dynamicSlippage = useDynamicSlippageBps({
     const q = await getYakQuotePerUnit(amountHuman);
     return q?.perUnitOut ?? null;
   },
-    // reset when the trading context changes (pair), direction-agnostic key
-  resetKey: dynamicSlippageResetKey,
-
+  // reset when the trading context changes (address if available, else symbol)
+  resetKey: `${selectedSellToken?.address ?? sellToken}->${selectedBuyToken?.address ?? buyToken}`,
 });
 
 
