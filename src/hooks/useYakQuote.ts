@@ -86,7 +86,7 @@ async function getDecimalsCached(addr: Address, native: boolean): Promise<number
     gasRef.current = effectiveGasPriceWei ?? FALLBACK;
   }, [effectiveGasPriceWei]);
 
-  const [quote, setQuote] = useState<QuoteState | null>(null);
+    const [quote, setQuote] = useState<QuoteState | null>(null);
   const lastMinOutRef = useRef<bigint | null>(null);
   const reqCounter = useRef(0);
 
@@ -95,6 +95,18 @@ async function getDecimalsCached(addr: Address, native: boolean): Promise<number
 
   const tokenInAddr  = toQuoteAddr(tokenIn);
   const tokenOutAddr = toQuoteAddr(tokenOut);
+
+  // 🔧 NEW: clear the cached quote whenever the token pair changes
+  // so we never reuse a MON→USDC quote for USDC→MON.
+  const pairKey = `${tokenInAddr.toLowerCase()}->${tokenOutAddr.toLowerCase()}`;
+  const lastPairKeyRef = useRef<string | null>(null);
+  useEffect(() => {
+    if (lastPairKeyRef.current !== pairKey) {
+      lastPairKeyRef.current = pairKey;
+      setQuote(null);
+      lastMinOutRef.current = null;
+    }
+  }, [pairKey]);
 
   // Warm the decimals cache whenever tokens or chain change
   useEffect(() => {
@@ -109,6 +121,7 @@ async function getDecimalsCached(addr: Address, native: boolean): Promise<number
       }
     })();
   }, [tokenInAddr, tokenOutAddr, tokenIn, tokenOut, chainId]);
+
 
   useEffect(() => {
       // Only clear when the hook is actually disabled or amount is non-positive.
