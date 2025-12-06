@@ -152,9 +152,7 @@ export function useDynamicSlippageBps({
   // Hops / MEV / Hysteresis
   const PER_HOP_BPS: number = toNum(CFG.PER_HOP_BPS) ?? 4;
   const MEV_PROTECTED: boolean = Boolean(CFG.MEV_PROTECTED ?? false);
-  const UP_HYST_BPS: number = toNum(CFG.UP_HYSTERESIS_BPS) ?? 3;
-  const DOWN_HYST_BPS: number = toNum(CFG.DOWN_HYSTERESIS_BPS) ?? 6;
-  const COOL_OFF_BPS_PER_SEC: number = toNum(CFG.COOL_OFF_BPS_PER_SEC) ?? 1; // gentle decay
+  
 
   // Elasticity probe (optional)
   const ELASTICITY_PROBE: boolean = Boolean(CFG.ELASTICITY_PROBE ?? false);
@@ -259,50 +257,17 @@ export function useDynamicSlippageBps({
   const hopBps = enabled ? extraHops * PER_HOP_BPS : 0;
   const mevBps = enabled ? mevBpsByUsd(notionalUsd, MEV_PROTECTED) : 0;
 
-  // ---- Compose target ----
-  const rawTarget = enabled ? BASE_BPS + volBps + sizeBps + hopBps + mevBps : BASE_BPS;
+    // ---- Compose target (no hysteresis / no sticky high state) ----
+  const rawTarget = enabled
+    ? BASE_BPS + volBps + sizeBps + hopBps + mevBps
+    : BASE_BPS;
 
-  // ---- Hysteresis + gentle cool-off ----
-  const lastRef = useRef<number>(BASE_BPS);
-  const [coolTick, setCoolTick] = useState(0);
-  // Reset the held value when the trade context changes so a previous spike
-  // doesn’t leak into a different pair/route/amount regime.
-  useEffect(() => {
-    lastRef.current = BASE_BPS;
-  }, [resetKey, enabled, BASE_BPS]);
-
-  // Cool-off ticker (decay toward new target to avoid sticky highs)
-  useEffect(() => {
-    if (!enabled || COOL_OFF_BPS_PER_SEC <= 0) return;
-    const id = setInterval(() => setCoolTick((x) => x + 1), 1000);
-    return () => clearInterval(id);
-  }, [enabled, COOL_OFF_BPS_PER_SEC]);
-
-  let target = rawTarget;
-  const delta = rawTarget - lastRef.current;
-  if (delta > 0 && delta < UP_HYST_BPS) {
-    target = lastRef.current; // ignore tiny uptick
-  } else if (delta < 0 && -delta < DOWN_HYST_BPS) {
-    target = lastRef.current; // ignore tiny downtick
-  }
-
-  // Gentle decay: if raw target is lower than our held value, step down gradually
-  useEffect(() => {
-    if (!enabled || COOL_OFF_BPS_PER_SEC <= 0) return;
-    if (rawTarget < lastRef.current) {
-      const gap = lastRef.current - rawTarget;
-      // Drop at least COOL_OFF_BPS_PER_SEC, and also ~20% of the gap for fast recovery.
-      const step = Math.max(COOL_OFF_BPS_PER_SEC, Math.ceil(gap * 0.2));
-      lastRef.current = Math.max(rawTarget, lastRef.current - step);
-    }
-  }, [coolTick, enabled, COOL_OFF_BPS_PER_SEC, rawTarget]);
-
-  target = clamp(target, MIN_BPS, MAX_BPS);
-  if (target !== lastRef.current) lastRef.current = target;
-
-  const bpsNumber = Math.round(target);
+  const clamped = clamp(rawTarget, MIN_BPS, MAX_BPS);
+  const bpsNumber = Math.round(clamped);
   const bps = BigInt(bpsNumber);
+
   return { bps, bpsNumber };
+
 }
 
 export default useDynamicSlippageBps;
