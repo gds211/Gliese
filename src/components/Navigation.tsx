@@ -27,7 +27,7 @@ const Navigation = ({ onNavChange }: NavigationProps) => {
   ];
 
   return (
-    <nav className="flex items-center justify-between px-6 py-4 backdrop-blur-sm border-b-[0.3px] border-border">
+    <nav className="relative flex items-center justify-between px-6 py-4 backdrop-blur-sm border-b-[0.3px] border-border">
       {/* Logo */}
       <div className="flex items-center gap-3 -translate-y-0.5">
         <img
@@ -39,7 +39,7 @@ const Navigation = ({ onNavChange }: NavigationProps) => {
       </div>
 
       {/* Navigation Links */}
-      <div className="flex items-center gap-1 bg-black/80 rounded-full px-2 py-1.5 backdrop-blur-sm border border-white/10">
+      <div className="absolute left-1/2 -translate-x-1/2 flex items-center gap-1 bg-black/80 rounded-full px-2 py-1.5 backdrop-blur-sm border border-white/10">
           {navItems.map((item) => {
             const button = (
               <Button
