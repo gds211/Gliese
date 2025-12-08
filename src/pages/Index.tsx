@@ -2,13 +2,14 @@ import { useState, useEffect } from "react";
 import Navigation from "@/components/Navigation";
 import SwapInterface from "@/components/SwapInterface";
 import BridgeInterface from "@/components/BridgeInterface";
+import ExploreInterface from "@/components/ExploreInterface";
 import EmptyCard from "@/components/EmptyCard";
 import cosmicBackground from "@/assets/cosmic-background.jpg";
 import bridgeIcon from "@/assets/bridge-icon.svg";
 import wormholeLogo from "@/assets/wormhole-logo.svg";
 
 const Index = () => {
-  const [navSection, setNavSection] = useState<"Swap" | "Bridge">("Swap");
+  const [navSection, setNavSection] = useState<"Swap" | "Bridge" | "Explore">("Swap");
   const [activeTab, setActiveTab] = useState<"instant" | "trigger" | "recurring">("instant");
   const [showPanel, setShowPanel] = useState(false);
   const [isExiting, setIsExiting] = useState(false);
@@ -71,10 +72,13 @@ const Index = () => {
                 </div>
               )}
             </div>
-          ) : (
+          ) : navSection === "Bridge" ? (
             <BridgeInterface />
-          )}
+          ) : null}
         </div>
+        
+        {/* Explore Interface - Liquid Glass Overlay */}
+        {navSection === "Explore" && <ExploreInterface />}
       </div>
     </div>
   );

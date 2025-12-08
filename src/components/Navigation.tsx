@@ -5,7 +5,7 @@ import WalletButton from "@/components/WalletButton";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 
 interface NavigationProps {
-  onNavChange?: (section: "Swap" | "Bridge") => void;
+  onNavChange?: (section: "Swap" | "Bridge" | "Explore") => void;
 }
 
 const Navigation = ({ onNavChange }: NavigationProps) => {
@@ -13,14 +13,14 @@ const Navigation = ({ onNavChange }: NavigationProps) => {
 
   const handleTabClick = (name: string) => {
     setActiveTab(name);
-    if (onNavChange && (name === "Swap" || name === "Bridge")) {
+    if (onNavChange && (name === "Swap" || name === "Bridge" || name === "Explore")) {
       onNavChange(name);
     }
   };
 
   const navItems = [
     { name: "Swap", href: "#", available: true },
-    { name: "Explore", href: "#", available: false },
+    { name: "Explore", href: "#", available: true },
     { name: "Perps", href: "#", available: false },
     { name: "Markets", href: "#", available: false },
     { name: "Bridge", href: "#", available: true },
