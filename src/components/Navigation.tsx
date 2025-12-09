@@ -6,15 +6,19 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip
 
 interface NavigationProps {
   onNavChange?: (section: "Swap" | "Bridge" | "Explore") => void;
+  onNavPending?: (section: "Swap" | "Bridge" | "Explore") => void;
+  currentSection?: "Swap" | "Bridge" | "Explore";
+  pendingSection?: "Swap" | "Bridge" | "Explore" | null;
 }
 
-const Navigation = ({ onNavChange }: NavigationProps) => {
-  const [activeTab, setActiveTab] = useState("Swap");
+const Navigation = ({ onNavChange, onNavPending, currentSection = "Swap", pendingSection }: NavigationProps) => {
+  // Use pendingSection for visual highlight, otherwise currentSection
+  const activeTab = pendingSection || currentSection;
 
   const handleTabClick = (name: string) => {
-    setActiveTab(name);
-    if (onNavChange && (name === "Swap" || name === "Bridge" || name === "Explore")) {
-      onNavChange(name);
+    if (name === currentSection) return; // Already on this tab
+    if (onNavPending && (name === "Swap" || name === "Bridge" || name === "Explore")) {
+      onNavPending(name);
     }
   };
 

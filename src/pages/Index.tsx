@@ -1,15 +1,18 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import Navigation from "@/components/Navigation";
 import SwapInterface from "@/components/SwapInterface";
 import BridgeInterface from "@/components/BridgeInterface";
 import ExploreInterface from "@/components/ExploreInterface";
 import EmptyCard from "@/components/EmptyCard";
+import TopLoadingBar from "@/components/TopLoadingBar";
 import cosmicBackground from "@/assets/cosmic-background.jpg";
 import bridgeIcon from "@/assets/bridge-icon.svg";
 import wormholeLogo from "@/assets/wormhole-logo.svg";
 
 const Index = () => {
   const [navSection, setNavSection] = useState<"Swap" | "Bridge" | "Explore">("Swap");
+  const [pendingSection, setPendingSection] = useState<"Swap" | "Bridge" | "Explore" | null>(null);
+  const [isLoadingTab, setIsLoadingTab] = useState(false);
   const [activeTab, setActiveTab] = useState<"instant" | "trigger" | "recurring">("instant");
   const [showPanel, setShowPanel] = useState(false);
   const [isExiting, setIsExiting] = useState(false);
@@ -38,8 +41,31 @@ const Index = () => {
     }
   }, [navSection, activeTab, showPanel]);
 
+  // Handle pending navigation
+  const handleNavPending = useCallback((section: "Swap" | "Bridge" | "Explore") => {
+    if (section === navSection) return;
+    setPendingSection(section);
+    setIsLoadingTab(true);
+  }, [navSection]);
+
+  // Called when loading bar completes
+  const handleLoadingComplete = useCallback(() => {
+    if (pendingSection) {
+      setNavSection(pendingSection);
+    }
+    setPendingSection(null);
+    setIsLoadingTab(false);
+  }, [pendingSection]);
+
   return (
     <div className="min-h-screen relative overflow-hidden">
+      {/* Top Loading Bar */}
+      <TopLoadingBar 
+        isLoading={isLoadingTab} 
+        onComplete={handleLoadingComplete}
+        duration={400}
+      />
+      
       {/* Cosmic Background */}
       <div 
         className="absolute inset-0 bg-cover bg-center bg-no-repeat"
@@ -51,7 +77,11 @@ const Index = () => {
       
       {/* Content */}
       <div className="relative z-10">
-        <Navigation onNavChange={setNavSection} />
+        <Navigation 
+          onNavPending={handleNavPending}
+          currentSection={navSection}
+          pendingSection={pendingSection}
+        />
         
         {/* Main Content Area */}
         <div className="flex justify-center items-start pt-[calc(50vh-300px)] min-h-[calc(100vh-80px)]">

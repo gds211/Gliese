@@ -1,0 +1,36 @@
+import { useEffect, useState } from "react";
+
+interface TopLoadingBarProps {
+  isLoading: boolean;
+  onComplete: () => void;
+  duration?: number;
+}
+
+const TopLoadingBar = ({ isLoading, onComplete, duration = 400 }: TopLoadingBarProps) => {
+  const [visible, setVisible] = useState(false);
+
+  useEffect(() => {
+    if (isLoading) {
+      setVisible(true);
+      const timer = setTimeout(() => {
+        onComplete();
+        // Small delay before hiding to let the bar reach 100%
+        setTimeout(() => setVisible(false), 50);
+      }, duration);
+      return () => clearTimeout(timer);
+    }
+  }, [isLoading, onComplete, duration]);
+
+  if (!visible) return null;
+
+  return (
+    <div className="fixed top-0 left-0 right-0 z-50 h-0.5">
+      <div 
+        className="h-full bg-white shadow-[0_0_10px_rgba(255,255,255,0.6)] animate-loading-bar"
+        style={{ animationDuration: `${duration}ms` }}
+      />
+    </div>
+  );
+};
+
+export default TopLoadingBar;
