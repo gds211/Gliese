@@ -81,7 +81,7 @@ const Index = () => {
       <TopLoadingBar 
         isLoading={isLoadingTab || isLoadingInnerTab} 
         onComplete={isLoadingTab ? handleLoadingComplete : handleInnerTabLoadingComplete}
-        duration={400}
+        duration={isLoadingInnerTab ? 250 : 400}
       />
       
       {/* Cosmic Background */}
