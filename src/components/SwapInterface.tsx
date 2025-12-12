@@ -114,12 +114,14 @@ type TabKey = "instant" | "trigger" | "recurring";
 type SwapInterfaceProps = {
   activeTab?: TabKey;
   onTabChange?: (tab: TabKey) => void;
+  pendingTab?: TabKey | null;
 };
 
 // -------------------- Component --------------------
 const SwapInterface = ({ 
   activeTab: externalActiveTab, 
-  onTabChange 
+  onTabChange,
+  pendingTab
 }: SwapInterfaceProps = {}) => {
   const { address, isConnected } = useAccount();
   const { openConnectModal } = useConnectModal();
@@ -131,6 +133,9 @@ const SwapInterface = ({
   // Which tab is active: controls when the bottom swap button shows
   const [internalActiveTab, setInternalActiveTab] = useState<TabKey>("instant");
   const activeTab = externalActiveTab || internalActiveTab;
+  
+  // Visual tab is the pending tab if loading, otherwise the active tab
+  const visualTab = pendingTab || activeTab;
   
   const handleTabChange = (v: TabKey) => {
     if (onTabChange) {
@@ -882,7 +887,7 @@ const selectToken = (picked: string | TokenObj) => {
     <Card className="w-full max-w-md mx-auto bg-muted/40 backdrop-blur-md border border-muted/60 shadow-2xl">
       <div className="p-4 space-y-4">
         {/* Tabs */}
-        <Tabs value={activeTab} onValueChange={(v) => handleTabChange(v as TabKey)} className="w-full">
+        <Tabs value={visualTab} onValueChange={(v) => handleTabChange(v as TabKey)} className="w-full">
           <TabsList className="grid w-full grid-cols-3 bg-muted/40 h-10">
             <TabsTrigger value="instant" className="text-sm flex items-center gap-2 h-8 data-[state=active]:text-primary data-[state=inactive]:text-muted-foreground">
               <span>⚡</span> Instant
@@ -895,7 +900,7 @@ const selectToken = (picked: string | TokenObj) => {
             </TabsTrigger>
           </TabsList>
 
-          <TabsContent value="instant" className="mt-4 space-y-3">
+          <TabsContent value="instant" forceMount className={`mt-4 space-y-3 ${activeTab !== "instant" ? "hidden" : ""}`}>
             {/* Selling Section */}
             <div className="space-y-3">
               <div className="flex items-center justify-between">
@@ -1069,7 +1074,7 @@ const selectToken = (picked: string | TokenObj) => {
             </div>
           </TabsContent>
 
-          <TabsContent value="trigger" className="mt-4">
+          <TabsContent value="trigger" forceMount className={`mt-4 ${activeTab !== "trigger" ? "hidden" : ""}`}>
             <TriggerInterface 
                tokens={tokens}
                payToken={sellToken}
@@ -1082,7 +1087,7 @@ const selectToken = (picked: string | TokenObj) => {
             />
           </TabsContent>
 
-          <TabsContent value="recurring">
+          <TabsContent value="recurring" forceMount className={activeTab !== "recurring" ? "hidden" : ""}>
             <div className="text-center text-muted-foreground py-8">Recurring orders coming soon</div>
           </TabsContent>
         </Tabs>

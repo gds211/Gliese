@@ -14,6 +14,8 @@ const Index = () => {
   const [pendingSection, setPendingSection] = useState<"Swap" | "Bridge" | "Explore" | null>(null);
   const [isLoadingTab, setIsLoadingTab] = useState(false);
   const [activeTab, setActiveTab] = useState<"instant" | "trigger" | "recurring">("instant");
+  const [pendingTab, setPendingTab] = useState<"instant" | "trigger" | "recurring" | null>(null);
+  const [isLoadingInnerTab, setIsLoadingInnerTab] = useState(false);
   const [showPanel, setShowPanel] = useState(false);
   const [isExiting, setIsExiting] = useState(false);
 
@@ -57,12 +59,28 @@ const Index = () => {
     setIsLoadingTab(false);
   }, [pendingSection]);
 
+  // Handle pending inner tab change
+  const handleTabPending = useCallback((tab: "instant" | "trigger" | "recurring") => {
+    if (tab === activeTab) return;
+    setPendingTab(tab);
+    setIsLoadingInnerTab(true);
+  }, [activeTab]);
+
+  // Called when inner tab loading bar completes
+  const handleInnerTabLoadingComplete = useCallback(() => {
+    if (pendingTab) {
+      setActiveTab(pendingTab);
+    }
+    setPendingTab(null);
+    setIsLoadingInnerTab(false);
+  }, [pendingTab]);
+
   return (
     <div className="min-h-screen relative overflow-hidden">
       {/* Top Loading Bar */}
       <TopLoadingBar 
-        isLoading={isLoadingTab} 
-        onComplete={handleLoadingComplete}
+        isLoading={isLoadingTab || isLoadingInnerTab} 
+        onComplete={isLoadingTab ? handleLoadingComplete : handleInnerTabLoadingComplete}
         duration={400}
       />
       
@@ -90,7 +108,8 @@ const Index = () => {
               {/* Main Swap Card - always in the same position */}
               <SwapInterface 
                 activeTab={activeTab} 
-                onTabChange={setActiveTab}
+                onTabChange={handleTabPending}
+                pendingTab={pendingTab}
               />
               
               {/* Empty Card - appears to the right when Trigger is active */}
