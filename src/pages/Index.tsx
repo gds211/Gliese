@@ -9,6 +9,10 @@ import cosmicBackground from "@/assets/cosmic-background.jpg";
 import bridgeIcon from "@/assets/bridge-icon.svg";
 import wormholeLogo from "@/assets/wormhole-logo.svg";
 
+// Loading bar durations
+const MAIN_NAV_LOADING_DURATION = 400;
+const INNER_TAB_LOADING_DURATION = 250;
+
 const Index = () => {
   const [navSection, setNavSection] = useState<"Swap" | "Bridge" | "Explore">("Swap");
   const [pendingSection, setPendingSection] = useState<"Swap" | "Bridge" | "Explore" | null>(null);
@@ -28,11 +32,15 @@ const Index = () => {
     });
   }, []);
 
+  // Derive whether panel should show
+  const panelShouldShow = navSection === "Swap" && activeTab === "trigger";
+
   useEffect(() => {
-    if (navSection === "Swap" && activeTab === "trigger") {
+    if (panelShouldShow) {
       setShowPanel(true);
       setIsExiting(false);
-    } else if (showPanel) {
+    } else if (showPanel && !isExiting) {
+      // Panel is visible and should hide, start exit animation
       setIsExiting(true);
       const timer = setTimeout(() => {
         setShowPanel(false);
@@ -41,7 +49,7 @@ const Index = () => {
       
       return () => clearTimeout(timer);
     }
-  }, [navSection, activeTab, showPanel]);
+  }, [panelShouldShow, showPanel, isExiting]);
 
   // Handle pending navigation
   const handleNavPending = useCallback((section: "Swap" | "Bridge" | "Explore") => {
@@ -81,7 +89,7 @@ const Index = () => {
       <TopLoadingBar 
         isLoading={isLoadingTab || isLoadingInnerTab} 
         onComplete={isLoadingTab ? handleLoadingComplete : handleInnerTabLoadingComplete}
-        duration={400}
+        duration={isLoadingTab ? MAIN_NAV_LOADING_DURATION : INNER_TAB_LOADING_DURATION}
       />
       
       {/* Cosmic Background */}
