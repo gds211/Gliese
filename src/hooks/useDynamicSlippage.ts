@@ -4,17 +4,33 @@ import { PUBLIC_CONFIG } from "@/config/public";
 
 // ----- Types -----
 export type SimpleQuote = {
+  /** Per-unit price proxy: amount out for ~1 unit of input, human formatted. */
   outFormatted?: string | number | null;
 };
 
 export type UseDynamicSlippageArgs = {
   enabled: boolean;
+
+  /** Preferred volatility source: per-unit output for ~1 input unit. */
   unitQuote?: SimpleQuote | null;
+
+  /** User-sized total out (we normalize it to per-unit internally). */
   userOutFormatted?: string | number | null;
+
+  /** User human input size (same unit as UI input). */
   userInHuman?: string | number | null;
+
+  /** Hop count for path pad. */
   pathLength?: number;
+
+  /** Optional notional in USD for MEV cushion calibration. */
   notionalUsd?: number | null;
+
+  /**
+   * OPTIONAL local elasticity probe.
+   */
   probePerUnit?: (amountInHuman: number) => Promise<number | null>;
+  /** Reset state when trade context changes (pair, direction, pool/path shape, etc.). */
   resetKey?: string | number | boolean | null;
 };
 
@@ -27,6 +43,7 @@ const toNum = (x: unknown): number | null => {
 };
 const clamp = (n: number, lo: number, hi: number) => Math.min(hi, Math.max(lo, n));
 
+/** In-place nth element (quickselect) to get quantile without full sort (small N safe) */
 function quantileAbs(returns: number[], q: number): number {
   if (!returns.length) return 0;
   const arr = returns.map((x) => Math.abs(x));
@@ -35,36 +52,28 @@ function quantileAbs(returns: number[], q: number): number {
   return arr[k];
 }
 
-/** EWMA variance with synchronous reset support */
+/** EWMA variance on log-returns (dimensionless). Resettable by resetKey. */
 function useEwmaSigma(
   active: boolean,
   price: number | null,
   alpha: number,
-  resetKey?: unknown
+  keyChanged: boolean
 ) {
   const last = useRef<number | null>(null);
   const [v, setV] = useState(0);
-  
-  // Track resetKey to force synchronous reset logic
-  const prevKey = useRef(resetKey);
-  const keyChanged = prevKey.current !== resetKey;
-  
+
+  // If key changed this frame, we treat previous state as invalid immediately
   if (keyChanged) {
-    prevKey.current = resetKey;
     last.current = null;
-    // We can't set state during render safely, but we can treat 'v' as 0
   }
 
-  // Effect to clear state after render
+  // Clear state effect
   useEffect(() => {
     if (keyChanged) setV(0);
-  }, [keyChanged]); // Run when key changes
+  }, [keyChanged]);
 
   useEffect(() => {
-    // If the key just changed this frame, skip calculation to avoid mixing contexts
-    if (keyChanged) return;
-    
-    if (!active || price === null || price <= 0) return;
+    if (keyChanged || !active || price === null || price <= 0) return;
     if (last.current && last.current > 0) {
       const r = Math.log(price / last.current);
       setV((prev) => alpha * (r * r) + (1 - alpha) * prev);
@@ -72,33 +81,26 @@ function useEwmaSigma(
     last.current = price;
   }, [active, price, alpha, keyChanged]);
 
-  // Return 0 immediately if we are in a reset frame
   return keyChanged ? 0 : Math.sqrt(v);
 }
 
-/** Return window with synchronous reset support */
+/** Rolling ring-buffer of log-returns for robust quantile vol. Resettable by resetKey. */
 function useReturnWindow(
   active: boolean,
   price: number | null,
   capacity: number,
-  resetKey?: unknown
+  keyChanged: boolean
 ) {
   const last = useRef<number | null>(null);
   const buf = useRef<number[]>([]);
-  
-  const prevKey = useRef(resetKey);
-  const keyChanged = prevKey.current !== resetKey;
 
   if (keyChanged) {
-    prevKey.current = resetKey;
     last.current = null;
     buf.current = [];
   }
 
   useEffect(() => {
-    if (keyChanged) return;
-
-    if (!active || price === null || price <= 0) return;
+    if (keyChanged || !active || price === null || price <= 0) return;
     if (last.current && last.current > 0) {
       const r = Math.log(price / last.current);
       const a = buf.current;
@@ -108,7 +110,6 @@ function useReturnWindow(
     last.current = price;
   }, [active, price, capacity, keyChanged]);
 
-  // Return empty immediately if in reset frame
   return keyChanged ? [] : buf.current;
 }
 
@@ -135,40 +136,64 @@ export function useDynamicSlippageBps({
 }: UseDynamicSlippageArgs): DynamicSlippage {
   // ---- Config ----
   const CFG = (PUBLIC_CONFIG as any).AUTO_SLIPPAGE ?? {};
-  const BASE_BPS: number = toNum(CFG.BASE_BPS) ?? 30;
-  const MIN_BPS: number = toNum(CFG.MIN_BPS) ?? 5;
-  const MAX_BPS: number = toNum(CFG.MAX_BPS) ?? 500;
+  const BASE_BPS: number = toNum(CFG.BASE_BPS) ?? 30;          // 0.30%
+  const MIN_BPS: number = toNum(CFG.MIN_BPS) ?? 5;             // 0.05%
+  const MAX_BPS: number = toNum(CFG.MAX_BPS) ?? 500;           // 5.00%
 
+  // Volatility
   const EWMA_ALPHA: number = toNum(CFG.EWMA_ALPHA) ?? 0.20;
   const QRET_WINDOW: number = toNum(CFG.QRET_WINDOW) ?? 48;
   const QRET_QUANTILE: number = toNum(CFG.QRET_QUANTILE) ?? 0.95;
   const VOL_SCALE: number = toNum(CFG.VOL_SCALE) ?? 1.0;
+
+  // Size impact
   const SIZE_FACTOR: number = toNum(CFG.SIZE_FACTOR) ?? 1.0;
+
+  // Hops / MEV / Hysteresis
   const PER_HOP_BPS: number = toNum(CFG.PER_HOP_BPS) ?? 4;
   const MEV_PROTECTED: boolean = Boolean(CFG.MEV_PROTECTED ?? false);
   const UP_HYST_BPS: number = toNum(CFG.UP_HYSTERESIS_BPS) ?? 3;
   const DOWN_HYST_BPS: number = toNum(CFG.DOWN_HYSTERESIS_BPS) ?? 6;
   const COOL_OFF_BPS_PER_SEC: number = toNum(CFG.COOL_OFF_BPS_PER_SEC) ?? 1;
 
+  // Elasticity probe (optional)
   const ELASTICITY_PROBE: boolean = Boolean(CFG.ELASTICITY_PROBE ?? false);
   const PROBE_EPS: number = toNum(CFG.PROBE_EPS) ?? 0.02;
   const PROBE_MIN_INTERVAL_MS: number = toNum(CFG.PROBE_MIN_INTERVAL_MS) ?? 2500;
 
-  // ---- Synchronous Reset Logic ----
+  // ---- Synchronous Reset & Grace Period ----
+  // We track the time of the last reset to provide a "Grace Period" (warmup).
+  // During warmup, we ignore size impact/volatility spikes because data sources (quotes)
+  // are likely stale (returning old pair data) while inputs are new, causing math errors.
   const resetRef = useRef(resetKey);
   const lastRef = useRef<number>(BASE_BPS);
-  const lastProbeAt = useRef<number>(0);
+  const resetTimeRef = useRef<number>(0);
+  const [forceUpdateTick, setForceUpdateTick] = useState(0);
 
   const keyChanged = resetRef.current !== resetKey;
   if (keyChanged) {
     resetRef.current = resetKey;
-    // Reset immediately to avoid stale state logic
-    lastRef.current = BASE_BPS;
-    lastProbeAt.current = 0;
+    lastRef.current = BASE_BPS; // Hard reset held value
+    resetTimeRef.current = Date.now(); // Mark reset timestamp
   }
 
+  // 600ms grace period covers most RPC latencies for the new quote to arrive
+  const GRACE_MS = 600;
+  const isWarmup = (Date.now() - resetTimeRef.current) < GRACE_MS;
+
+  // Force a re-render after grace period ends to "unlock" the slippage calculation
+  useEffect(() => {
+    if (isWarmup) {
+      const remaining = GRACE_MS - (Date.now() - resetTimeRef.current);
+      if (remaining > 0) {
+        const t = setTimeout(() => setForceUpdateTick(c => c + 1), remaining + 20);
+        return () => clearTimeout(t);
+      }
+    }
+  }, [resetKey, isWarmup]);
+
   // ---- Per-unit sources ----
-  const unitPerUnit = toNum(unitQuote?.outFormatted);
+  const unitPerUnit = toNum(unitQuote?.outFormatted); // per-unit OUT@~1in
   const userOut = toNum(userOutFormatted);
   const userIn = toNum(userInHuman);
   const userPerUnit = useMemo(() => {
@@ -176,36 +201,36 @@ export function useDynamicSlippageBps({
     return null;
   }, [userOut, userIn]);
 
+  // Preferred price source for volatility: unit quote; fallback to normalized user quote
   const priceSource = unitPerUnit ?? userPerUnit ?? null;
 
-  // ---- Volatility ----
-  const sigma = useEwmaSigma(enabled, priceSource, EWMA_ALPHA, resetKey);
-  const window = useReturnWindow(enabled, priceSource, QRET_WINDOW, resetKey);
+  // ---- Volatility (robust) ----
+  const sigma = useEwmaSigma(enabled, priceSource, EWMA_ALPHA, keyChanged);
+  const window = useReturnWindow(enabled, priceSource, QRET_WINDOW, keyChanged);
   const qAbs = quantileAbs(window, QRET_QUANTILE);
 
   const volBpsEWMA = enabled ? Math.ceil(VOL_SCALE * 10_000 * sigma) : 0;
   const volBpsQ = enabled ? Math.ceil(VOL_SCALE * 10_000 * qAbs) : 0;
   const volBps = Math.max(volBpsEWMA, volBpsQ);
 
-  // ---- Size impact ----
+  // ---- Size impact (two modes) ----
   let sizeImpactBps = 0;
   if (enabled && unitPerUnit && unitPerUnit > 0 && userPerUnit && userPerUnit > 0) {
     const impact = (unitPerUnit - userPerUnit) / unitPerUnit;
     sizeImpactBps = Math.max(0, Math.ceil(SIZE_FACTOR * impact * 10_000));
   }
 
-  // Optional probe
+  // Probe logic
   const [probeBps, setProbeBps] = useState<number | null>(null);
-  
-  useEffect(() => { 
-    // Effect reset for state
-    if (keyChanged) setProbeBps(null);
-  }, [keyChanged]);
+  const lastProbeAt = useRef<number>(0);
+
+  // Reset probe on key change
+  useEffect(() => { if (keyChanged) setProbeBps(null); }, [keyChanged]);
 
   useEffect(() => {
-    if (keyChanged || !enabled || !ELASTICITY_PROBE || !probePerUnit || !userIn || !(userIn > 0)) {
-      if (!probeBps) setProbeBps(null); // avoid loop
-      return;
+    if (keyChanged || isWarmup || !enabled || !ELASTICITY_PROBE || !probePerUnit || !userIn || !(userIn > 0)) {
+       if (!probeBps) setProbeBps(null);
+       return;
     }
     const now = Date.now();
     if (now - lastProbeAt.current < PROBE_MIN_INTERVAL_MS) return;
@@ -225,7 +250,7 @@ export function useDynamicSlippageBps({
         }
         const drop = Math.max(0, ppBase - ppBump);
         const dist = Math.max(0, baseIn - 1);
-        const steps = dist / (baseIn * PROBE_EPS || 1);
+        const steps = dist / (baseIn * PROBE_EPS || 1); 
         const predicted = Math.min(ppBase, drop * steps);
         const bps = Math.ceil((predicted / ppBase) * 10_000);
         setProbeBps(bps);
@@ -236,7 +261,7 @@ export function useDynamicSlippageBps({
     };
     run();
     return () => { cancelled = true; };
-  }, [enabled, ELASTICITY_PROBE, probePerUnit, userIn, keyChanged]);
+  }, [enabled, ELASTICITY_PROBE, probePerUnit, userIn, keyChanged, isWarmup]);
 
   const sizeBps = probeBps != null ? Math.max(sizeImpactBps, probeBps) : sizeImpactBps;
 
@@ -245,11 +270,13 @@ export function useDynamicSlippageBps({
   const hopBps = enabled ? extraHops * PER_HOP_BPS : 0;
   const mevBps = enabled ? mevBpsByUsd(notionalUsd, MEV_PROTECTED) : 0;
 
-  // ---- Compose ----
-  // If we just reset, we only use BASE_BPS this frame to be safe
-  const rawTarget = (enabled && !keyChanged) ? BASE_BPS + volBps + sizeBps + hopBps + mevBps : BASE_BPS;
+  // ---- Compose target ----
+  // Safety: During Warmup or Reset Frame, default to BASE_BPS to prevent stale data spikes
+  const rawTarget = (enabled && !keyChanged && !isWarmup) 
+    ? BASE_BPS + volBps + sizeBps + hopBps + mevBps 
+    : BASE_BPS;
 
-  // ---- Hysteresis + Cool-off ----
+  // ---- Hysteresis + gentle cool-off ----
   const [coolTick, setCoolTick] = useState(0);
 
   // Cool-off ticker
@@ -259,20 +286,20 @@ export function useDynamicSlippageBps({
     return () => clearInterval(id);
   }, [enabled, COOL_OFF_BPS_PER_SEC]);
 
-  // Gentle decay logic
+  // Gentle decay
   useEffect(() => {
-    if (!enabled || COOL_OFF_BPS_PER_SEC <= 0 || keyChanged) return;
+    if (!enabled || COOL_OFF_BPS_PER_SEC <= 0 || keyChanged || isWarmup) return;
     if (rawTarget < lastRef.current) {
       const gap = lastRef.current - rawTarget;
       const step = Math.max(COOL_OFF_BPS_PER_SEC, Math.ceil(gap * 0.2));
       lastRef.current = Math.max(rawTarget, lastRef.current - step);
     }
-  }, [coolTick, enabled, COOL_OFF_BPS_PER_SEC, rawTarget, keyChanged]);
+  }, [coolTick, forceUpdateTick, enabled, COOL_OFF_BPS_PER_SEC, rawTarget, keyChanged, isWarmup]);
 
   let target = rawTarget;
   
-  // Only apply hysteresis if we aren't in a reset frame
-  if (!keyChanged) {
+  // Hysteresis: only apply if we are stable (not resetting/warming up)
+  if (!keyChanged && !isWarmup) {
     const delta = rawTarget - lastRef.current;
     if (delta > 0 && delta < UP_HYST_BPS) {
       target = lastRef.current; 
