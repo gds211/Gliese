@@ -10,7 +10,13 @@ export type SimpleQuote = {
 export type UseDynamicSlippageArgs = {
   enabled: boolean;
   unitQuote?: SimpleQuote | null;
+  /** RAW amount out for 1 unit of input. Essential for precise volatility calc. */
+  unitQuoteRaw?: bigint | null;
+  
   userOutFormatted?: string | number | null;
+  /** RAW amount out for user input size. */
+  userOutRaw?: bigint | null;
+
   userInHuman?: string | number | null;
   pathLength?: number;
   notionalUsd?: number | null;
@@ -27,7 +33,6 @@ const toNum = (x: unknown): number | null => {
 };
 const clamp = (n: number, lo: number, hi: number) => Math.min(hi, Math.max(lo, n));
 
-/** In-place nth element (quickselect) */
 function quantileAbs(returns: number[], q: number): number {
   if (!returns.length) return 0;
   const arr = returns.map((x) => Math.abs(x));
@@ -36,12 +41,14 @@ function quantileAbs(returns: number[], q: number): number {
   return arr[k];
 }
 
-/** EWMA variance on log-returns. Paused during reset/warmup to prevent data poisoning. */
+/** * EWMA variance on log-returns. 
+ * Paused during 'isUnstable' (warmup) to prevent mixing old/new pair data.
+ */
 function useEwmaSigma(
   active: boolean,
   price: number | null,
   alpha: number,
-  shouldReset: boolean // changed from keyChanged to generic reset signal
+  shouldReset: boolean
 ) {
   const last = useRef<number | null>(null);
   const [v, setV] = useState(0);
@@ -51,14 +58,12 @@ function useEwmaSigma(
     last.current = null;
   }
 
-  // Effect to clear state value
   useEffect(() => {
     if (shouldReset) setV(0);
   }, [shouldReset]);
 
   useEffect(() => {
-    // If we are resetting/warming up, DO NOT process prices.
-    // This prevents calculating a huge return between (Old Pair Price) -> (New Pair Price)
+    // If resetting/warming up, or price is invalid, do not update volatility
     if (shouldReset || !active || price === null || price <= 0) return;
     
     if (last.current && last.current > 0) {
@@ -71,7 +76,7 @@ function useEwmaSigma(
   return shouldReset ? 0 : Math.sqrt(v);
 }
 
-/** Rolling ring-buffer. Paused during reset/warmup. */
+/** Rolling ring-buffer. Paused during warmup. */
 function useReturnWindow(
   active: boolean,
   price: number | null,
@@ -115,7 +120,9 @@ function mevBpsByUsd(usd: number | null | undefined, protectedFlow: boolean): nu
 export function useDynamicSlippageBps({
   enabled,
   unitQuote,
+  unitQuoteRaw,
   userOutFormatted,
+  userOutRaw,
   userInHuman,
   pathLength = 1,
   notionalUsd = null,
@@ -155,18 +162,16 @@ export function useDynamicSlippageBps({
   
   if (keyChanged) {
     resetRef.current = resetKey;
-    lastRef.current = BASE_BPS; // immediate visual reset
+    lastRef.current = BASE_BPS; // Visual reset immediately
     resetTimeRef.current = Date.now();
   }
 
-  // Grace Period: 600ms to allow stale quotes to flush out before we track data
+  // Grace Period: 600ms to allow stale quotes to flush
   const GRACE_MS = 600;
   const isWarmup = (Date.now() - resetTimeRef.current) < GRACE_MS;
-  
-  // This signal tells sub-hooks (volatility/impact) to STAY CLEARED/PAUSED
   const isUnstable = keyChanged || isWarmup;
 
-  // Force re-render when grace period ends to unlock the engine
+  // Force re-render when grace period ends
   useEffect(() => {
     if (isWarmup) {
       const remaining = GRACE_MS - (Date.now() - resetTimeRef.current);
@@ -181,15 +186,21 @@ export function useDynamicSlippageBps({
   const unitPerUnit = toNum(unitQuote?.outFormatted);
   const userOut = toNum(userOutFormatted);
   const userIn = toNum(userInHuman);
+
+  // **CRITICAL FIX**: Use RAW BigInts converted to Number for Volatility.
+  // This preserves precision for tokens with many decimals or high values.
+  const unitRawNum = unitQuoteRaw ? Number(unitQuoteRaw) : null;
+  const userRawNum = userOutRaw ? Number(userOutRaw) : null;
+
   const userPerUnit = useMemo(() => {
     if (userOut && userOut > 0 && userIn && userIn > 0) return userOut / userIn;
     return null;
   }, [userOut, userIn]);
 
-  const priceSource = unitPerUnit ?? userPerUnit ?? null;
+  // Volatility Source Priority: Raw Unit -> Formatted Unit -> Raw User
+  const priceSource = unitRawNum ?? unitPerUnit ?? userRawNum ?? null;
 
   // ---- Volatility (Paused during instability) ----
-  // This was the missing link: passing isUnstable prevents stale-data spikes
   const sigma = useEwmaSigma(enabled, priceSource, EWMA_ALPHA, isUnstable);
   const window = useReturnWindow(enabled, priceSource, QRET_WINDOW, isUnstable);
   const qAbs = quantileAbs(window, QRET_QUANTILE);
@@ -199,8 +210,8 @@ export function useDynamicSlippageBps({
   const volBps = Math.max(volBpsEWMA, volBpsQ);
 
   // ---- Size Impact ----
+  // Uses formatted ratio for safer human-scale comparison (avoiding raw decimals mismatch)
   let sizeImpactBps = 0;
-  // We also check !isUnstable here to avoid comparing (New Quote) vs (Old User Input)
   if (!isUnstable && enabled && unitPerUnit && unitPerUnit > 0 && userPerUnit && userPerUnit > 0) {
     const impact = (unitPerUnit - userPerUnit) / unitPerUnit;
     sizeImpactBps = Math.max(0, Math.ceil(SIZE_FACTOR * impact * 10_000));
@@ -213,7 +224,6 @@ export function useDynamicSlippageBps({
   useEffect(() => { if (keyChanged) setProbeBps(null); }, [keyChanged]);
 
   useEffect(() => {
-    // Abort probe during warmup
     if (isUnstable || !enabled || !ELASTICITY_PROBE || !probePerUnit || !userIn || !(userIn > 0)) {
        if (!probeBps) setProbeBps(null);
        return;
@@ -256,8 +266,7 @@ export function useDynamicSlippageBps({
   const hopBps = enabled ? extraHops * PER_HOP_BPS : 0;
   const mevBps = enabled ? mevBpsByUsd(notionalUsd, MEV_PROTECTED) : 0;
 
-  // Final Target Composition
-  // During warmup, we default to BASE_BPS. This is the visual "reset" the user expects.
+  // Default to BASE_BPS during warmup/unstable to prevent visual spikes
   const rawTarget = (enabled && !isUnstable) 
     ? BASE_BPS + volBps + sizeBps + hopBps + mevBps 
     : BASE_BPS;
@@ -291,7 +300,9 @@ export function useDynamicSlippageBps({
   target = clamp(target, MIN_BPS, MAX_BPS);
   if (target !== lastRef.current) lastRef.current = target;
 
-  return { bps: BigInt(Math.round(target)), bpsNumber: Math.round(target) };
+  const bpsNumber = Math.round(target);
+  const bps = BigInt(bpsNumber);
+  return { bps, bpsNumber };
 }
 
 export default useDynamicSlippageBps;
