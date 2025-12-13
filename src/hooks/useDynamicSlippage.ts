@@ -4,38 +4,17 @@ import { PUBLIC_CONFIG } from "@/config/public";
 
 // ----- Types -----
 export type SimpleQuote = {
-  /** Per-unit price proxy: amount out for ~1 unit of input, human formatted. */
   outFormatted?: string | number | null;
-  // optional: updatedAtMs?: number;
 };
-//probably stable
 
 export type UseDynamicSlippageArgs = {
   enabled: boolean;
-
-  /** Preferred volatility source: per-unit output for ~1 input unit. */
   unitQuote?: SimpleQuote | null;
-
-  /** User-sized total out (we normalize it to per-unit internally). */
   userOutFormatted?: string | number | null;
-
-  /** User human input size (same unit as UI input). */
   userInHuman?: string | number | null;
-
-  /** Hop count for path pad. */
   pathLength?: number;
-
-  /** Optional notional in USD for MEV cushion calibration. */
   notionalUsd?: number | null;
-
-  /**
-   * OPTIONAL local elasticity probe. If provided AND enabled in config,
-   * we'll occasionally call this to get per-unit outputs at two close sizes
-   * to estimate a local slope/curvature for size impact prediction.
-   * Return per-unit OUT (amountOut/amountIn) or null on failure.
-   */
   probePerUnit?: (amountInHuman: number) => Promise<number | null>;
-  /** Reset state when trade context changes (pair, direction, pool/path shape, etc.). */
   resetKey?: string | number | boolean | null;
 };
 
@@ -48,17 +27,15 @@ const toNum = (x: unknown): number | null => {
 };
 const clamp = (n: number, lo: number, hi: number) => Math.min(hi, Math.max(lo, n));
 
-/** In-place nth element (quickselect) to get quantile without full sort (small N safe) */
 function quantileAbs(returns: number[], q: number): number {
   if (!returns.length) return 0;
   const arr = returns.map((x) => Math.abs(x));
   const k = Math.max(0, Math.min(arr.length - 1, Math.floor(q * (arr.length - 1))));
-  // small N -> simple sort is fine, readable and stable
   arr.sort((a, b) => a - b);
   return arr[k];
 }
 
-/** EWMA variance on log-returns (dimensionless). Resettable by resetKey. */
+/** EWMA variance with synchronous reset support */
 function useEwmaSigma(
   active: boolean,
   price: number | null,
@@ -67,20 +44,39 @@ function useEwmaSigma(
 ) {
   const last = useRef<number | null>(null);
   const [v, setV] = useState(0);
-  // Reset EWMA state when context changes (new pair/route)
-  useEffect(() => { last.current = null; setV(0); }, [resetKey]);
+  
+  // Track resetKey to force synchronous reset logic
+  const prevKey = useRef(resetKey);
+  const keyChanged = prevKey.current !== resetKey;
+  
+  if (keyChanged) {
+    prevKey.current = resetKey;
+    last.current = null;
+    // We can't set state during render safely, but we can treat 'v' as 0
+  }
+
+  // Effect to clear state after render
   useEffect(() => {
+    if (keyChanged) setV(0);
+  }, [keyChanged]); // Run when key changes
+
+  useEffect(() => {
+    // If the key just changed this frame, skip calculation to avoid mixing contexts
+    if (keyChanged) return;
+    
     if (!active || price === null || price <= 0) return;
     if (last.current && last.current > 0) {
       const r = Math.log(price / last.current);
       setV((prev) => alpha * (r * r) + (1 - alpha) * prev);
     }
     last.current = price;
-  }, [active, price, alpha]);
-  return Math.sqrt(v);
+  }, [active, price, alpha, keyChanged]);
+
+  // Return 0 immediately if we are in a reset frame
+  return keyChanged ? 0 : Math.sqrt(v);
 }
 
-/** Rolling ring-buffer of log-returns for robust quantile vol. Resettable by resetKey. */
+/** Return window with synchronous reset support */
 function useReturnWindow(
   active: boolean,
   price: number | null,
@@ -89,9 +85,19 @@ function useReturnWindow(
 ) {
   const last = useRef<number | null>(null);
   const buf = useRef<number[]>([]);
-  // Reset window when context changes (new pair/route)
-  useEffect(() => { last.current = null; buf.current = []; }, [resetKey, capacity]);
+  
+  const prevKey = useRef(resetKey);
+  const keyChanged = prevKey.current !== resetKey;
+
+  if (keyChanged) {
+    prevKey.current = resetKey;
+    last.current = null;
+    buf.current = [];
+  }
+
   useEffect(() => {
+    if (keyChanged) return;
+
     if (!active || price === null || price <= 0) return;
     if (last.current && last.current > 0) {
       const r = Math.log(price / last.current);
@@ -100,14 +106,14 @@ function useReturnWindow(
       a.push(r);
     }
     last.current = price;
-  }, [active, price, capacity]);
-  return buf.current;
+  }, [active, price, capacity, keyChanged]);
+
+  // Return empty immediately if in reset frame
+  return keyChanged ? [] : buf.current;
 }
 
-/** Piecewise MEV cushion by notional USD. */
 function mevBpsByUsd(usd: number | null | undefined, protectedFlow: boolean): number {
   if (usd == null || !Number.isFinite(usd)) return 0;
-  // Reduce cushion if flow is MEV-protected (Flashbots/MEV-Blocker/intents)
   const scale = protectedFlow ? 0.5 : 1.0;
   if (usd < 50) return 0;
   if (usd < 500) return Math.round(8 * scale);
@@ -129,33 +135,40 @@ export function useDynamicSlippageBps({
 }: UseDynamicSlippageArgs): DynamicSlippage {
   // ---- Config ----
   const CFG = (PUBLIC_CONFIG as any).AUTO_SLIPPAGE ?? {};
-  const BASE_BPS: number = toNum(CFG.BASE_BPS) ?? 30;          // 0.30%
-  const MIN_BPS: number = toNum(CFG.MIN_BPS) ?? 5;             // 0.05%
-  const MAX_BPS: number = toNum(CFG.MAX_BPS) ?? 500;           // 5.00%
+  const BASE_BPS: number = toNum(CFG.BASE_BPS) ?? 30;
+  const MIN_BPS: number = toNum(CFG.MIN_BPS) ?? 5;
+  const MAX_BPS: number = toNum(CFG.MAX_BPS) ?? 500;
 
-  // Volatility
   const EWMA_ALPHA: number = toNum(CFG.EWMA_ALPHA) ?? 0.20;
-  const QRET_WINDOW: number = toNum(CFG.QRET_WINDOW) ?? 48;    // last N returns
-  const QRET_QUANTILE: number = toNum(CFG.QRET_QUANTILE) ?? 0.95; // 95% tail
-  const VOL_SCALE: number = toNum(CFG.VOL_SCALE) ?? 1.0;       // global vol knob
-
-  // Size impact
+  const QRET_WINDOW: number = toNum(CFG.QRET_WINDOW) ?? 48;
+  const QRET_QUANTILE: number = toNum(CFG.QRET_QUANTILE) ?? 0.95;
+  const VOL_SCALE: number = toNum(CFG.VOL_SCALE) ?? 1.0;
   const SIZE_FACTOR: number = toNum(CFG.SIZE_FACTOR) ?? 1.0;
-
-  // Hops / MEV / Hysteresis
   const PER_HOP_BPS: number = toNum(CFG.PER_HOP_BPS) ?? 4;
   const MEV_PROTECTED: boolean = Boolean(CFG.MEV_PROTECTED ?? false);
   const UP_HYST_BPS: number = toNum(CFG.UP_HYSTERESIS_BPS) ?? 3;
   const DOWN_HYST_BPS: number = toNum(CFG.DOWN_HYSTERESIS_BPS) ?? 6;
-  const COOL_OFF_BPS_PER_SEC: number = toNum(CFG.COOL_OFF_BPS_PER_SEC) ?? 1; // gentle decay
+  const COOL_OFF_BPS_PER_SEC: number = toNum(CFG.COOL_OFF_BPS_PER_SEC) ?? 1;
 
-  // Elasticity probe (optional)
   const ELASTICITY_PROBE: boolean = Boolean(CFG.ELASTICITY_PROBE ?? false);
-  const PROBE_EPS: number = toNum(CFG.PROBE_EPS) ?? 0.02;      // +2% size nudge
+  const PROBE_EPS: number = toNum(CFG.PROBE_EPS) ?? 0.02;
   const PROBE_MIN_INTERVAL_MS: number = toNum(CFG.PROBE_MIN_INTERVAL_MS) ?? 2500;
 
+  // ---- Synchronous Reset Logic ----
+  const resetRef = useRef(resetKey);
+  const lastRef = useRef<number>(BASE_BPS);
+  const lastProbeAt = useRef<number>(0);
+
+  const keyChanged = resetRef.current !== resetKey;
+  if (keyChanged) {
+    resetRef.current = resetKey;
+    // Reset immediately to avoid stale state logic
+    lastRef.current = BASE_BPS;
+    lastProbeAt.current = 0;
+  }
+
   // ---- Per-unit sources ----
-  const unitPerUnit = toNum(unitQuote?.outFormatted); // per-unit OUT@~1in
+  const unitPerUnit = toNum(unitQuote?.outFormatted);
   const userOut = toNum(userOutFormatted);
   const userIn = toNum(userInHuman);
   const userPerUnit = useMemo(() => {
@@ -163,42 +176,35 @@ export function useDynamicSlippageBps({
     return null;
   }, [userOut, userIn]);
 
-  // Preferred price source for volatility: unit quote; fallback to normalized user quote
   const priceSource = unitPerUnit ?? userPerUnit ?? null;
 
-  // ---- Volatility (robust) ----
+  // ---- Volatility ----
   const sigma = useEwmaSigma(enabled, priceSource, EWMA_ALPHA, resetKey);
   const window = useReturnWindow(enabled, priceSource, QRET_WINDOW, resetKey);
-  const qAbs = quantileAbs(window, QRET_QUANTILE); // tail of |returns|
+  const qAbs = quantileAbs(window, QRET_QUANTILE);
 
-  // Convert to bps (small log-returns ≈ percent change)
   const volBpsEWMA = enabled ? Math.ceil(VOL_SCALE * 10_000 * sigma) : 0;
   const volBpsQ = enabled ? Math.ceil(VOL_SCALE * 10_000 * qAbs) : 0;
   const volBps = Math.max(volBpsEWMA, volBpsQ);
 
-  // ---- Size impact (two modes) ----
-  // Fallback: per-unit vs per-unit (1-unit vs user)
+  // ---- Size impact ----
   let sizeImpactBps = 0;
   if (enabled && unitPerUnit && unitPerUnit > 0 && userPerUnit && userPerUnit > 0) {
     const impact = (unitPerUnit - userPerUnit) / unitPerUnit;
     sizeImpactBps = Math.max(0, Math.ceil(SIZE_FACTOR * impact * 10_000));
   }
 
-  // Optional local elasticity probe improves size estimate for curved CLMM segments
+  // Optional probe
   const [probeBps, setProbeBps] = useState<number | null>(null);
-  const lastProbeAt = useRef<number>(0);
-  // Clear probe state on context change to avoid stale carry-over
-  useEffect(() => { setProbeBps(null); lastProbeAt.current = 0; }, [resetKey]);
+  
+  useEffect(() => { 
+    // Effect reset for state
+    if (keyChanged) setProbeBps(null);
+  }, [keyChanged]);
+
   useEffect(() => {
-    if (
-      !enabled ||
-      !ELASTICITY_PROBE ||
-      !probePerUnit ||
-      !userIn ||
-      !(userIn > 0) ||
-      !Number.isFinite(userIn)
-    ) {
-      setProbeBps(null);
+    if (keyChanged || !enabled || !ELASTICITY_PROBE || !probePerUnit || !userIn || !(userIn > 0)) {
+      if (!probeBps) setProbeBps(null); // avoid loop
       return;
     }
     const now = Date.now();
@@ -210,20 +216,17 @@ export function useDynamicSlippageBps({
         const baseIn = userIn;
         const bumpIn = baseIn * (1 + PROBE_EPS);
         const [ppBase, ppBump] = await Promise.all([
-          probePerUnit!(baseIn),
-          probePerUnit!(bumpIn),
+          probePerUnit(baseIn),
+          probePerUnit(bumpIn),
         ]);
         if (cancelled || ppBase == null || ppBase <= 0 || ppBump == null || ppBump <= 0) {
           setProbeBps(null);
           return;
         }
-        // local slope: drop in per-unit for +ε input
         const drop = Math.max(0, ppBase - ppBump);
-        // extrapolate to full distance between 1-unit and user size
-        // (safe, conservative: multiply by distance in units of ε)
         const dist = Math.max(0, baseIn - 1);
-        const steps = dist / (baseIn * PROBE_EPS || 1); // ~how many +ε bumps
-        const predicted = Math.min(ppBase, drop * steps); // cannot exceed ppBase
+        const steps = dist / (baseIn * PROBE_EPS || 1);
+        const predicted = Math.min(ppBase, drop * steps);
         const bps = Math.ceil((predicted / ppBase) * 10_000);
         setProbeBps(bps);
         lastProbeAt.current = Date.now();
@@ -232,17 +235,8 @@ export function useDynamicSlippageBps({
       }
     };
     run();
-    return () => {
-      cancelled = true;
-    };
-  }, [
-    enabled,
-    ELASTICITY_PROBE,
-    probePerUnit,
-    userIn,
-    PROBE_EPS,
-    PROBE_MIN_INTERVAL_MS,
-  ]);
+    return () => { cancelled = true; };
+  }, [enabled, ELASTICITY_PROBE, probePerUnit, userIn, keyChanged]);
 
   const sizeBps = probeBps != null ? Math.max(sizeImpactBps, probeBps) : sizeImpactBps;
 
@@ -251,45 +245,45 @@ export function useDynamicSlippageBps({
   const hopBps = enabled ? extraHops * PER_HOP_BPS : 0;
   const mevBps = enabled ? mevBpsByUsd(notionalUsd, MEV_PROTECTED) : 0;
 
-  // ---- Compose target ----
-  const rawTarget = enabled ? BASE_BPS + volBps + sizeBps + hopBps + mevBps : BASE_BPS;
+  // ---- Compose ----
+  // If we just reset, we only use BASE_BPS this frame to be safe
+  const rawTarget = (enabled && !keyChanged) ? BASE_BPS + volBps + sizeBps + hopBps + mevBps : BASE_BPS;
 
-  // ---- Hysteresis + gentle cool-off ----
-  const lastRef = useRef<number>(BASE_BPS);
+  // ---- Hysteresis + Cool-off ----
   const [coolTick, setCoolTick] = useState(0);
-  // Reset the held value when the trade context changes so a previous spike
-  // doesn’t leak into a different pair/route/amount regime.
-  useEffect(() => {
-    lastRef.current = BASE_BPS;
-  }, [resetKey, enabled, BASE_BPS]);
 
-  // Cool-off ticker (decay toward new target to avoid sticky highs)
+  // Cool-off ticker
   useEffect(() => {
     if (!enabled || COOL_OFF_BPS_PER_SEC <= 0) return;
     const id = setInterval(() => setCoolTick((x) => x + 1), 1000);
     return () => clearInterval(id);
   }, [enabled, COOL_OFF_BPS_PER_SEC]);
 
-  let target = rawTarget;
-  const delta = rawTarget - lastRef.current;
-  if (delta > 0 && delta < UP_HYST_BPS) {
-    target = lastRef.current; // ignore tiny uptick
-  } else if (delta < 0 && -delta < DOWN_HYST_BPS) {
-    target = lastRef.current; // ignore tiny downtick
-  }
-
-  // Gentle decay: if raw target is lower than our held value, step down gradually
+  // Gentle decay logic
   useEffect(() => {
-    if (!enabled || COOL_OFF_BPS_PER_SEC <= 0) return;
+    if (!enabled || COOL_OFF_BPS_PER_SEC <= 0 || keyChanged) return;
     if (rawTarget < lastRef.current) {
       const gap = lastRef.current - rawTarget;
-      // Drop at least COOL_OFF_BPS_PER_SEC, and also ~20% of the gap for fast recovery.
       const step = Math.max(COOL_OFF_BPS_PER_SEC, Math.ceil(gap * 0.2));
       lastRef.current = Math.max(rawTarget, lastRef.current - step);
     }
-  }, [coolTick, enabled, COOL_OFF_BPS_PER_SEC, rawTarget]);
+  }, [coolTick, enabled, COOL_OFF_BPS_PER_SEC, rawTarget, keyChanged]);
+
+  let target = rawTarget;
+  
+  // Only apply hysteresis if we aren't in a reset frame
+  if (!keyChanged) {
+    const delta = rawTarget - lastRef.current;
+    if (delta > 0 && delta < UP_HYST_BPS) {
+      target = lastRef.current; 
+    } else if (delta < 0 && -delta < DOWN_HYST_BPS) {
+      target = lastRef.current; 
+    }
+  }
 
   target = clamp(target, MIN_BPS, MAX_BPS);
+  
+  // Update ref for next frame
   if (target !== lastRef.current) lastRef.current = target;
 
   const bpsNumber = Math.round(target);
