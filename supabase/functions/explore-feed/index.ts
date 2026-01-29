@@ -195,8 +195,10 @@ function extractTokensFromMoralis(moralisResponse: any, chain: string): ExploreT
 function applyBasicScamFilters(tokens: ExploreToken[], mode: ModeUI): ExploreToken[] {
   return tokens.filter((t) => {
     if (t.possibleSpam) return false;
-    if (mode === "new-trending" && t.securityScore !== null && t.securityScore < 50) return false;
-    if (t.liquidityUsd !== null && t.liquidityUsd < 500) return false;
+    const score = t.securityScore ?? 100;
+    if (mode === "new-trending" && score < 50) return false;
+    const liq = t.liquidityUsd ?? 0;
+    if (liq < 500) return false;
     return true;
   });
 }
