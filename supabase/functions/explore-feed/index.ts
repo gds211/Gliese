@@ -43,12 +43,19 @@ function clampInt(value: string | null, fallback: number, min: number, max: numb
 
 function normalizeChain(input: string | null): string {
   const c = (input ?? "monad").toLowerCase().trim();
+  // If user asks for "monad", return the HEX ID "0x8f" which Moralis guarantees support for
+  if (c === "monad") return "0x8f"; 
+  
   const allowed = new Set([
-    "monad", "eth", "base", "arbitrum", "polygon", "optimism",
-    "avalanche", "binance", "solana", "ronin", "linea", "fantom",
+    "0x8f", // Monad Hex
+    "eth", "0x1", "base", "0x2105", "arbitrum", "0xa4b1", 
+    "polygon", "0x89", "optimism", "0xa", "avalanche", "0xa86a", 
+    "binance", "bsc", "0x38", "solana", "ronin", "linea", "fantom",
     "pulse", "lisk", "sei"
   ]);
-  return allowed.has(c) ? c : "monad";
+  
+  // Default to Monad Hex if unknown, or return the valid chain string
+  return allowed.has(c) ? c : "0x8f";
 }
 
 function toMoralisTimeframe(tf: TimeframeUI): string {
@@ -198,7 +205,10 @@ serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
   try {
     const url = new URL(req.url);
-    const chain = normalizeChain(url.searchParams.get("chain"));
+    const chainParam = url.searchParams.get("chain");
+    
+    // Normalize: If "monad" is passed, this returns "0x8f"
+    const chain = normalizeChain(chainParam);
     const timeframe = (url.searchParams.get("timeframe") ?? "24h") as TimeframeUI;
     const mode = (url.searchParams.get("mode") ?? "top-traded") as ModeUI;
     const limit = clampInt(url.searchParams.get("limit"), 50, 10, 100);
@@ -212,7 +222,9 @@ serve(async (req) => {
     if (!supabaseUrl || !serviceRole) return json({ error: "Missing SUPABASE keys" }, 500);
 
     const supabase = createClient(supabaseUrl, serviceRole, { auth: { persistSession: false } });
-    const cacheKey = `explore:v3:${chain}:${timeframe}:${mode}:${limit}`;
+    
+    // Cache Key includes the specific chain ID used
+    const cacheKey = `explore:v4:${chain}:${timeframe}:${mode}:${limit}`;
 
     if (!force) {
       const { data: cached, error: cacheErr } = await supabase.from("explore_cache").select("payload, expires_at").eq("cache_key", cacheKey).maybeSingle();
@@ -226,7 +238,7 @@ serve(async (req) => {
     const sortBy = mode === "top-traded" ? { metric: "volumeUsd", timeFrame: moralisTimeFrame, type: "DESC" } : { metric: "usdPricePercentChange", timeFrame: moralisTimeFrame, type: "DESC" };
 
     const requestBody = {
-      chains: [chain],
+      chains: [chain], // This will now be "0x8f" for Monad
       filters: [{ metric: "marketCap", gt: 0, lt: 5_000_000_000_000 }, { metric: "totalLiquidityUsd", gt: 500 }, { metric: "volumeUsd", timeFrame: moralisTimeFrame, gt: 1000 }],
       sortBy, limit,
     };
@@ -236,17 +248,24 @@ serve(async (req) => {
       body: JSON.stringify(requestBody),
     });
 
-    if (!discoveryResp.ok) return json({ error: "Moralis discovery failed", status: discoveryResp.status }, 502);
+    if (!discoveryResp.ok) {
+       const body = await discoveryResp.text();
+       // Log detailed error for debugging
+       console.error("Moralis Error:", body);
+       return json({ error: "Moralis discovery failed", status: discoveryResp.status, details: body, chainUsed: chain }, 502);
+    }
 
     const discoveryJson = await safeJson(discoveryResp);
     let items = extractTokensFromMoralis(discoveryJson, chain);
     items = applyBasicScamFilters(items, mode);
 
     const addresses = items.map((t) => t.tokenAddress);
+    
     if (chain === "solana") {
       const priceMap = await fetchSolanaUsdPrices({ moralisApiKey, addresses });
       items = items.map((t) => ({ ...t, usdPrice: priceMap.get(t.tokenAddress) ?? t.usdPrice ?? null }));
     } else {
+      // 0x8f (Monad) falls here, which is correct as it is EVM
       const priceChain = toMoralisEvmPriceChain(chain);
       const priceMap = await fetchEvmUsdPrices({ moralisApiKey, chain: priceChain, addresses });
       items = items.map((t) => ({ ...t, usdPrice: priceMap.get(lower(t.tokenAddress)) ?? t.usdPrice ?? null }));
