@@ -1,0 +1,2 @@
+[functions.explore-feed]
+verify_jwt = false
