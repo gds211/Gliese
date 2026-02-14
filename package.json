@@ -62,7 +62,12 @@
     "vaul": "^0.9.3",
     "viem": "^2.9.32",
     "wagmi": "^2.5.7",
-    "zod": "^3.23.8"
+    "zod": "^3.23.8",
+    "@lifi/widget": "^3.40.8",
+    "@bigmi/react": "latest",
+    "@mysten/dapp-kit": "latest",
+    "@solana/wallet-adapter-react": "latest"
+
   },
   "devDependencies": {
     "@eslint/js": "^9.9.0",
