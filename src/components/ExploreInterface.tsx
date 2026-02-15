@@ -3,14 +3,15 @@ import ExploreTokenTable from "./explore/ExploreTokenTable";
 
 const ExploreInterface = () => {
   return (
-    <div className="absolute inset-0 top-[73px] z-20 w-full min-h-screen m-0 rounded-none border-x-0 border-b-0 border-t border-white/5 overflow-y-auto scrollbar-hide"
+    <div
+      className="absolute inset-0 top-[73px] z-20 w-full min-h-screen m-0 p-0 rounded-none border-t border-white/5 overflow-y-auto scrollbar-hide"
       style={{
-        background: 'linear-gradient(to bottom, rgba(11, 14, 20, 0.80), rgba(11, 14, 20, 0.40))',
-        backdropFilter: 'blur(24px)',
-        WebkitBackdropFilter: 'blur(24px)',
+        background: 'rgba(11, 14, 20, 0.30)',
+        backdropFilter: 'blur(12px)',
+        WebkitBackdropFilter: 'blur(12px)',
       }}
     >
-      <div className="px-8 lg:px-12 pt-8 pb-8">
+      <div className="max-w-6xl mx-auto w-full px-6 pt-12 pb-8">
         <ExploreFilters />
         <ExploreTokenTable />
       </div>

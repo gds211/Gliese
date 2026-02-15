@@ -39,41 +39,38 @@ const tokens: Token[] = [
 export default function ExploreTokenTable() {
   return (
     <div className="w-full overflow-x-auto scrollbar-hide">
-      <table className="w-full text-sm">
+      <table className="w-full">
         <thead>
-          <tr className="border-b border-white/[0.06]">
-            <th className="text-left py-3 px-4 text-[11px] font-medium uppercase tracking-wider text-white/30">#</th>
-            <th className="text-left py-3 px-4 text-[11px] font-medium uppercase tracking-wider text-white/30">Token</th>
-            <th className="text-right py-3 px-4 text-[11px] font-medium uppercase tracking-wider text-white/30">Price</th>
-            <th className="text-right py-3 px-4 text-[11px] font-medium uppercase tracking-wider text-white/30">MC / FDV</th>
-            <th className="text-right py-3 px-4 text-[11px] font-medium uppercase tracking-wider text-white/30">24h Vol</th>
-            <th className="text-right py-3 px-4 text-[11px] font-medium uppercase tracking-wider text-white/30">Liquidity</th>
-            <th className="text-right py-3 px-4 text-[11px] font-medium uppercase tracking-wider text-white/30">Holders</th>
-            <th className="text-right py-3 px-4 text-[11px] font-medium uppercase tracking-wider text-white/30">Fees Paid</th>
-            <th className="text-center py-3 px-4 text-[11px] font-medium uppercase tracking-wider text-white/30">Last 24h</th>
-            <th className="py-3 px-3"></th>
+          <tr className="border-b border-white/10">
+            <th className="text-left py-3 pb-4 px-4 text-xs font-medium uppercase tracking-wider text-white/40">#</th>
+            <th className="text-left py-3 pb-4 px-4 text-xs font-medium uppercase tracking-wider text-white/40">Token</th>
+            <th className="text-right py-3 pb-4 px-4 text-xs font-medium uppercase tracking-wider text-white/40">Price</th>
+            <th className="text-right py-3 pb-4 px-4 text-xs font-medium uppercase tracking-wider text-white/40">MC / FDV</th>
+            <th className="text-right py-3 pb-4 px-4 text-xs font-medium uppercase tracking-wider text-white/40">24h Vol</th>
+            <th className="text-right py-3 pb-4 px-4 text-xs font-medium uppercase tracking-wider text-white/40">Liquidity</th>
+            <th className="text-right py-3 pb-4 px-4 text-xs font-medium uppercase tracking-wider text-white/40">Holders</th>
+            <th className="text-right py-3 pb-4 px-4 text-xs font-medium uppercase tracking-wider text-white/40">Fees Paid</th>
+            <th className="text-center py-3 pb-4 px-4 text-xs font-medium uppercase tracking-wider text-white/40">Last 24h</th>
+            <th className="py-3 pb-4 px-3"></th>
           </tr>
         </thead>
         <tbody>
           {tokens.map((t, i) => (
             <tr
               key={t.ticker}
-              className="border-b border-white/[0.03] last:border-b-0 rounded-xl transition-all duration-300 group"
-              style={{ backgroundImage: 'none' }}
-              onMouseEnter={(e) => { e.currentTarget.style.backgroundImage = 'linear-gradient(to right, rgba(255,255,255,0.03), transparent)'; }}
-              onMouseLeave={(e) => { e.currentTarget.style.backgroundImage = 'none'; }}
+              className="border-b border-white/5 last:border-b-0 transition-all duration-300 group hover:bg-white/[0.04] rounded-xl"
             >
-              <td className="py-5 px-4 text-xs font-mono tabular-nums text-white/30">{i + 1}</td>
+              <td className="py-5 px-4 text-sm font-mono tabular-nums text-white/30">{i + 1}</td>
               <td className="py-5 px-4">
                 <div className="flex items-center gap-3">
-                  <div className="w-9 h-9 rounded-full bg-white/[0.06] flex items-center justify-center text-[11px] font-bold shrink-0 border border-white/[0.06] text-white/60">
+                  <div className="w-10 h-10 rounded-full bg-white/[0.06] flex items-center justify-center text-xs font-bold shrink-0 border border-white/[0.06] text-white/60">
                     {t.ticker.slice(0, 2)}
                   </div>
                   <div className="flex flex-col gap-0.5">
                     <div className="flex items-center gap-1.5">
-                      <span className="text-white font-semibold" style={{ textShadow: '0 1px 2px rgba(0,0,0,0.5)' }}>{t.name}</span>
+                      <span className="text-white text-base font-bold" style={{ textShadow: '0 1px 2px rgba(0,0,0,0.5)' }}>{t.name}</span>
                       {t.verified && (
-                        <svg width="13" height="13" viewBox="0 0 22 22" className="shrink-0">
+                        <svg width="14" height="14" viewBox="0 0 22 22" className="shrink-0">
                           <path
                             d="M12.096 1.673c-.593-.635-1.599-.635-2.192 0L8.452 3.227c-.296.316-.714.49-1.147.474L5.18 3.63c-.867-.03-1.579.682-1.55 1.55l.072 2.125c.015.433-.158.851-.474 1.147L1.673 9.904c-.635.593-.635 1.599 0 2.192l1.554 1.452c.316.296.49.714.474 1.147L3.63 16.82c-.03.867.682 1.579 1.55 1.55l2.125-.072c.433-.015.851.158 1.147.474l1.452 1.555c.593.634 1.599.634 2.192 0l1.452-1.555c.296-.316.714-.49 1.147-.474l2.126.071c.867.03 1.579-.682 1.55-1.55l-.072-2.125c-.015-.433.158-.851.474-1.147l1.555-1.452c.634-.593.634-1.599 0-2.192l-1.555-1.452c-.316-.296-.49-.714-.474-1.147l.071-2.126c.03-.867-.682-1.579-1.55-1.55l-2.125.072c-.433.015-.851-.158-1.147-.474l-1.452-1.554zM6 11.39l3.74 3.74 6.2-6.77L14.47 7l-4.8 5.23-2.26-2.26L6 11.39z"
                             fill="#F97316"
@@ -81,48 +78,48 @@ export default function ExploreTokenTable() {
                         </svg>
                       )}
                     </div>
-                    <span className="text-xs text-white/35">{t.ticker} · {t.age}</span>
+                    <span className="text-sm text-white/50">{t.ticker} · {t.age}</span>
                   </div>
                 </div>
               </td>
               <td className="py-5 px-4 text-right">
                 <div className="flex flex-col items-end gap-0.5">
-                  <span className="text-white font-semibold font-mono tabular-nums" style={{ textShadow: '0 1px 2px rgba(0,0,0,0.5)' }}>{t.price}</span>
-                  <span className={`text-xs font-mono tabular-nums ${t.change >= 0 ? "text-emerald-400" : "text-rose-400"}`}>
+                  <span className="text-white text-base font-medium font-mono tabular-nums" style={{ textShadow: '0 1px 2px rgba(0,0,0,0.5)' }}>{t.price}</span>
+                  <span className={`text-sm font-mono tabular-nums ${t.change >= 0 ? "text-emerald-400" : "text-rose-400"}`}>
                     {t.change >= 0 ? "+" : ""}{t.change}%
                   </span>
                 </div>
               </td>
               <td className="py-5 px-4 text-right">
                 <div className="flex flex-col items-end gap-0.5">
-                  <span className="text-white/80 text-sm font-mono tabular-nums">{t.mc}</span>
-                  <span className="text-xs font-mono tabular-nums text-white/30">{t.fdv}</span>
+                  <span className="text-white text-base font-medium font-mono tabular-nums">{t.mc}</span>
+                  <span className="text-sm font-mono tabular-nums text-white/50">{t.fdv}</span>
                 </div>
               </td>
               <td className="py-5 px-4 text-right">
                 <div className="flex flex-col items-end gap-0.5">
-                  <span className="text-white/80 text-sm font-mono tabular-nums">{t.vol24}</span>
-                  <span className={`text-xs font-mono tabular-nums ${t.netVol.startsWith("+") ? "text-emerald-400" : "text-rose-400"}`}>
+                  <span className="text-white text-base font-medium font-mono tabular-nums">{t.vol24}</span>
+                  <span className={`text-sm font-mono tabular-nums ${t.netVol.startsWith("+") ? "text-emerald-400" : "text-rose-400"}`}>
                     {t.netVol}
                   </span>
                 </div>
               </td>
-              <td className="py-5 px-4 text-right text-white/80 text-sm font-mono tabular-nums">{t.liquidity}</td>
+              <td className="py-5 px-4 text-right text-white text-base font-medium font-mono tabular-nums">{t.liquidity}</td>
               <td className="py-5 px-4 text-right">
                 <div className="flex flex-col items-end gap-0.5">
-                  <span className="text-white/80 text-sm font-mono tabular-nums">{t.holders}</span>
-                  <span className={`text-xs font-mono tabular-nums ${t.holdersChange >= 0 ? "text-emerald-400" : "text-rose-400"}`}>
+                  <span className="text-white text-base font-medium font-mono tabular-nums">{t.holders}</span>
+                  <span className={`text-sm font-mono tabular-nums ${t.holdersChange >= 0 ? "text-emerald-400" : "text-rose-400"}`}>
                     {t.holdersChange >= 0 ? "+" : ""}{t.holdersChange}%
                   </span>
                 </div>
               </td>
-              <td className="py-5 px-4 text-right text-amber-400 text-sm font-medium font-mono tabular-nums">{t.feesPaid}</td>
+              <td className="py-5 px-4 text-right text-amber-400 text-base font-medium font-mono tabular-nums">{t.feesPaid}</td>
               <td className="py-5 px-4 flex items-center justify-center">
                 <SparklineChart data={t.spark} positive={t.change >= 0} />
               </td>
               <td className="py-5 px-3">
-                <button className="w-7 h-7 rounded-full bg-white/[0.04] hover:bg-white/[0.10] flex items-center justify-center transition-colors border border-white/[0.06]">
-                  <Plus className="w-3.5 h-3.5 text-white/50" />
+                <button className="w-8 h-8 rounded-full bg-white/[0.04] hover:bg-white/[0.10] flex items-center justify-center transition-colors border border-white/[0.06]">
+                  <Plus className="w-4 h-4 text-white/50" />
                 </button>
               </td>
             </tr>
