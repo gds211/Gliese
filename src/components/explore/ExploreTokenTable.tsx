@@ -41,82 +41,82 @@ export default function ExploreTokenTable() {
     <div className="w-full overflow-x-auto">
       <table className="w-full text-sm">
         <thead>
-          <tr className="border-b border-white/10 text-white/40 text-xs">
-            <th className="text-left py-2.5 px-3 font-medium">#</th>
-            <th className="text-left py-2.5 px-3 font-medium">Token</th>
-            <th className="text-right py-2.5 px-3 font-medium">Price</th>
-            <th className="text-right py-2.5 px-3 font-medium">MC / FDV</th>
-            <th className="text-right py-2.5 px-3 font-medium">24h Vol</th>
-            <th className="text-right py-2.5 px-3 font-medium">Liquidity</th>
-            <th className="text-right py-2.5 px-3 font-medium">Holders</th>
-            <th className="text-right py-2.5 px-3 font-medium">Fees Paid</th>
-            <th className="text-center py-2.5 px-3 font-medium">Last 24h</th>
-            <th className="py-2.5 px-2 font-medium"></th>
+          <tr className="border-b border-slate-700/30">
+            <th className="text-left py-3 px-4 text-[11px] font-semibold uppercase tracking-wider text-slate-400">#</th>
+            <th className="text-left py-3 px-4 text-[11px] font-semibold uppercase tracking-wider text-slate-400">Token</th>
+            <th className="text-right py-3 px-4 text-[11px] font-semibold uppercase tracking-wider text-slate-400">Price</th>
+            <th className="text-right py-3 px-4 text-[11px] font-semibold uppercase tracking-wider text-slate-400">MC / FDV</th>
+            <th className="text-right py-3 px-4 text-[11px] font-semibold uppercase tracking-wider text-slate-400">24h Vol</th>
+            <th className="text-right py-3 px-4 text-[11px] font-semibold uppercase tracking-wider text-slate-400">Liquidity</th>
+            <th className="text-right py-3 px-4 text-[11px] font-semibold uppercase tracking-wider text-slate-400">Holders</th>
+            <th className="text-right py-3 px-4 text-[11px] font-semibold uppercase tracking-wider text-slate-400">Fees Paid</th>
+            <th className="text-center py-3 px-4 text-[11px] font-semibold uppercase tracking-wider text-slate-400">Last 24h</th>
+            <th className="py-3 px-3"></th>
           </tr>
         </thead>
         <tbody>
           {tokens.map((t, i) => (
-            <tr key={t.ticker} className="border-b border-white/5 hover:bg-white/5 transition-colors">
-              <td className="py-3 px-3 text-white/30 text-xs">{i + 1}</td>
-              <td className="py-3 px-3">
-                <div className="flex items-center gap-2">
-                  <div className="w-7 h-7 rounded-full bg-white/10 flex items-center justify-center text-[10px] font-bold text-white/70 shrink-0">
+            <tr key={t.ticker} className="border-b border-slate-700/30 last:border-b-0 hover:bg-slate-800/40 transition-colors">
+              <td className="py-4 px-4 text-slate-500 text-xs">{i + 1}</td>
+              <td className="py-4 px-4">
+                <div className="flex items-center gap-3">
+                  <div className="w-8 h-8 rounded-full bg-slate-700/60 flex items-center justify-center text-[11px] font-bold text-slate-300 shrink-0 border border-slate-600/30">
                     {t.ticker.slice(0, 2)}
                   </div>
                   <div className="flex flex-col">
-                    <div className="flex items-center gap-1">
-                      <span className="text-white font-medium text-sm">{t.name}</span>
+                    <div className="flex items-center gap-1.5">
+                      <span className="text-white font-medium">{t.name}</span>
                       {t.verified && (
-                        <svg width="12" height="12" viewBox="0 0 22 22" className="shrink-0">
+                        <svg width="13" height="13" viewBox="0 0 22 22" className="shrink-0">
                           <path
                             d="M12.096 1.673c-.593-.635-1.599-.635-2.192 0L8.452 3.227c-.296.316-.714.49-1.147.474L5.18 3.63c-.867-.03-1.579.682-1.55 1.55l.072 2.125c.015.433-.158.851-.474 1.147L1.673 9.904c-.635.593-.635 1.599 0 2.192l1.554 1.452c.316.296.49.714.474 1.147L3.63 16.82c-.03.867.682 1.579 1.55 1.55l2.125-.072c.433-.015.851.158 1.147.474l1.452 1.555c.593.634 1.599.634 2.192 0l1.452-1.555c.296-.316.714-.49 1.147-.474l2.126.071c.867.03 1.579-.682 1.55-1.55l-.072-2.125c-.015-.433.158-.851.474-1.147l1.555-1.452c.634-.593.634-1.599 0-2.192l-1.555-1.452c-.316-.296-.49-.714-.474-1.147l.071-2.126c.03-.867-.682-1.579-1.55-1.55l-2.125.072c-.433.015-.851-.158-1.147-.474l-1.452-1.554zM6 11.39l3.74 3.74 6.2-6.77L14.47 7l-4.8 5.23-2.26-2.26L6 11.39z"
-                            fill="#829AAB"
+                            fill="#F97316"
                           />
                         </svg>
                       )}
                     </div>
-                    <span className="text-white/30 text-[10px]">{t.ticker} · {t.age}</span>
+                    <span className="text-slate-400 text-xs">{t.ticker} · {t.age}</span>
                   </div>
                 </div>
               </td>
-              <td className="py-3 px-3 text-right">
+              <td className="py-4 px-4 text-right">
                 <div className="flex flex-col items-end">
-                  <span className="text-white text-sm">{t.price}</span>
-                  <span className={`text-[10px] ${t.change >= 0 ? "text-green-400" : "text-red-400"}`}>
+                  <span className="text-white font-medium">{t.price}</span>
+                  <span className={`text-xs ${t.change >= 0 ? "text-emerald-400" : "text-rose-400"}`}>
                     {t.change >= 0 ? "+" : ""}{t.change}%
                   </span>
                 </div>
               </td>
-              <td className="py-3 px-3 text-right">
+              <td className="py-4 px-4 text-right">
                 <div className="flex flex-col items-end">
-                  <span className="text-white/80 text-sm">{t.mc}</span>
-                  <span className="text-white/30 text-[10px]">{t.fdv}</span>
+                  <span className="text-slate-200 text-sm">{t.mc}</span>
+                  <span className="text-slate-500 text-xs">{t.fdv}</span>
                 </div>
               </td>
-              <td className="py-3 px-3 text-right">
+              <td className="py-4 px-4 text-right">
                 <div className="flex flex-col items-end">
-                  <span className="text-white/80 text-sm">{t.vol24}</span>
-                  <span className={`text-[10px] ${t.netVol.startsWith("+") ? "text-green-400" : "text-red-400"}`}>
+                  <span className="text-slate-200 text-sm">{t.vol24}</span>
+                  <span className={`text-xs ${t.netVol.startsWith("+") ? "text-emerald-400" : "text-rose-400"}`}>
                     {t.netVol}
                   </span>
                 </div>
               </td>
-              <td className="py-3 px-3 text-right text-white/80 text-sm">{t.liquidity}</td>
-              <td className="py-3 px-3 text-right">
+              <td className="py-4 px-4 text-right text-slate-200 text-sm">{t.liquidity}</td>
+              <td className="py-4 px-4 text-right">
                 <div className="flex flex-col items-end">
-                  <span className="text-white/80 text-sm">{t.holders}</span>
-                  <span className={`text-[10px] ${t.holdersChange >= 0 ? "text-green-400" : "text-red-400"}`}>
+                  <span className="text-slate-200 text-sm">{t.holders}</span>
+                  <span className={`text-xs ${t.holdersChange >= 0 ? "text-emerald-400" : "text-rose-400"}`}>
                     {t.holdersChange >= 0 ? "+" : ""}{t.holdersChange}%
                   </span>
                 </div>
               </td>
-              <td className="py-3 px-3 text-right text-amber-400/90 text-sm font-medium">{t.feesPaid}</td>
-              <td className="py-3 px-2">
+              <td className="py-4 px-4 text-right text-amber-400 text-sm font-medium">{t.feesPaid}</td>
+              <td className="py-4 px-3">
                 <SparklineChart data={t.spark} positive={t.change >= 0} />
               </td>
-              <td className="py-3 px-2">
-                <button className="w-7 h-7 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center transition-colors">
-                  <Plus className="w-3.5 h-3.5 text-white/60" />
+              <td className="py-4 px-3">
+                <button className="w-7 h-7 rounded-full bg-slate-700/50 hover:bg-slate-600/60 flex items-center justify-center transition-colors border border-slate-600/30">
+                  <Plus className="w-3.5 h-3.5 text-white/70" />
                 </button>
               </td>
             </tr>

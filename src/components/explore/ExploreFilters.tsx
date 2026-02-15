@@ -8,31 +8,31 @@ export default function ExploreFilters() {
   const [activeTime, setActiveTime] = useState("24h");
 
   return (
-    <div className="flex items-center justify-between px-4 py-3 gap-3 flex-wrap">
+    <div className="flex items-center justify-between px-5 py-4 gap-3 flex-wrap border-b border-slate-700/30">
       <div className="flex items-center gap-2 flex-wrap">
         {categories.map((c) => (
           <button
             key={c}
             onClick={() => setActiveCategory(c)}
-            className={`px-3 py-1.5 rounded-full text-xs font-medium transition-colors ${
+            className={`px-3.5 py-1.5 rounded-full text-xs font-semibold tracking-wide transition-colors ${
               activeCategory === c
-                ? "bg-white/20 text-white"
-                : "bg-white/5 text-white/50 hover:bg-white/10 hover:text-white/70"
+                ? "bg-orange-500/20 text-orange-400 border border-orange-500/40"
+                : "bg-slate-800/50 text-slate-300 hover:bg-slate-700/50 hover:text-slate-200 border border-transparent"
             }`}
           >
             {c}
           </button>
         ))}
       </div>
-      <div className="flex items-center gap-1 bg-white/5 rounded-full p-0.5">
+      <div className="flex items-center gap-1 bg-slate-800/50 rounded-full p-0.5 border border-slate-700/30">
         {timeRanges.map((t) => (
           <button
             key={t}
             onClick={() => setActiveTime(t)}
-            className={`px-2.5 py-1 rounded-full text-xs font-medium transition-colors ${
+            className={`px-2.5 py-1 rounded-full text-xs font-semibold tracking-wide transition-colors ${
               activeTime === t
-                ? "bg-white/20 text-white"
-                : "text-white/40 hover:text-white/60"
+                ? "bg-slate-700/60 text-white"
+                : "text-slate-400 hover:text-slate-200"
             }`}
           >
             {t}
