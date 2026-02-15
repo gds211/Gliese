@@ -40,32 +40,32 @@ export default function ExploreTokenTable() {
   return (
     <div className="w-full overflow-x-auto">
       <table className="w-full text-sm">
-        <thead className="sticky top-0 z-10" style={{ background: 'rgba(0, 0, 0, 0.6)', backdropFilter: 'blur(10px)' }}>
-          <tr className="border-b border-white/10">
-            <th className="text-left py-3 px-4 text-[11px] font-semibold uppercase tracking-wider text-slate-500">#</th>
-            <th className="text-left py-3 px-4 text-[11px] font-semibold uppercase tracking-wider text-slate-500">Token</th>
-            <th className="text-right py-3 px-4 text-[11px] font-semibold uppercase tracking-wider text-slate-500">Price</th>
-            <th className="text-right py-3 px-4 text-[11px] font-semibold uppercase tracking-wider text-slate-500">MC / FDV</th>
-            <th className="text-right py-3 px-4 text-[11px] font-semibold uppercase tracking-wider text-slate-500">24h Vol</th>
-            <th className="text-right py-3 px-4 text-[11px] font-semibold uppercase tracking-wider text-slate-500">Liquidity</th>
-            <th className="text-right py-3 px-4 text-[11px] font-semibold uppercase tracking-wider text-slate-500">Holders</th>
-            <th className="text-right py-3 px-4 text-[11px] font-semibold uppercase tracking-wider text-slate-500">Fees Paid</th>
-            <th className="text-center py-3 px-4 text-[11px] font-semibold uppercase tracking-wider text-slate-500">Last 24h</th>
+        <thead className="sticky top-0 z-10" style={{ background: 'rgba(15, 20, 30, 0.7)', backdropFilter: 'blur(16px)' }}>
+          <tr className="border-b border-white/[0.04]">
+            <th className="text-left py-3 px-5 text-[11px] font-medium uppercase tracking-wider" style={{ color: 'rgba(255,255,255,0.5)' }}>#</th>
+            <th className="text-left py-3 px-5 text-[11px] font-medium uppercase tracking-wider" style={{ color: 'rgba(255,255,255,0.5)' }}>Token</th>
+            <th className="text-right py-3 px-5 text-[11px] font-medium uppercase tracking-wider" style={{ color: 'rgba(255,255,255,0.5)' }}>Price</th>
+            <th className="text-right py-3 px-5 text-[11px] font-medium uppercase tracking-wider" style={{ color: 'rgba(255,255,255,0.5)' }}>MC / FDV</th>
+            <th className="text-right py-3 px-5 text-[11px] font-medium uppercase tracking-wider" style={{ color: 'rgba(255,255,255,0.5)' }}>24h Vol</th>
+            <th className="text-right py-3 px-5 text-[11px] font-medium uppercase tracking-wider" style={{ color: 'rgba(255,255,255,0.5)' }}>Liquidity</th>
+            <th className="text-right py-3 px-5 text-[11px] font-medium uppercase tracking-wider" style={{ color: 'rgba(255,255,255,0.5)' }}>Holders</th>
+            <th className="text-right py-3 px-5 text-[11px] font-medium uppercase tracking-wider" style={{ color: 'rgba(255,255,255,0.5)' }}>Fees Paid</th>
+            <th className="text-center py-3 px-5 text-[11px] font-medium uppercase tracking-wider" style={{ color: 'rgba(255,255,255,0.5)' }}>Last 24h</th>
             <th className="py-3 px-3"></th>
           </tr>
         </thead>
         <tbody>
           {tokens.map((t, i) => (
-             <tr key={t.ticker} className="border-b border-white/5 last:border-b-0 hover:bg-white/[0.05] transition-colors">
-              <td className="py-5 px-4 text-slate-500 text-xs tabular-nums">{i + 1}</td>
-              <td className="py-5 px-4">
+             <tr key={t.ticker} className="border-b border-white/[0.04] last:border-b-0 hover:bg-white/[0.04] transition-all duration-200 rounded-xl">
+              <td className="py-6 px-5 text-xs tabular-nums" style={{ color: 'rgba(255,255,255,0.4)' }}>{i + 1}</td>
+              <td className="py-6 px-5">
                 <div className="flex items-center gap-3">
-                  <div className="w-8 h-8 rounded-full bg-slate-700/60 flex items-center justify-center text-[11px] font-bold text-slate-300 shrink-0 border border-slate-600/30">
+                  <div className="w-9 h-9 rounded-full bg-white/[0.08] flex items-center justify-center text-[11px] font-bold shrink-0 border border-white/[0.06]" style={{ color: 'rgba(255,255,255,0.7)' }}>
                     {t.ticker.slice(0, 2)}
                   </div>
-                  <div className="flex flex-col">
+                  <div className="flex flex-col gap-0.5">
                     <div className="flex items-center gap-1.5">
-                      <span className="text-white font-medium">{t.name}</span>
+                      <span className="text-white font-semibold" style={{ textShadow: '0 1px 2px rgba(0,0,0,0.5)' }}>{t.name}</span>
                       {t.verified && (
                         <svg width="13" height="13" viewBox="0 0 22 22" className="shrink-0">
                           <path
@@ -75,48 +75,48 @@ export default function ExploreTokenTable() {
                         </svg>
                       )}
                     </div>
-                    <span className="text-slate-400 text-xs">{t.ticker} · {t.age}</span>
+                    <span className="text-xs" style={{ color: 'rgba(255,255,255,0.4)' }}>{t.ticker} · {t.age}</span>
                   </div>
                 </div>
               </td>
-              <td className="py-5 px-4 text-right">
-                <div className="flex flex-col items-end">
-                  <span className="text-white font-medium tabular-nums">{t.price}</span>
+              <td className="py-6 px-5 text-right">
+                <div className="flex flex-col items-end gap-0.5">
+                  <span className="text-white font-semibold tabular-nums" style={{ textShadow: '0 1px 2px rgba(0,0,0,0.5)' }}>{t.price}</span>
                   <span className={`text-xs tabular-nums ${t.change >= 0 ? "text-emerald-400" : "text-rose-400"}`}>
                     {t.change >= 0 ? "+" : ""}{t.change}%
                   </span>
                 </div>
               </td>
-              <td className="py-5 px-4 text-right">
-                <div className="flex flex-col items-end">
-                  <span className="text-slate-200 text-sm tabular-nums">{t.mc}</span>
-                  <span className="text-slate-500 text-xs tabular-nums">{t.fdv}</span>
+              <td className="py-6 px-5 text-right">
+                <div className="flex flex-col items-end gap-0.5">
+                  <span className="text-white/90 text-sm tabular-nums">{t.mc}</span>
+                  <span className="text-xs tabular-nums" style={{ color: 'rgba(255,255,255,0.4)' }}>{t.fdv}</span>
                 </div>
               </td>
-              <td className="py-5 px-4 text-right">
-                <div className="flex flex-col items-end">
-                  <span className="text-slate-200 text-sm tabular-nums">{t.vol24}</span>
+              <td className="py-6 px-5 text-right">
+                <div className="flex flex-col items-end gap-0.5">
+                  <span className="text-white/90 text-sm tabular-nums">{t.vol24}</span>
                   <span className={`text-xs tabular-nums ${t.netVol.startsWith("+") ? "text-emerald-400" : "text-rose-400"}`}>
                     {t.netVol}
                   </span>
                 </div>
               </td>
-              <td className="py-5 px-4 text-right text-slate-200 text-sm tabular-nums">{t.liquidity}</td>
-              <td className="py-5 px-4 text-right">
-                <div className="flex flex-col items-end">
-                  <span className="text-slate-200 text-sm tabular-nums">{t.holders}</span>
+              <td className="py-6 px-5 text-right text-white/90 text-sm tabular-nums">{t.liquidity}</td>
+              <td className="py-6 px-5 text-right">
+                <div className="flex flex-col items-end gap-0.5">
+                  <span className="text-white/90 text-sm tabular-nums">{t.holders}</span>
                   <span className={`text-xs tabular-nums ${t.holdersChange >= 0 ? "text-emerald-400" : "text-rose-400"}`}>
                     {t.holdersChange >= 0 ? "+" : ""}{t.holdersChange}%
                   </span>
                 </div>
               </td>
-              <td className="py-5 px-4 text-right text-amber-400 text-sm font-medium tabular-nums">{t.feesPaid}</td>
-              <td className="py-5 px-3 flex items-center justify-center">
+              <td className="py-6 px-5 text-right text-amber-400 text-sm font-medium tabular-nums">{t.feesPaid}</td>
+              <td className="py-6 px-4 flex items-center justify-center">
                 <SparklineChart data={t.spark} positive={t.change >= 0} />
               </td>
-              <td className="py-5 px-3">
-                <button className="w-7 h-7 rounded-full bg-slate-700/50 hover:bg-slate-600/60 flex items-center justify-center transition-colors border border-slate-600/30">
-                  <Plus className="w-3.5 h-3.5 text-white/70" />
+              <td className="py-6 px-3">
+                <button className="w-7 h-7 rounded-full bg-white/[0.06] hover:bg-white/[0.12] flex items-center justify-center transition-colors border border-white/[0.06]">
+                  <Plus className="w-3.5 h-3.5 text-white/60" />
                 </button>
               </td>
             </tr>
