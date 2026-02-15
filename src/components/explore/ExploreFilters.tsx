@@ -8,31 +8,34 @@ export default function ExploreFilters() {
   const [activeTime, setActiveTime] = useState("24h");
 
   return (
-    <div className="flex items-center justify-between px-6 py-4 gap-3 flex-wrap border-b border-white/[0.04]">
-      <div className="flex items-center gap-2 flex-wrap">
+    <div className="flex items-center justify-between pb-5 mb-5 gap-3 flex-wrap border-b border-white/[0.06]">
+      <div className="flex items-center gap-6">
         {categories.map((c) => (
           <button
             key={c}
             onClick={() => setActiveCategory(c)}
-            className={`px-3.5 py-1.5 rounded-full text-xs font-semibold tracking-wide transition-colors ${
+            className={`relative pb-2 text-sm font-medium tracking-wide transition-colors ${
               activeCategory === c
-                ? "bg-orange-500/20 text-orange-400 border border-orange-500/40"
-                : "bg-slate-800/50 text-slate-300 hover:bg-slate-700/50 hover:text-slate-200 border border-transparent"
+                ? "text-white"
+                : "text-white/40 hover:text-white/70"
             }`}
           >
             {c}
+            {activeCategory === c && (
+              <span className="absolute bottom-0 left-0 right-0 h-[2px] bg-orange-500 rounded-full" />
+            )}
           </button>
         ))}
       </div>
-      <div className="flex items-center gap-1 bg-slate-800/50 rounded-full p-0.5 border border-slate-700/30">
+      <div className="flex items-center gap-1 rounded-lg p-0.5 border border-white/[0.06]">
         {timeRanges.map((t) => (
           <button
             key={t}
             onClick={() => setActiveTime(t)}
-            className={`px-2.5 py-1 rounded-full text-xs font-semibold tracking-wide transition-colors ${
+            className={`px-3 py-1.5 rounded-md text-xs font-medium tracking-wide transition-colors ${
               activeTime === t
-                ? "bg-slate-700/60 text-white"
-                : "text-slate-400 hover:text-slate-200"
+                ? "bg-white/[0.08] text-white"
+                : "text-white/40 hover:text-white/60"
             }`}
           >
             {t}
