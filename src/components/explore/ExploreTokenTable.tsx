@@ -40,8 +40,8 @@ export default function ExploreTokenTable() {
   return (
     <div className="w-full overflow-x-auto">
       <table className="w-full text-sm">
-        <thead className="sticky top-0 z-10 bg-[#080D15]">
-          <tr className="border-b border-slate-700/40">
+        <thead className="sticky top-0 z-10" style={{ background: 'rgba(0, 0, 0, 0.6)', backdropFilter: 'blur(10px)' }}>
+          <tr className="border-b border-white/10">
             <th className="text-left py-3 px-4 text-[11px] font-semibold uppercase tracking-wider text-slate-500">#</th>
             <th className="text-left py-3 px-4 text-[11px] font-semibold uppercase tracking-wider text-slate-500">Token</th>
             <th className="text-right py-3 px-4 text-[11px] font-semibold uppercase tracking-wider text-slate-500">Price</th>
@@ -56,7 +56,7 @@ export default function ExploreTokenTable() {
         </thead>
         <tbody>
           {tokens.map((t, i) => (
-             <tr key={t.ticker} className="border-b border-slate-700/20 last:border-b-0 hover:bg-slate-800/30 transition-colors">
+             <tr key={t.ticker} className="border-b border-white/5 last:border-b-0 hover:bg-white/[0.05] transition-colors">
               <td className="py-5 px-4 text-slate-500 text-xs tabular-nums">{i + 1}</td>
               <td className="py-5 px-4">
                 <div className="flex items-center gap-3">
