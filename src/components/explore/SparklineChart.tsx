@@ -15,7 +15,7 @@ export default function SparklineChart({ data, positive, width = 80, height = 28
         type="monotone"
         dataKey="v"
         stroke={positive ? "#22c55e" : "#ef4444"}
-        strokeWidth={1.5}
+        strokeWidth={2}
         dot={false}
         isAnimationActive={false}
       />
