@@ -8,7 +8,7 @@ export default function ExploreFilters() {
   const [activeTime, setActiveTime] = useState("24h");
 
   return (
-    <div className="flex items-center justify-between px-5 py-4 gap-3 flex-wrap border-b border-slate-700/30">
+    <div className="flex items-center justify-between px-6 py-4 gap-3 flex-wrap border-b border-white/[0.04]">
       <div className="flex items-center gap-2 flex-wrap">
         {categories.map((c) => (
           <button
