@@ -1,19 +1,19 @@
-import ExploreFilters from "./explore/ExploreFilters";
-import ExploreTokenTable from "./explore/ExploreTokenTable";
-
 const ExploreInterface = () => {
   return (
-    <div
-      className="absolute inset-0 top-[73px] z-20 w-full min-h-screen m-0 p-0 rounded-none border-t border-white/5 overflow-y-auto scrollbar-hide"
-      style={{
-        background: 'rgba(11, 14, 20, 0.30)',
-        backdropFilter: 'blur(12px)',
-        WebkitBackdropFilter: 'blur(12px)',
-      }}
-    >
-      <div className="max-w-6xl mx-auto w-full px-6 pt-12 pb-8">
-        <ExploreFilters />
-        <ExploreTokenTable />
+    <div className="absolute inset-0 top-[73px] z-20">
+      {/* Glassmorphism Container - full width, edge to edge */}
+      <div className="relative w-full h-full">
+        {/* Frosted Glass Effect - highly transparent with strong blur */}
+        <div className="absolute inset-0 bg-white/10 backdrop-blur-xl" />
+        
+        {/* Radial darkening to reduce center brightness */}
+        <div 
+          className="absolute inset-0 pointer-events-none"
+          style={{ background: 'radial-gradient(ellipse at center, rgba(0,0,0,0.3) 0%, transparent 70%)' }}
+        />
+        
+        {/* Subtle top edge highlight for glass depth */}
+        <div className="absolute inset-x-0 top-0 h-px bg-white/20" />
       </div>
     </div>
   );
