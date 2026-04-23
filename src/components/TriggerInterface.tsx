@@ -683,7 +683,7 @@ const filteredTokens: TokenLite[] = useMemo(() => {
           <div className="flex items-center gap-2">
             <div className="flex items-center gap-1 border-2 border-border px-2 py-1 rounded-lg">
               <img src={glieseLogo} alt="Gliese" className="w-4 h-4 rounded-lg" />
-              <span>Wrapdrive v1.1</span>
+              <span>Gliese AMM</span>
             </div>
             <span>0.1% FEE</span>
           </div>

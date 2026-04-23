@@ -1,4 +1,4 @@
-const ExploreInterface = () => {
+const PoolsInterface = () => {
   return (
     <div className="absolute inset-0 top-[73px] z-20">
       {/* Glassmorphism Container - full width, edge to edge */}
@@ -19,4 +19,4 @@ const ExploreInterface = () => {
   );
 };
 
-export default ExploreInterface;
+export default PoolsInterface;
