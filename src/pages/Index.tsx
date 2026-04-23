@@ -1,32 +1,20 @@
 import { useState, useEffect, useCallback } from "react";
 import Navigation from "@/components/Navigation";
 import SwapInterface from "@/components/SwapInterface";
-import BridgeInterface from "@/components/BridgeInterface";
 import PoolsInterface from "@/components/PoolsInterface";
 import EmptyCard from "@/components/EmptyCard";
 import TopLoadingBar from "@/components/TopLoadingBar";
 import cosmicBackground from "@/assets/cosmic-background.jpg";
-import bridgeIcon from "@/assets/bridge-icon.svg";
-import wormholeLogo from "@/assets/wormhole-logo.svg";
 
 const Index = () => {
-  const [navSection, setNavSection] = useState<"Swap" | "Bridge" | "Pools">("Swap");
-  const [pendingSection, setPendingSection] = useState<"Swap" | "Bridge" | "Pools" | null>(null);
+  const [navSection, setNavSection] = useState<"Swap" | "Pools">("Swap");
+  const [pendingSection, setPendingSection] = useState<"Swap" | "Pools" | null>(null);
   const [isLoadingTab, setIsLoadingTab] = useState(false);
   const [activeTab, setActiveTab] = useState<"instant" | "trigger" | "recurring">("instant");
   const [pendingTab, setPendingTab] = useState<"instant" | "trigger" | "recurring" | null>(null);
   const [isLoadingInnerTab, setIsLoadingInnerTab] = useState(false);
   const [showPanel, setShowPanel] = useState(false);
   const [isExiting, setIsExiting] = useState(false);
-
-  // Preload bridge assets for instant display when switching tabs
-  useEffect(() => {
-    const preloadImages = [bridgeIcon, wormholeLogo];
-    preloadImages.forEach((src) => {
-      const img = new Image();
-      img.src = src;
-    });
-  }, []);
 
   useEffect(() => {
     if (navSection === "Swap" && activeTab === "trigger") {
@@ -44,7 +32,7 @@ const Index = () => {
   }, [navSection, activeTab, showPanel]);
 
   // Handle pending navigation
-  const handleNavPending = useCallback((section: "Swap" | "Bridge" | "Pools") => {
+  const handleNavPending = useCallback((section: "Swap" | "Pools") => {
     if (section === navSection) return;
     setPendingSection(section);
     setIsLoadingTab(true);
@@ -121,8 +109,6 @@ const Index = () => {
                 </div>
               )}
             </div>
-          ) : navSection === "Bridge" ? (
-            <BridgeInterface />
           ) : null}
         </div>
         
