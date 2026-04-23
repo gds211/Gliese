@@ -39,7 +39,7 @@ const Navigation = ({ onNavChange, onNavPending, currentSection = "Swap", pendin
           alt="Gliese"
           className="w-8 h-8 rounded-full shadow-glow-cosmic"
         />
-        <span className="text-xl font-medium text-foreground" style={{ fontFamily: 'Inter, sans-serif' }}>Gliese</span>
+        <span className="text-xl font-semibold text-foreground" style={{ fontFamily: 'Inter, sans-serif' }}>Gliese</span>
       </div>
 
       {/* Navigation Links */}
