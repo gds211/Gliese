@@ -5,10 +5,10 @@ import WalletButton from "@/components/WalletButton";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 
 interface NavigationProps {
-  onNavChange?: (section: "Swap" | "Bridge" | "Explore") => void;
-  onNavPending?: (section: "Swap" | "Bridge" | "Explore") => void;
-  currentSection?: "Swap" | "Bridge" | "Explore";
-  pendingSection?: "Swap" | "Bridge" | "Explore" | null;
+  onNavChange?: (section: "Swap" | "Bridge" | "Pools") => void;
+  onNavPending?: (section: "Swap" | "Bridge" | "Pools") => void;
+  currentSection?: "Swap" | "Bridge" | "Pools";
+  pendingSection?: "Swap" | "Bridge" | "Pools" | null;
 }
 
 const Navigation = ({ onNavChange, onNavPending, currentSection = "Swap", pendingSection }: NavigationProps) => {
@@ -17,14 +17,14 @@ const Navigation = ({ onNavChange, onNavPending, currentSection = "Swap", pendin
 
   const handleTabClick = (name: string) => {
     if (name === currentSection) return; // Already on this tab
-    if (onNavPending && (name === "Swap" || name === "Bridge" || name === "Explore")) {
+    if (onNavPending && (name === "Swap" || name === "Bridge" || name === "Pools")) {
       onNavPending(name);
     }
   };
 
   const navItems = [
     { name: "Swap", href: "#", available: true },
-    { name: "Explore", href: "#", available: true },
+    { name: "Pools", href: "#", available: true },
     { name: "Perps", href: "#", available: false },
     { name: "Markets", href: "#", available: false },
     { name: "Bridge", href: "#", available: true },
