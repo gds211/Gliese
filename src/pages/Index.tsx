@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from "react";
 import Navigation from "@/components/Navigation";
 import SwapInterface from "@/components/SwapInterface";
 import BridgeInterface from "@/components/BridgeInterface";
-import ExploreInterface from "@/components/ExploreInterface";
+import PoolsInterface from "@/components/PoolsInterface";
 import EmptyCard from "@/components/EmptyCard";
 import TopLoadingBar from "@/components/TopLoadingBar";
 import cosmicBackground from "@/assets/cosmic-background.jpg";
@@ -10,8 +10,8 @@ import bridgeIcon from "@/assets/bridge-icon.svg";
 import wormholeLogo from "@/assets/wormhole-logo.svg";
 
 const Index = () => {
-  const [navSection, setNavSection] = useState<"Swap" | "Bridge" | "Explore">("Swap");
-  const [pendingSection, setPendingSection] = useState<"Swap" | "Bridge" | "Explore" | null>(null);
+  const [navSection, setNavSection] = useState<"Swap" | "Bridge" | "Pools">("Swap");
+  const [pendingSection, setPendingSection] = useState<"Swap" | "Bridge" | "Pools" | null>(null);
   const [isLoadingTab, setIsLoadingTab] = useState(false);
   const [activeTab, setActiveTab] = useState<"instant" | "trigger" | "recurring">("instant");
   const [pendingTab, setPendingTab] = useState<"instant" | "trigger" | "recurring" | null>(null);
@@ -44,7 +44,7 @@ const Index = () => {
   }, [navSection, activeTab, showPanel]);
 
   // Handle pending navigation
-  const handleNavPending = useCallback((section: "Swap" | "Bridge" | "Explore") => {
+  const handleNavPending = useCallback((section: "Swap" | "Bridge" | "Pools") => {
     if (section === navSection) return;
     setPendingSection(section);
     setIsLoadingTab(true);
@@ -126,8 +126,8 @@ const Index = () => {
           ) : null}
         </div>
         
-        {/* Explore Interface - Liquid Glass Overlay */}
-        {navSection === "Explore" && <ExploreInterface />}
+        {/* Pools Interface - Liquid Glass Overlay */}
+        {navSection === "Pools" && <PoolsInterface />}
       </div>
     </div>
   );
