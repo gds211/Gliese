@@ -28,7 +28,7 @@ const Navigation = ({ onNavChange, onNavPending, currentSection = "Swap", pendin
   ];
 
   return (
-    <nav className="flex items-center justify-between px-6 py-4 backdrop-blur-sm border-b-[0.3px] border-border">
+    <nav className="relative flex items-center justify-between px-6 py-4 backdrop-blur-sm after:absolute after:left-0 after:right-0 after:bottom-0 after:h-px after:bg-border after:origin-bottom after:[transform:scaleY(0.5)]">
       {/* Left group: Logo + Navigation Links */}
       <div className="flex items-center gap-12">
         <div className="flex items-center gap-3 -translate-y-0.5">
