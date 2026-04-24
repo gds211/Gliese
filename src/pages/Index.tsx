@@ -90,8 +90,8 @@ const Index = () => {
         />
         
         {/* Main Content Area */}
-        <div className="flex justify-center items-start pt-[calc(50vh-300px)] min-h-[calc(100vh-80px)]">
-          {navSection === "Swap" ? (
+        {navSection === "Swap" && (
+          <div className="flex justify-center items-start pt-[calc(50vh-300px)] min-h-[calc(100vh-80px)]">
             <div className="relative">
               {/* Main Swap Card - always in the same position */}
               <SwapInterface 
@@ -109,8 +109,8 @@ const Index = () => {
                 </div>
               )}
             </div>
-          ) : null}
-        </div>
+          </div>
+        )}
         
         {/* Pools Interface - Liquid Glass Overlay */}
         {navSection === "Pools" && <PoolsInterface />}
