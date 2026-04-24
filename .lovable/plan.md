@@ -1,24 +1,26 @@
 
 
-## Plan: Make navbar divider clearly visible across full width (without changing width or color)
+## Plan: Make the navbar divider line slightly thicker
 
-### Problem
-The current divider uses `border-b-[0.3px] border-border`. The `0.3px` width is sub-pixel and renders inconsistently — on many displays it's partially or fully invisible, and the rendering can vary across the width of the line. The user wants it clearly visible everywhere, but **without** making it thicker or changing its color.
-
-### Approach
-Keep the existing visual weight (`0.3px`) and color (`border-border`) intentions, but switch from a CSS `border` (which suffers from sub-pixel rendering issues) to a crisp 1-device-pixel line that always renders fully across the entire surface.
+### Current state
+The divider is a pseudo-element hairline on the `<nav>` in `src/components/Navigation.tsx`:
+```
+after:absolute after:left-0 after:right-0 after:bottom-0
+after:h-px after:bg-border
+after:origin-bottom after:[transform:scaleY(0.5)]
+```
+The `scaleY(0.5)` shrinks the 1px line down to ~0.5px visual thickness, which is what makes it look very thin.
 
 ### Change
-**`src/components/Navigation.tsx`** — Replace the bottom border on the `<nav>` with a pseudo-element hairline:
+**`src/components/Navigation.tsx`** — Remove the `scaleY(0.5)` shrink so the line renders at its natural 1px thickness (roughly double its current visual weight, but still a clean hairline — not bulky).
 
-- Remove `border-b-[0.3px] border-border` from the `<nav>` element.
-- Add `relative` to the `<nav>` and an `after:` pseudo-element that:
-  - Spans the full width: `after:absolute after:left-0 after:right-0 after:bottom-0`
-  - Is exactly 1 physical pixel tall on all displays: `after:h-px`
-  - Uses the same color token as before: `after:bg-border`
-  - On high-DPI screens, scale it down so the *visual* thickness matches the original ~0.3px intent: `after:[transform:scaleY(0.5)] after:origin-bottom`
+- Remove `after:origin-bottom after:[transform:scaleY(0.5)]`
+- Keep everything else the same:
+  - `after:h-px` (1px tall)
+  - `after:bg-border` (same color as before — unchanged)
+  - `after:absolute after:left-0 after:right-0 after:bottom-0` (still spans the full width edge-to-edge)
 
-This guarantees the line paints uniformly across the full width of the page (no sub-pixel gaps), while preserving the same hairline appearance and the existing `border` color.
+Result: the line stays the same color and still spans the entire width uniformly, but is a bit thicker and therefore more visible.
 
 ### Files Modified
 - `src/components/Navigation.tsx`
