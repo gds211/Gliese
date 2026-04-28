@@ -1,42 +1,32 @@
+## Plan: Lock navbar in place, expand Pools list to bottom, add 4 more pools
 
-
-## Plan: Align Pools tab divider with Swap tab divider
+### Problem
+1. The navbar (Gliese logo + nav pill + Connect Wallet) scrolls with the page on the Pools tab instead of staying pinned to the top.
+2. The "All Pools" card doesn't reach the bottom of the screen — there's a visible gap.
+3. Only 6 pools exist; user wants 4 more (10 total).
 
 ### Root cause
-On the Swap tab, the only divider visible is the navbar's own `after:` hairline (`bg-border`, drawn at the bottom of `<nav>`).
-
-On the Pools tab, `PoolsInterface` is rendered as an overlay positioned at a **hardcoded `top-[73px]`** and includes its **own top edge highlight line**:
-```tsx
-<div className="absolute inset-x-0 top-0 h-px bg-white/20" />
-```
-This produces a second, brighter line at a slightly different vertical position than the real navbar divider — which is what the user perceives as the divider "getting higher" / shifting when switching tabs.
+- In `src/pages/Index.tsx`, the page root is `min-h-screen` and the `Navigation` component is just a normal in-flow `<nav>`. When `PoolsInterface` (currently `h-[calc(100vh-65px)]`) is taller than the actual remaining viewport (because the navbar is not exactly 65px tall), the page itself becomes scrollable, and the navbar scrolls away with it.
+- The `h-[calc(100vh-65px)]` magic number doesn't match the real navbar height, leaving a gap at the bottom (or causing overflow).
 
 ### Fix
-**`src/components/PoolsInterface.tsx`** — Stop drawing a competing divider and stop relying on a hardcoded offset, so the navbar's own `after:` divider remains the single, consistent divider in both tabs at exactly the same height.
 
-Concrete changes:
-1. **Remove the duplicate divider line** inside `PoolsInterface`:
-   - Delete `<div className="absolute inset-x-0 top-0 h-px bg-white/20" />`.
-2. **Remove the hardcoded `top-[73px]` offset** so the Pools overlay no longer depends on guessing the navbar's exact pixel height. Instead, mount it below the navbar using normal flow.
+**1. `src/pages/Index.tsx`**
+- Change the root wrapper from `min-h-screen relative overflow-hidden` to `h-screen relative overflow-hidden flex flex-col` so the page is locked to viewport height and lays out vertically.
+- Change the inner content wrapper (`<div className="relative z-10">`) to `relative z-10 flex-1 min-h-0 flex flex-col` so it fills remaining space below the navbar.
+- Wrap the `Navigation` in a `flex-shrink-0` container (or apply `shrink-0` directly) so it never compresses.
+- Wrap the Swap and Pools content areas in a `flex-1 min-h-0` container so they get exactly the leftover height.
 
-### Implementation approach for (2)
-Two equivalent options — I'll go with **Option A** because it requires no changes to `Index.tsx`:
-
-- **Option A (recommended):** Change `PoolsInterface`'s root from `absolute inset-0 top-[73px] z-20` to `relative w-full h-[calc(100vh-theme_navbar_height)] z-20`. Since the navbar is rendered above it in normal document flow inside `<div className="relative z-10">`, using `relative` positioning will automatically place Pools immediately below the navbar — at the exact pixel where the navbar's `after:` divider lives — regardless of the navbar's actual height. The height becomes `min-h-[calc(100vh-73px)]` replaced by simply `flex-1` / a min-height that fills the remaining viewport.
-
-  Concretely: change root wrapper to:
-  ```tsx
-  <div className="relative w-full min-h-[calc(100vh-65px)] z-20">
-  ```
-  and remove the inner `<div className="relative w-full h-full">` wrapper-only-needed-for-absolute-positioning (keep the children but flatten one level), or keep it and switch the children to fill `h-full`.
-
-- **Option B (fallback if Option A causes layout regressions for the Swap content):** keep `absolute` but anchor the top using `top-full` from the navbar instead of `top-[73px]`. This requires moving `<PoolsInterface>` to render as a sibling **inside** the navbar's parent flex/relative container. More invasive, so prefer Option A.
+**2. `src/components/PoolsInterface.tsx`**
+- Replace the hardcoded `h-[calc(100vh-65px)]` with `h-full` (now that the parent gives it the correct remaining height automatically).
+- Keep the existing internal layout: header is `flex-shrink-0`, the table card is `flex-1 min-h-0 flex flex-col`, and the rows area is `flex-1 min-h-0 overflow-y-auto`. This already guarantees only the rows scroll.
+- Add 4 more entries to the `POOLS` array (e.g. `LINK/ETH`, `ARB/USDC`, `MATIC/USDT`, `SOL/USDC`) with realistic spread/TVL/volume/fees/APR values and matching gradient colors, bringing the total to 10 pools.
 
 ### Result
-- The navbar's `after:bg-border` hairline is the **only** divider in both tabs.
-- It stays at the **exact same y-position** when switching between Swap and Pools (because the Pools overlay no longer overlaps the navbar nor draws its own line).
-- No color, thickness, or styling changes to the divider itself.
+- Logo, nav pill, and Connect Wallet stay perfectly pinned at the top — no movement when scrolling the pool list.
+- The "All Pools" card stretches all the way down to touch the bottom edge of the screen on every viewport size (no more hardcoded 65px guess).
+- 10 pools are visible, and the rows area scrolls internally while the table header, tabs, and page header all stay fixed.
 
 ### Files Modified
+- `src/pages/Index.tsx`
 - `src/components/PoolsInterface.tsx`
-

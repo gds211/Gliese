@@ -22,6 +22,10 @@ const POOLS: Pool[] = [
   { id: 4, pair: "ETH/USDT", spread: "0.30%", tvl: "$98.70M", volume: "$19.10M", fees: "$57.3K", apr: "21.2%", colorA: "from-indigo-400 to-purple-600", colorB: "from-emerald-400 to-emerald-600", symbolA: "ETH", symbolB: "USDT" },
   { id: 5, pair: "WBTC/ETH", spread: "0.30%", tvl: "$76.20M", volume: "$11.80M", fees: "$35.4K", apr: "16.9%", colorA: "from-orange-400 to-orange-600", colorB: "from-indigo-400 to-purple-600", symbolA: "WBTC", symbolB: "ETH" },
   { id: 6, pair: "MON/USDC", spread: "1.00%", tvl: "$34.50M", volume: "$8.20M", fees: "$82.0K", apr: "86.7%", colorA: "from-fuchsia-400 to-purple-600", colorB: "from-blue-400 to-blue-600", symbolA: "MON", symbolB: "USDC" },
+  { id: 7, pair: "LINK/ETH", spread: "0.30%", tvl: "$28.90M", volume: "$6.40M", fees: "$19.2K", apr: "24.3%", colorA: "from-sky-400 to-blue-600", colorB: "from-indigo-400 to-purple-600", symbolA: "LINK", symbolB: "ETH" },
+  { id: 8, pair: "ARB/USDC", spread: "0.30%", tvl: "$22.10M", volume: "$5.30M", fees: "$15.9K", apr: "26.3%", colorA: "from-cyan-400 to-blue-600", colorB: "from-blue-400 to-blue-600", symbolA: "ARB", symbolB: "USDC" },
+  { id: 9, pair: "MATIC/USDT", spread: "0.30%", tvl: "$18.70M", volume: "$4.10M", fees: "$12.3K", apr: "24.0%", colorA: "from-violet-400 to-purple-600", colorB: "from-emerald-400 to-emerald-600", symbolA: "MATIC", symbolB: "USDT" },
+  { id: 10, pair: "SOL/USDC", spread: "0.30%", tvl: "$15.40M", volume: "$3.80M", fees: "$11.4K", apr: "27.0%", colorA: "from-fuchsia-400 to-pink-600", colorB: "from-blue-400 to-blue-600", symbolA: "SOL", symbolB: "USDC" },
 ];
 
 const TokenPair = ({ colorA, colorB, symbolA, symbolB }: { colorA: string; colorB: string; symbolA: string; symbolB: string }) => (
@@ -42,7 +46,7 @@ const PoolsInterface = () => {
   const filtered = POOLS.filter((p) => p.pair.toLowerCase().includes(search.toLowerCase()));
 
   return (
-    <div className="relative w-full h-[calc(100vh-65px)] overflow-hidden z-20">
+    <div className="relative w-full h-full overflow-hidden z-20">
       {/* Frosted Glass Effect - highly transparent with strong blur */}
       <div className="absolute inset-0 bg-white/10 backdrop-blur-xl" />
 
