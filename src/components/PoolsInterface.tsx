@@ -42,7 +42,7 @@ const PoolsInterface = () => {
   const filtered = POOLS.filter((p) => p.pair.toLowerCase().includes(search.toLowerCase()));
 
   return (
-    <div className="relative w-full min-h-[calc(100vh-65px)] z-20">
+    <div className="relative w-full h-[calc(100vh-65px)] overflow-hidden z-20">
       {/* Frosted Glass Effect - highly transparent with strong blur */}
       <div className="absolute inset-0 bg-white/10 backdrop-blur-xl" />
 
@@ -53,7 +53,7 @@ const PoolsInterface = () => {
       />
 
       {/* Content */}
-      <div className="relative z-10 px-8 py-8 max-w-[1800px] mx-auto">
+      <div className="relative z-10 px-8 py-8 max-w-[1800px] mx-auto h-full flex flex-col">
         {/* Header */}
         <div className="flex items-start justify-between mb-8">
           <div>
@@ -79,9 +79,9 @@ const PoolsInterface = () => {
         </div>
 
         {/* Pools Table Card */}
-        <div className="rounded-2xl bg-muted/40 backdrop-blur-md border border-white/10 overflow-hidden">
+        <div className="rounded-2xl bg-muted/40 backdrop-blur-md border border-white/10 overflow-hidden flex-1 min-h-0 flex flex-col">
           {/* Tabs */}
-          <div className="flex items-center gap-6 px-6 pt-4 border-b border-white/10">
+          <div className="flex items-center gap-6 px-6 pt-4 border-b border-white/10 flex-shrink-0">
             <button
               onClick={() => setActiveTab("all")}
               className={`pb-3 text-sm font-semibold transition-colors relative ${
@@ -107,7 +107,7 @@ const PoolsInterface = () => {
           </div>
 
           {/* Table Header */}
-          <div className="grid grid-cols-[40px_2fr_1fr_1fr_1fr_1fr_120px] items-center gap-4 px-6 py-3 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground border-b border-white/5">
+          <div className="grid grid-cols-[40px_2fr_1fr_1fr_1fr_1fr_120px] items-center gap-4 px-6 py-3 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground border-b border-white/5 flex-shrink-0">
             <div>#</div>
             <div>Pool Spread</div>
             <div className="flex items-center gap-1">TVL <ArrowUpDown className="w-3 h-3" /></div>
@@ -118,7 +118,7 @@ const PoolsInterface = () => {
           </div>
 
           {/* Table Rows */}
-          <div>
+          <div className="flex-1 min-h-0 overflow-y-auto">
             {filtered.map((pool) => (
               <div
                 key={pool.id}
