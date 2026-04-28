@@ -91,7 +91,7 @@ const Index = () => {
         
         {/* Main Content Area */}
         {navSection === "Swap" && (
-          <div className="flex justify-center items-start pt-[calc(50vh-300px)] min-h-[calc(100vh-80px)]">
+          <div className="flex justify-center items-start pt-[calc(50vh-300px)] h-[calc(100vh-65px)] overflow-hidden">
             <div className="relative">
               {/* Main Swap Card - always in the same position */}
               <SwapInterface 
