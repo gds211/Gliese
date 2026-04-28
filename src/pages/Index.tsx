@@ -64,7 +64,7 @@ const Index = () => {
   }, [pendingTab]);
 
   return (
-    <div className="h-screen relative overflow-hidden flex flex-col">
+    <div className="min-h-screen relative overflow-hidden">
       {/* Top Loading Bar */}
       <TopLoadingBar 
         isLoading={isLoadingTab || isLoadingInnerTab} 
@@ -82,18 +82,16 @@ const Index = () => {
       <div className="absolute inset-0 bg-background/20 backdrop-blur-[1px]" />
       
       {/* Content */}
-      <div className="relative z-10 flex-1 min-h-0 flex flex-col">
-        <div className="flex-shrink-0">
-          <Navigation 
-            onNavPending={handleNavPending}
-            currentSection={navSection}
-            pendingSection={pendingSection}
-          />
-        </div>
-
+      <div className="relative z-10">
+        <Navigation 
+          onNavPending={handleNavPending}
+          currentSection={navSection}
+          pendingSection={pendingSection}
+        />
+        
         {/* Main Content Area */}
         {navSection === "Swap" && (
-          <div className="flex-1 min-h-0 overflow-auto flex justify-center items-start pt-[calc(50vh-300px)]">
+          <div className="flex justify-center items-start pt-[calc(50vh-300px)] min-h-[calc(100vh-80px)]">
             <div className="relative">
               {/* Main Swap Card - always in the same position */}
               <SwapInterface 
@@ -115,11 +113,7 @@ const Index = () => {
         )}
         
         {/* Pools Interface - Liquid Glass Overlay */}
-        {navSection === "Pools" && (
-          <div className="flex-1 min-h-0">
-            <PoolsInterface />
-          </div>
-        )}
+        {navSection === "Pools" && <PoolsInterface />}
       </div>
     </div>
   );
