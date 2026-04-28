@@ -83,7 +83,7 @@ const PoolsInterface = () => {
         </div>
 
         {/* Pools Table Card */}
-        <div className="rounded-2xl bg-background/80 backdrop-blur-xl border border-white/10 overflow-hidden flex-1 min-h-0 flex flex-col">
+        <div className="rounded-2xl bg-background border border-white/10 overflow-hidden flex-1 min-h-0 flex flex-col">
           {/* Tabs */}
           <div className="flex items-center gap-6 px-6 pt-4 border-b border-white/10 flex-shrink-0">
             <button
