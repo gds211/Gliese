@@ -84,9 +84,9 @@ const PoolsInterface = () => {
         </div>
 
         {/* Pools Table Card */}
-        <div className="rounded-2xl bg-background border border-white/10 overflow-hidden flex-1 min-h-0 flex flex-col">
+        <div className="rounded-2xl border border-white/10 overflow-hidden flex-1 min-h-0 flex flex-col" style={{ backgroundColor: "#131313" }}>
           {/* Tabs */}
-          <div className="flex items-center gap-6 px-6 pt-4 border-b border-white/10 flex-shrink-0">
+          <div className="flex items-center gap-6 px-6 pt-4 border-b border-white/10 flex-shrink-0" style={{ backgroundColor: "#1A1A1A" }}>
             <button
               onClick={() => setActiveTab("all")}
               className={`pb-3 text-sm font-semibold transition-colors relative ${
@@ -112,7 +112,7 @@ const PoolsInterface = () => {
           </div>
 
           {/* Table Header */}
-          <div className="grid grid-cols-[40px_2fr_1fr_1fr_1fr_1fr_1fr_120px] items-center gap-4 px-6 py-3 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground border-b border-white/5 flex-shrink-0">
+          <div className="grid grid-cols-[40px_2fr_1fr_1fr_1fr_1fr_1fr_120px] items-center gap-4 px-6 py-3 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground border-b border-white/5 flex-shrink-0" style={{ backgroundColor: "#1A1A1A" }}>
             <div>#</div>
             <div>Pool</div>
             <div>Spread</div>
