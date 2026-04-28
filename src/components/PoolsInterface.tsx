@@ -118,7 +118,7 @@ const PoolsInterface = () => {
           </div>
 
           {/* Table Rows */}
-          <div className="flex-1 min-h-0 overflow-y-auto">
+          <div className="flex-1 min-h-0 overflow-y-auto no-scrollbar">
             {filtered.map((pool) => (
               <div
                 key={pool.id}
