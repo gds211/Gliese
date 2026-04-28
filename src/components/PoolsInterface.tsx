@@ -5,6 +5,7 @@ type Pool = {
   id: number;
   pair: string;
   spread: string;
+  category: "Tight" | "Moderate" | "Broad" | "Wide";
   tvl: string;
   volume: string;
   fees: string;
@@ -16,16 +17,16 @@ type Pool = {
 };
 
 const POOLS: Pool[] = [
-  { id: 1, pair: "USDC/USDT", spread: "0.01%", tvl: "$211.00M", volume: "$54.30M", fees: "$5.4K", apr: "9.4%", colorA: "from-blue-400 to-blue-600", colorB: "from-emerald-400 to-emerald-600", symbolA: "USDC", symbolB: "USDT" },
-  { id: 2, pair: "ETH/USDC", spread: "0.05%", tvl: "$142.30M", volume: "$28.40M", fees: "$14.2K", apr: "36.5%", colorA: "from-indigo-400 to-purple-600", colorB: "from-blue-400 to-blue-600", symbolA: "ETH", symbolB: "USDC" },
-  { id: 3, pair: "DAI/USDC", spread: "0.01%", tvl: "$88.00M", volume: "$22.00M", fees: "$2.2K", apr: "9.1%", colorA: "from-amber-400 to-yellow-600", colorB: "from-blue-400 to-blue-600", symbolA: "DAI", symbolB: "USDC" },
-  { id: 4, pair: "ETH/USDT", spread: "0.30%", tvl: "$98.70M", volume: "$19.10M", fees: "$57.3K", apr: "21.2%", colorA: "from-indigo-400 to-purple-600", colorB: "from-emerald-400 to-emerald-600", symbolA: "ETH", symbolB: "USDT" },
-  { id: 5, pair: "WBTC/ETH", spread: "0.30%", tvl: "$76.20M", volume: "$11.80M", fees: "$35.4K", apr: "16.9%", colorA: "from-orange-400 to-orange-600", colorB: "from-indigo-400 to-purple-600", symbolA: "WBTC", symbolB: "ETH" },
-  { id: 6, pair: "MON/USDC", spread: "1.00%", tvl: "$34.50M", volume: "$8.20M", fees: "$82.0K", apr: "86.7%", colorA: "from-fuchsia-400 to-purple-600", colorB: "from-blue-400 to-blue-600", symbolA: "MON", symbolB: "USDC" },
-  { id: 7, pair: "ARB/USDC", spread: "0.05%", tvl: "$28.90M", volume: "$6.40M", fees: "$3.2K", apr: "12.3%", colorA: "from-sky-400 to-blue-600", colorB: "from-blue-400 to-blue-600", symbolA: "ARB", symbolB: "USDC" },
-  { id: 8, pair: "SOL/USDT", spread: "0.30%", tvl: "$45.10M", volume: "$14.70M", fees: "$44.1K", apr: "28.5%", colorA: "from-purple-400 to-fuchsia-600", colorB: "from-emerald-400 to-emerald-600", symbolA: "SOL", symbolB: "USDT" },
-  { id: 9, pair: "LINK/ETH", spread: "0.30%", tvl: "$22.60M", volume: "$4.30M", fees: "$12.9K", apr: "18.4%", colorA: "from-blue-500 to-indigo-700", colorB: "from-indigo-400 to-purple-600", symbolA: "LINK", symbolB: "ETH" },
-  { id: 10, pair: "MATIC/USDC", spread: "0.05%", tvl: "$18.40M", volume: "$3.80M", fees: "$1.9K", apr: "10.7%", colorA: "from-violet-400 to-purple-600", colorB: "from-blue-400 to-blue-600", symbolA: "MATIC", symbolB: "USDC" },
+  { id: 1, pair: "USDC/USDT", spread: "0.01%", category: "Tight", tvl: "$211.00M", volume: "$54.30M", fees: "$5.4K", apr: "9.4%", colorA: "from-blue-400 to-blue-600", colorB: "from-emerald-400 to-emerald-600", symbolA: "USDC", symbolB: "USDT" },
+  { id: 2, pair: "ETH/USDC", spread: "0.05%", category: "Moderate", tvl: "$142.30M", volume: "$28.40M", fees: "$14.2K", apr: "36.5%", colorA: "from-indigo-400 to-purple-600", colorB: "from-blue-400 to-blue-600", symbolA: "ETH", symbolB: "USDC" },
+  { id: 3, pair: "DAI/USDC", spread: "0.01%", category: "Tight", tvl: "$88.00M", volume: "$22.00M", fees: "$2.2K", apr: "9.1%", colorA: "from-amber-400 to-yellow-600", colorB: "from-blue-400 to-blue-600", symbolA: "DAI", symbolB: "USDC" },
+  { id: 4, pair: "ETH/USDT", spread: "0.30%", category: "Moderate", tvl: "$98.70M", volume: "$19.10M", fees: "$57.3K", apr: "21.2%", colorA: "from-indigo-400 to-purple-600", colorB: "from-emerald-400 to-emerald-600", symbolA: "ETH", symbolB: "USDT" },
+  { id: 5, pair: "WBTC/ETH", spread: "0.30%", category: "Broad", tvl: "$76.20M", volume: "$11.80M", fees: "$35.4K", apr: "16.9%", colorA: "from-orange-400 to-orange-600", colorB: "from-indigo-400 to-purple-600", symbolA: "WBTC", symbolB: "ETH" },
+  { id: 6, pair: "MON/USDC", spread: "1.00%", category: "Wide", tvl: "$34.50M", volume: "$8.20M", fees: "$82.0K", apr: "86.7%", colorA: "from-fuchsia-400 to-purple-600", colorB: "from-blue-400 to-blue-600", symbolA: "MON", symbolB: "USDC" },
+  { id: 7, pair: "ARB/USDC", spread: "0.05%", category: "Moderate", tvl: "$28.90M", volume: "$6.40M", fees: "$3.2K", apr: "12.3%", colorA: "from-sky-400 to-blue-600", colorB: "from-blue-400 to-blue-600", symbolA: "ARB", symbolB: "USDC" },
+  { id: 8, pair: "SOL/USDT", spread: "0.30%", category: "Broad", tvl: "$45.10M", volume: "$14.70M", fees: "$44.1K", apr: "28.5%", colorA: "from-purple-400 to-fuchsia-600", colorB: "from-emerald-400 to-emerald-600", symbolA: "SOL", symbolB: "USDT" },
+  { id: 9, pair: "LINK/ETH", spread: "0.30%", category: "Broad", tvl: "$22.60M", volume: "$4.30M", fees: "$12.9K", apr: "18.4%", colorA: "from-blue-500 to-indigo-700", colorB: "from-indigo-400 to-purple-600", symbolA: "LINK", symbolB: "ETH" },
+  { id: 10, pair: "MATIC/USDC", spread: "0.05%", category: "Moderate", tvl: "$18.40M", volume: "$3.80M", fees: "$1.9K", apr: "10.7%", colorA: "from-violet-400 to-purple-600", colorB: "from-blue-400 to-blue-600", symbolA: "MATIC", symbolB: "USDC" },
 ];
 
 const TokenPair = ({ colorA, colorB, symbolA, symbolB }: { colorA: string; colorB: string; symbolA: string; symbolB: string }) => (
@@ -111,13 +112,14 @@ const PoolsInterface = () => {
           </div>
 
           {/* Table Header */}
-          <div className="grid grid-cols-[40px_2fr_1fr_1fr_1fr_1fr_120px] items-center gap-4 px-6 py-3 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground border-b border-white/5 flex-shrink-0">
+          <div className="grid grid-cols-[40px_2fr_1fr_1fr_1fr_1fr_1fr_120px] items-center gap-4 px-6 py-3 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground border-b border-white/5 flex-shrink-0">
             <div>#</div>
-            <div>Pool Spread</div>
+            <div>Pool</div>
+            <div>Spread</div>
             <div className="flex items-center gap-1">TVL <ArrowUpDown className="w-3 h-3" /></div>
-            <div className="flex items-center gap-1 text-primary">24H Volume <ArrowUpDown className="w-3 h-3" /></div>
-            <div className="flex items-center gap-1">24H Fees <ArrowUpDown className="w-3 h-3" /></div>
-            <div className="flex items-center gap-1">24H APR <ArrowUpDown className="w-3 h-3" /></div>
+            <div className="flex items-center gap-1 text-primary">Volume 24H <ArrowUpDown className="w-3 h-3" /></div>
+            <div className="flex items-center gap-1">Fees 24H <ArrowUpDown className="w-3 h-3" /></div>
+            <div className="flex items-center gap-1">APR 24H <ArrowUpDown className="w-3 h-3" /></div>
             <div></div>
           </div>
 
@@ -126,7 +128,7 @@ const PoolsInterface = () => {
             {filtered.map((pool) => (
               <div
                 key={pool.id}
-                className="grid grid-cols-[40px_2fr_1fr_1fr_1fr_1fr_120px] items-center gap-4 px-6 py-4 border-b border-white/5 last:border-b-0 hover:bg-white/5 transition-colors"
+                className="grid grid-cols-[40px_2fr_1fr_1fr_1fr_1fr_1fr_120px] items-center gap-4 px-6 py-4 border-b border-white/5 last:border-b-0 hover:bg-white/5 transition-colors"
               >
                 <div className="text-sm text-muted-foreground">{pool.id}</div>
                 <div className="flex items-center gap-3">
@@ -136,6 +138,7 @@ const PoolsInterface = () => {
                     {pool.spread}
                   </span>
                 </div>
+                <div className="text-sm font-semibold text-foreground">{pool.category}</div>
                 <div className="text-sm font-semibold text-foreground">{pool.tvl}</div>
                 <div className="text-sm font-semibold text-foreground">{pool.volume}</div>
                 <div className="text-sm font-semibold text-foreground">{pool.fees}</div>
