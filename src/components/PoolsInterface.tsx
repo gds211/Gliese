@@ -47,7 +47,7 @@ const PoolsInterface = () => {
   const filtered = POOLS.filter((p) => p.pair.toLowerCase().includes(search.toLowerCase()));
 
   return (
-    <div className="relative w-full h-[calc(100vh-65px)] overflow-hidden z-20">
+    <div className="relative w-full h-[calc(100vh-65px)] overflow-hidden z-20" style={{ fontFamily: "'Inter', sans-serif", fontWeight: 500 }}>
       {/* Frosted Glass Effect - highly transparent with strong blur */}
       <div className="absolute inset-0 bg-white/10 backdrop-blur-xl" />
 
@@ -62,7 +62,7 @@ const PoolsInterface = () => {
         {/* Header */}
         <div className="flex items-start justify-between mb-8">
           <div>
-            <h1 className="text-3xl font-bold text-foreground">Liquidity Pools</h1>
+            <h1 className="text-3xl text-foreground">Liquidity Pools</h1>
             <p className="text-sm text-muted-foreground mt-1">Provide liquidity and earn trading fees</p>
           </div>
           <div className="flex items-center gap-3">
@@ -76,7 +76,7 @@ const PoolsInterface = () => {
                 className="pl-10 pr-4 py-2.5 w-72 rounded-lg bg-muted/40 backdrop-blur-md border border-white/10 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/50 transition-colors"
               />
             </div>
-            <button className="flex items-center gap-2 px-4 py-2.5 rounded-lg bg-gradient-to-r from-primary to-orange-500 text-primary-foreground text-sm font-semibold hover:opacity-90 transition-opacity">
+            <button className="flex items-center gap-2 px-4 py-2.5 rounded-lg bg-gradient-to-r from-primary to-orange-500 text-primary-foreground text-sm hover:opacity-90 transition-opacity">
               <Plus className="w-4 h-4" />
               New Pool
             </button>
@@ -89,7 +89,7 @@ const PoolsInterface = () => {
           <div className="flex items-center gap-6 px-6 pt-4 border-b border-white/10 flex-shrink-0" style={{ backgroundColor: "#1A1A1A" }}>
             <button
               onClick={() => setActiveTab("all")}
-              className={`pb-3 text-sm font-semibold transition-colors relative ${
+              className={`pb-3 text-sm transition-colors relative ${
                 activeTab === "all" ? "text-primary" : "text-muted-foreground hover:text-foreground"
               }`}
             >
@@ -100,7 +100,7 @@ const PoolsInterface = () => {
             </button>
             <button
               onClick={() => setActiveTab("my")}
-              className={`pb-3 text-sm font-semibold transition-colors relative ${
+              className={`pb-3 text-sm transition-colors relative ${
                 activeTab === "my" ? "text-primary" : "text-muted-foreground hover:text-foreground"
               }`}
             >
@@ -112,7 +112,7 @@ const PoolsInterface = () => {
           </div>
 
           {/* Table Header */}
-          <div className="grid grid-cols-[40px_2fr_1fr_1fr_1fr_1fr_1fr_120px] items-center gap-4 px-6 py-3 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground border-b border-white/5 flex-shrink-0" style={{ backgroundColor: "#1A1A1A" }}>
+          <div className="grid grid-cols-[40px_2fr_1fr_1fr_1fr_1fr_1fr_120px] items-center gap-4 px-6 py-3 text-[11px] uppercase tracking-wider text-muted-foreground border-b border-white/5 flex-shrink-0" style={{ backgroundColor: "#1A1A1A" }}>
             <div>#</div>
             <div>Pool</div>
             <div>Spread</div>
@@ -133,18 +133,18 @@ const PoolsInterface = () => {
                 <div className="text-sm text-muted-foreground">{pool.id}</div>
                 <div className="flex items-center gap-3">
                   <TokenPair colorA={pool.colorA} colorB={pool.colorB} symbolA={pool.symbolA} symbolB={pool.symbolB} />
-                  <span className="text-sm font-semibold text-foreground">{pool.pair}</span>
+                  <span className="text-sm text-foreground">{pool.pair}</span>
                   <span className="text-[11px] font-medium px-2 py-0.5 rounded-md bg-primary/15 text-primary">
                     {pool.spread}
                   </span>
                 </div>
-                <div className="text-sm font-semibold text-foreground">{pool.category}</div>
-                <div className="text-sm font-semibold text-foreground">{pool.tvl}</div>
-                <div className="text-sm font-semibold text-foreground">{pool.volume}</div>
-                <div className="text-sm font-semibold text-foreground">{pool.fees}</div>
-                <div className="text-sm font-semibold text-emerald-400">{pool.apr}</div>
+                <div className="text-sm text-foreground">{pool.category}</div>
+                <div className="text-sm text-foreground">{pool.tvl}</div>
+                <div className="text-sm text-foreground">{pool.volume}</div>
+                <div className="text-sm text-foreground">{pool.fees}</div>
+                <div className="text-sm text-foreground">{pool.apr}</div>
                 <div className="flex justify-end">
-                  <button className="flex items-center gap-1.5 px-4 py-1.5 rounded-lg bg-primary/15 text-primary text-sm font-semibold hover:bg-primary/25 transition-colors">
+                  <button className="flex items-center gap-1.5 px-4 py-1.5 rounded-lg bg-primary/15 text-primary text-sm hover:bg-primary/25 transition-colors">
                     <Plus className="w-3.5 h-3.5" />
                     Add
                   </button>
