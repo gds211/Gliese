@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Search, Plus, ArrowUpDown } from "lucide-react";
+import { Search, Plus, ArrowUp, ArrowDown } from "lucide-react";
 
 type Pool = {
   id: number;
@@ -43,8 +43,50 @@ const TokenPair = ({ colorA, colorB, symbolA, symbolB }: { colorA: string; color
 const PoolsInterface = () => {
   const [activeTab, setActiveTab] = useState<"all" | "my">("all");
   const [search, setSearch] = useState("");
+  const [sortKey, setSortKey] = useState<"tvl" | "volume" | "fees" | "apr" | null>(null);
+  const [sortDir, setSortDir] = useState<"asc" | "desc">("desc");
 
   const filtered = POOLS.filter((p) => p.pair.toLowerCase().includes(search.toLowerCase()));
+
+  const parseValue = (s: string) => {
+    const cleaned = s.replace(/[$,%]/g, "");
+    const m = cleaned.match(/^([\d.]+)([KMB]?)$/i);
+    if (!m) return 0;
+    const n = parseFloat(m[1]);
+    const suffix = m[2].toUpperCase() as "K" | "M" | "B" | "";
+    const mult: Record<string, number> = { K: 1e3, M: 1e6, B: 1e9, "": 1 };
+    return n * mult[suffix];
+  };
+
+  const sorted = sortKey
+    ? [...filtered].sort((a, b) => {
+        const av = parseValue(a[sortKey]);
+        const bv = parseValue(b[sortKey]);
+        return sortDir === "desc" ? bv - av : av - bv;
+      })
+    : filtered;
+
+  const handleSort = (key: "tvl" | "volume" | "fees" | "apr") => {
+    if (sortKey !== key) {
+      setSortKey(key);
+      setSortDir("desc");
+    } else {
+      setSortDir((d) => (d === "desc" ? "asc" : "desc"));
+    }
+  };
+
+  const SortHeader = ({ k, label }: { k: "tvl" | "volume" | "fees" | "apr"; label: string }) => {
+    const active = sortKey === k;
+    return (
+      <button
+        onClick={() => handleSort(k)}
+        className={`flex items-center gap-1 transition-colors ${active ? "text-primary" : "text-muted-foreground hover:text-foreground"}`}
+      >
+        {label}
+        {active && (sortDir === "desc" ? <ArrowDown className="w-3 h-3" /> : <ArrowUp className="w-3 h-3" />)}
+      </button>
+    );
+  };
 
   return (
     <div className="relative w-full h-[calc(100vh-65px)] overflow-hidden z-20" style={{ fontFamily: "'Inter', sans-serif", fontWeight: 500 }}>
@@ -67,7 +109,7 @@ const PoolsInterface = () => {
           </div>
           <div className="flex items-center gap-3">
             <div className="relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-white/50" />
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none z-10" />
               <input
                 type="text"
                 value={search}
@@ -116,16 +158,16 @@ const PoolsInterface = () => {
             <div>#</div>
             <div>Pool</div>
             <div>Spread</div>
-            <div className="flex items-center gap-1">TVL <ArrowUpDown className="w-3 h-3" /></div>
-            <div className="flex items-center gap-1 text-primary">Volume 24H <ArrowUpDown className="w-3 h-3" /></div>
-            <div className="flex items-center gap-1">Fees 24H <ArrowUpDown className="w-3 h-3" /></div>
-            <div className="flex items-center gap-1">APR 24H <ArrowUpDown className="w-3 h-3" /></div>
+            <SortHeader k="tvl" label="TVL" />
+            <SortHeader k="volume" label="Volume 24H" />
+            <SortHeader k="fees" label="Fees 24H" />
+            <SortHeader k="apr" label="APR 24H" />
             <div></div>
           </div>
 
           {/* Table Rows */}
           <div className="flex-1 min-h-0 overflow-y-auto no-scrollbar">
-            {filtered.map((pool) => (
+            {sorted.map((pool) => (
               <div
                 key={pool.id}
                 className="grid grid-cols-[40px_2fr_1fr_1fr_1fr_1fr_1fr_120px] items-center gap-4 px-6 py-4 border-b border-white/5 last:border-b-0 hover:bg-white/5 transition-colors"

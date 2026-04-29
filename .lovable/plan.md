@@ -1,33 +1,75 @@
-## Pools interface header tweaks
+## Pools interface: search icon + sortable columns
 
-Three small adjustments scoped to `src/components/PoolsInterface.tsx`.
+All changes scoped to `src/components/PoolsInterface.tsx`.
 
-### 1. Match the magnifying glass icon style from the swap modal
+### 1. Make the magnifying glass visible in "Search pools..."
 
-The Search pools input already has a magnifying glass icon, but it uses `text-muted-foreground`. Update it to match the swap modal's "Select a token to sell" search exactly:
+The `Search` icon is currently rendered but sits behind the input because the input has no transparent background and the icon's `text-white/50` blends with the dark glass. Two fixes:
 
-- Icon classes: `absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-white/50`
+- Bump icon contrast: change `text-white/50` to `text-muted-foreground` (matches the rest of the interface and is clearly visible on the dark glass).
+- Ensure the input doesn't cover it. The current `pl-10` is correct; keep it. The icon stays absolutely positioned at `left-3`.
 
-No other changes to the input's background or border — keep the current glass look untouched.
+Result: a clearly visible magnifying glass on the left side of the search box, identical in placement to the swap modal.
 
-### 2. Vertically align Search + New Pool with the subtitle
+### 2. Sortable columns: TVL, Volume 24H, Fees 24H, APR 24H
 
-Currently the header wrapper uses `items-start`, so the buttons line up with the "Liquidity Pools" title. Switch to `items-end` so the Search input and New Pool button drop down and align with the bottom "Provide liquidity and earn trading fees" subtitle.
+Replace the static `ArrowUpDown` (two-arrow) icons on these four headers with dynamic single-arrow indicators that match the screenshot reference.
 
-```text
-Before                                After
-┌ Liquidity Pools     [Search][New]   ┌ Liquidity Pools
-└ Provide liquidity…                  └ Provide liquidity…  [Search][New]
+**Behavior**:
+- Add component state: `sortKey: 'tvl' | 'volume' | 'fees' | 'apr' | null` and `sortDir: 'asc' | 'desc'`.
+- Initial state: `sortKey = null`, no sort applied (pools display in their original order).
+- Clicking a header:
+  - If it's not the active column → make it active, set `sortDir = 'desc'` (down arrow, decreasing order).
+  - If it's already active and `desc` → toggle to `asc` (up arrow, increasing order).
+  - If it's already active and `asc` → toggle back to `desc`.
+- Active header: text turns `text-primary` (orange) and shows a single arrow (`ArrowDown` for desc, `ArrowUp` for asc) in orange.
+- Inactive headers: text stays `text-muted-foreground`, no arrow shown at all (clean look matching the screenshot — only the active column displays an arrow).
+
+**Sorting logic**:
+- Parse the existing string values (e.g. `"$211.00M"`, `"$5.4K"`, `"9.4%"`) into numbers via a small helper that strips `$`, `%`, and expands `K`/`M`/`B` suffixes.
+- Sort the `filtered` array by the parsed numeric value of the chosen field in the chosen direction.
+
+### 3. Remove orange from "Volume 24H" default styling
+
+Currently `Volume 24H` header has hardcoded `text-primary`. Remove it so all four headers share the same default `text-muted-foreground` styling, and orange only appears when that column is the active sort.
+
+### Technical details
+
+```tsx
+// New state
+const [sortKey, setSortKey] = useState<'tvl'|'volume'|'fees'|'apr'|null>(null);
+const [sortDir, setSortDir] = useState<'asc'|'desc'>('desc');
+
+// Parser
+const parseValue = (s: string) => {
+  const cleaned = s.replace(/[$,%]/g, '');
+  const m = cleaned.match(/^([\d.]+)([KMB]?)$/i);
+  if (!m) return 0;
+  const n = parseFloat(m[1]);
+  const mult = { K: 1e3, M: 1e6, B: 1e9, '': 1 }[m[2].toUpperCase() as 'K'|'M'|'B'|''];
+  return n * mult;
+};
+
+// Click handler
+const handleSort = (key) => {
+  if (sortKey !== key) { setSortKey(key); setSortDir('desc'); }
+  else setSortDir(d => d === 'desc' ? 'asc' : 'desc');
+};
+
+// Sorted list
+const sorted = sortKey
+  ? [...filtered].sort((a,b) => {
+      const av = parseValue(a[sortKey]); const bv = parseValue(b[sortKey]);
+      return sortDir === 'desc' ? bv - av : av - bv;
+    })
+  : filtered;
 ```
 
-### 3. White "New Pool" button with black text
-
-Replace the orange gradient on the New Pool button:
-
-- From: `bg-gradient-to-r from-primary to-orange-500 text-primary-foreground`
-- To: `bg-white text-black hover:bg-white/90`
-
-The Plus icon inherits `currentColor` so it becomes black automatically.
+Replace each sortable header cell with a `<button>` that:
+- Uses `flex items-center gap-1`
+- Text is `text-primary` when `sortKey === key`, else `text-muted-foreground`
+- Renders `<ArrowDown />` if active+desc, `<ArrowUp />` if active+asc, nothing otherwise
+- Imports: add `ArrowUp`, `ArrowDown` from `lucide-react`; remove `ArrowUpDown` if no longer used.
 
 ### Files modified
 - `src/components/PoolsInterface.tsx`
