@@ -60,14 +60,14 @@ const PoolsInterface = () => {
       {/* Content */}
       <div className="relative z-10 px-8 pt-8 pb-0 max-w-[1800px] mx-auto h-full flex flex-col">
         {/* Header */}
-        <div className="flex items-start justify-between mb-8">
+        <div className="flex items-end justify-between mb-8">
           <div>
             <h1 className="text-3xl text-foreground">Liquidity Pools</h1>
             <p className="text-sm text-muted-foreground mt-1">Provide liquidity and earn trading fees</p>
           </div>
           <div className="flex items-center gap-3">
             <div className="relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-white/50" />
               <input
                 type="text"
                 value={search}
@@ -76,7 +76,7 @@ const PoolsInterface = () => {
                 className="pl-10 pr-4 py-2.5 w-72 rounded-lg bg-muted/40 backdrop-blur-md border border-white/10 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/50 transition-colors"
               />
             </div>
-            <button className="flex items-center gap-2 px-4 py-2.5 rounded-lg bg-gradient-to-r from-primary to-orange-500 text-primary-foreground text-sm hover:opacity-90 transition-opacity">
+            <button className="flex items-center gap-2 px-4 py-2.5 rounded-lg bg-white text-black text-sm hover:bg-white/90 transition-colors">
               <Plus className="w-4 h-4" />
               New Pool
             </button>
