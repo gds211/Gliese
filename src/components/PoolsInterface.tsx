@@ -43,7 +43,7 @@ const TokenPair = ({ colorA, colorB, symbolA, symbolB }: { colorA: string; color
 const PoolsInterface = () => {
   const [activeTab, setActiveTab] = useState<"all" | "my">("all");
   const [search, setSearch] = useState("");
-  const [sortKey, setSortKey] = useState<"tvl" | "volume" | "fees" | "apr" | null>(null);
+  const [sortKey, setSortKey] = useState<"tvl" | "volume" | "fees" | "apr" | null>("tvl");
   const [sortDir, setSortDir] = useState<"asc" | "desc">("desc");
 
   const filtered = POOLS.filter((p) => p.pair.toLowerCase().includes(search.toLowerCase()));
@@ -154,7 +154,7 @@ const PoolsInterface = () => {
           </div>
 
           {/* Table Header */}
-          <div className="grid grid-cols-[40px_2fr_1fr_1fr_1fr_1fr_1fr_120px] items-center gap-4 px-6 py-3 text-xs uppercase tracking-wider text-muted-foreground border-b border-white/5 flex-shrink-0" style={{ backgroundColor: "#1A1A1A" }}>
+          <div className="grid grid-cols-[40px_2fr_1fr_1fr_1fr_1fr_1fr_120px] items-center gap-4 px-6 py-3 text-xs tracking-wider text-muted-foreground border-b border-white/5 flex-shrink-0" style={{ backgroundColor: "#1A1A1A" }}>
             <div>#</div>
             <div>Pool</div>
             <div>Spread</div>
@@ -167,12 +167,12 @@ const PoolsInterface = () => {
 
           {/* Table Rows */}
           <div className="flex-1 min-h-0 overflow-y-auto no-scrollbar">
-            {sorted.map((pool) => (
+            {sorted.map((pool, idx) => (
               <div
                 key={pool.id}
                 className="grid grid-cols-[40px_2fr_1fr_1fr_1fr_1fr_1fr_120px] items-center gap-4 px-6 py-4 border-b border-white/5 last:border-b-0 hover:bg-white/5 transition-colors"
               >
-                <div className="text-base text-muted-foreground">{pool.id}</div>
+                <div className="text-base text-muted-foreground">{idx + 1}</div>
                 <div className="flex items-center gap-3">
                   <TokenPair colorA={pool.colorA} colorB={pool.colorB} symbolA={pool.symbolA} symbolB={pool.symbolB} />
                   <span className="text-base text-foreground">{pool.pair}</span>
