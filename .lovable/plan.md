@@ -1,26 +1,12 @@
-## Pools Interface — Inter Medium 500 + APR color fix
+## Increase font size in Pools interface
 
-Edit `src/components/PoolsInterface.tsx`:
+Bump the body/table text in the All Pools section up one Tailwind step so it reads more comfortably while keeping the layout intact.
 
-1. **Font: Inter Medium 500 across the entire Pools section**
-   - On the outermost wrapper `<div>` of `PoolsInterface`, add inline `style={{ fontFamily: "'Inter', sans-serif", fontWeight: 500 }}`. This cascades to header, search input, tabs, table header, and all rows.
-   - Remove `font-bold` / `font-semibold` Tailwind classes that would override 500 weight on:
-     - The `Liquidity Pools` heading (`font-bold` → drop)
-     - Tabs buttons (`font-semibold` → drop)
-     - Table header row (`font-semibold` → drop)
-     - Pool pair name, category, TVL, Volume, Fees, APR cells (`font-semibold` → drop)
-     - The "New Pool" button and per-row "Add" button (`font-semibold` → drop)
-   - The `font-medium` class on the spread badge stays (already 500).
+### Changes in `src/components/PoolsInterface.tsx`
 
-2. **Index.html — load Inter weight 500**
-   - Update the Google Fonts `<link>` to include `wght@500` (currently only `600`):
-     `family=Inter:wght@500;600&display=swap`
+- **Tabs (All Pools / My Positions)**: `text-sm` → `text-base`
+- **Table header row** (#, Pool, Spread, TVL, Volume 24H, Fees 24H, APR 24H): `text-[11px]` → `text-xs` (12px)
+- **Table data rows** (id, pair name, spread badge, category, TVL, Volume, Fees, APR, Add button): `text-sm` → `text-base`; spread badge `text-[11px]` → `text-xs`
+- **Token symbol initials inside circles**: `text-[9px]` → `text-[10px]` so they stay legible against the slightly larger row height
 
-3. **APR 24H column → white**
-   - Change `text-emerald-400` on the APR cell to `text-foreground` (white).
-
-No structural, layout, or background changes. Backgrounds (`#131313` body, `#1A1A1A` header strips) remain as-is.
-
-### Files modified
-- `src/components/PoolsInterface.tsx`
-- `index.html`
+Header title ("Liquidity Pools"), subtitle, search input, and "New Pool" button stay the same — the request is scoped to the All Pools table section.

@@ -31,10 +31,10 @@ const POOLS: Pool[] = [
 
 const TokenPair = ({ colorA, colorB, symbolA, symbolB }: { colorA: string; colorB: string; symbolA: string; symbolB: string }) => (
   <div className="flex items-center -space-x-2">
-    <div className={`w-8 h-8 rounded-full bg-gradient-to-br ${colorA} ring-2 ring-background flex items-center justify-center text-[9px] font-bold text-white`}>
+    <div className={`w-8 h-8 rounded-full bg-gradient-to-br ${colorA} ring-2 ring-background flex items-center justify-center text-[10px] font-bold text-white`}>
       {symbolA.slice(0, 3)}
     </div>
-    <div className={`w-8 h-8 rounded-full bg-gradient-to-br ${colorB} ring-2 ring-background flex items-center justify-center text-[9px] font-bold text-white`}>
+    <div className={`w-8 h-8 rounded-full bg-gradient-to-br ${colorB} ring-2 ring-background flex items-center justify-center text-[10px] font-bold text-white`}>
       {symbolB.slice(0, 3)}
     </div>
   </div>
@@ -89,7 +89,7 @@ const PoolsInterface = () => {
           <div className="flex items-center gap-6 px-6 pt-4 border-b border-white/10 flex-shrink-0" style={{ backgroundColor: "#1A1A1A" }}>
             <button
               onClick={() => setActiveTab("all")}
-              className={`pb-3 text-sm transition-colors relative ${
+              className={`pb-3 text-base transition-colors relative ${
                 activeTab === "all" ? "text-primary" : "text-muted-foreground hover:text-foreground"
               }`}
             >
@@ -100,7 +100,7 @@ const PoolsInterface = () => {
             </button>
             <button
               onClick={() => setActiveTab("my")}
-              className={`pb-3 text-sm transition-colors relative ${
+              className={`pb-3 text-base transition-colors relative ${
                 activeTab === "my" ? "text-primary" : "text-muted-foreground hover:text-foreground"
               }`}
             >
@@ -112,7 +112,7 @@ const PoolsInterface = () => {
           </div>
 
           {/* Table Header */}
-          <div className="grid grid-cols-[40px_2fr_1fr_1fr_1fr_1fr_1fr_120px] items-center gap-4 px-6 py-3 text-[11px] uppercase tracking-wider text-muted-foreground border-b border-white/5 flex-shrink-0" style={{ backgroundColor: "#1A1A1A" }}>
+          <div className="grid grid-cols-[40px_2fr_1fr_1fr_1fr_1fr_1fr_120px] items-center gap-4 px-6 py-3 text-xs uppercase tracking-wider text-muted-foreground border-b border-white/5 flex-shrink-0" style={{ backgroundColor: "#1A1A1A" }}>
             <div>#</div>
             <div>Pool</div>
             <div>Spread</div>
@@ -130,21 +130,21 @@ const PoolsInterface = () => {
                 key={pool.id}
                 className="grid grid-cols-[40px_2fr_1fr_1fr_1fr_1fr_1fr_120px] items-center gap-4 px-6 py-4 border-b border-white/5 last:border-b-0 hover:bg-white/5 transition-colors"
               >
-                <div className="text-sm text-muted-foreground">{pool.id}</div>
+                <div className="text-base text-muted-foreground">{pool.id}</div>
                 <div className="flex items-center gap-3">
                   <TokenPair colorA={pool.colorA} colorB={pool.colorB} symbolA={pool.symbolA} symbolB={pool.symbolB} />
-                  <span className="text-sm text-foreground">{pool.pair}</span>
-                  <span className="text-[11px] font-medium px-2 py-0.5 rounded-md bg-primary/15 text-primary">
+                  <span className="text-base text-foreground">{pool.pair}</span>
+                  <span className="text-xs font-medium px-2 py-0.5 rounded-md bg-primary/15 text-primary">
                     {pool.spread}
                   </span>
                 </div>
-                <div className="text-sm text-foreground">{pool.category}</div>
-                <div className="text-sm text-foreground">{pool.tvl}</div>
-                <div className="text-sm text-foreground">{pool.volume}</div>
-                <div className="text-sm text-foreground">{pool.fees}</div>
-                <div className="text-sm text-foreground">{pool.apr}</div>
+                <div className="text-base text-foreground">{pool.category}</div>
+                <div className="text-base text-foreground">{pool.tvl}</div>
+                <div className="text-base text-foreground">{pool.volume}</div>
+                <div className="text-base text-foreground">{pool.fees}</div>
+                <div className="text-base text-foreground">{pool.apr}</div>
                 <div className="flex justify-end">
-                  <button className="flex items-center gap-1.5 px-4 py-1.5 rounded-lg bg-primary/15 text-primary text-sm hover:bg-primary/25 transition-colors">
+                  <button className="flex items-center gap-1.5 px-4 py-1.5 rounded-lg bg-primary/15 text-primary text-base hover:bg-primary/25 transition-colors">
                     <Plus className="w-3.5 h-3.5" />
                     Add
                   </button>
