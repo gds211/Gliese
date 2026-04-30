@@ -170,7 +170,7 @@ const PoolsInterface = () => {
             {sorted.map((pool, idx) => (
               <div
                 key={pool.id}
-                className="grid grid-cols-[40px_2fr_1fr_1fr_1fr_1fr_1fr_120px] items-center gap-4 px-6 py-4 border-b border-white/5 last:border-b-0 hover:bg-white/5 transition-colors"
+                className="grid grid-cols-[40px_2fr_1fr_1fr_1fr_1fr_1fr_120px] items-center gap-4 px-6 py-4 border-b border-white/5 last:border-b-0"
               >
                 <div className="text-base text-muted-foreground">{idx + 1}</div>
                 <div className="flex items-center gap-3">
@@ -186,9 +186,8 @@ const PoolsInterface = () => {
                 <div className="text-base text-foreground">{pool.fees}</div>
                 <div className="text-base text-foreground">{pool.apr}</div>
                 <div className="flex justify-end">
-                  <button className="flex items-center gap-1.5 px-4 py-1.5 rounded-lg bg-primary/15 text-primary text-base hover:bg-primary/25 transition-colors">
-                    <Plus className="w-3.5 h-3.5" />
-                    Add
+                  <button className="px-5 py-1.5 rounded-full border border-primary text-primary text-sm hover:bg-primary/10 transition-colors">
+                    Deposit
                   </button>
                 </div>
               </div>
