@@ -1068,7 +1068,7 @@ const selectToken = (picked: string | TokenObj) => {
                     <img src={glieseLogo} alt="Gliese" className="w-4 h-4 rounded-lg" />
                     <span>Gliese AMM</span>
                   </div>
-                  <span>0.30% FEE</span>
+                  <span>0.02% FEE</span>
                 </div>
               </div>
             </div>
