@@ -330,7 +330,10 @@ const PoolsInterface = () => {
                 <div className="text-base text-foreground">{pool.fees}</div>
                 <div className="text-base text-foreground">{pool.apr}</div>
                 <div className="flex justify-end">
-                  <button className="flex items-center gap-1.5 px-4 py-1.5 rounded-lg bg-primary/15 text-primary text-base hover:bg-primary/25 transition-colors">
+                  <button
+                    onClick={() => openAdd(pool)}
+                    className="flex items-center gap-1.5 px-4 py-1.5 rounded-lg bg-primary/15 text-primary text-base hover:bg-primary/25 transition-colors"
+                  >
                     <Plus className="w-3.5 h-3.5" />
                     Add
                   </button>
