@@ -108,20 +108,23 @@ const PoolsInterface = () => {
           className="absolute inset-0 pointer-events-none"
           style={{ background: "radial-gradient(ellipse at center, rgba(0,0,0,0.3) 0%, transparent 70%)" }}
         />
+        {/* Back button - far left of viewport, aligned with title row */}
+        <button
+          onClick={closeAdd}
+          className="absolute left-8 top-[44px] z-20 flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground transition-colors"
+        >
+          <ChevronLeft className="w-4 h-4" />
+          Back
+        </button>
         <div className="relative z-10 px-8 pt-8 pb-8 max-w-[1100px] mx-auto h-full overflow-y-auto no-scrollbar">
-          {/* Back button - far left, aligned with title row */}
-          <button
-            onClick={closeAdd}
-            className="absolute left-4 top-8 flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground transition-colors"
-          >
-            <ChevronLeft className="w-4 h-4" />
-            Back
-          </button>
           {/* Title row aligned with panel start */}
           <div className="flex items-center gap-3 mb-6">
             <TokenPair colorA={selectedPool.colorA} colorB={selectedPool.colorB} symbolA={selectedPool.symbolA} symbolB={selectedPool.symbolB} />
             <h1 className="text-2xl text-foreground">{selectedPool.pair}</h1>
-            <span className="text-xs font-medium px-2 py-0.5 rounded-md bg-primary/15 text-primary">
+            <span className="text-xs font-medium px-2 py-0.5 rounded-sm bg-white/10 text-foreground">
+              {selectedPool.category}
+            </span>
+            <span className="text-xs font-medium px-2 py-0.5 rounded-sm bg-primary/15 text-primary">
               {selectedPool.spread}
             </span>
           </div>
