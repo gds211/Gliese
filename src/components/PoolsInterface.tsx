@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Search, Plus, ArrowUp, ArrowDown } from "lucide-react";
+import { Search, Plus, ArrowUp, ArrowDown, ChevronLeft, Wallet } from "lucide-react";
 
 type Pool = {
   id: number;
@@ -45,6 +45,16 @@ const PoolsInterface = () => {
   const [search, setSearch] = useState("");
   const [sortKey, setSortKey] = useState<"tvl" | "volume" | "fees" | "apr" | null>("tvl");
   const [sortDir, setSortDir] = useState<"asc" | "desc">("desc");
+  const [selectedPool, setSelectedPool] = useState<Pool | null>(null);
+  const [amountA, setAmountA] = useState("");
+  const [amountB, setAmountB] = useState("");
+
+  const openAdd = (pool: Pool) => {
+    setSelectedPool(pool);
+    setAmountA("");
+    setAmountB("");
+  };
+  const closeAdd = () => setSelectedPool(null);
 
   const filtered = POOLS.filter((p) => p.pair.toLowerCase().includes(search.toLowerCase()));
 
@@ -87,6 +97,140 @@ const PoolsInterface = () => {
       </button>
     );
   };
+
+  if (selectedPool) {
+    const ratioA = 57.1;
+    const ratioB = 42.9;
+    return (
+      <div className="relative w-full h-[calc(100vh-65px)] overflow-hidden z-20" style={{ fontFamily: "'Inter', sans-serif", fontWeight: 500 }}>
+        <div className="absolute inset-0 bg-white/10 backdrop-blur-xl" />
+        <div
+          className="absolute inset-0 pointer-events-none"
+          style={{ background: "radial-gradient(ellipse at center, rgba(0,0,0,0.3) 0%, transparent 70%)" }}
+        />
+        <div className="relative z-10 px-8 pt-8 pb-8 max-w-[1100px] mx-auto h-full overflow-y-auto no-scrollbar">
+          {/* Back */}
+          <button
+            onClick={closeAdd}
+            className="flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground transition-colors mb-6"
+          >
+            <ChevronLeft className="w-4 h-4" />
+            Back
+          </button>
+
+          {/* Title */}
+          <div className="flex items-center gap-3 mb-6">
+            <TokenPair colorA={selectedPool.colorA} colorB={selectedPool.colorB} symbolA={selectedPool.symbolA} symbolB={selectedPool.symbolB} />
+            <h1 className="text-2xl text-foreground">{selectedPool.pair}</h1>
+            <span className="text-xs font-medium px-2 py-0.5 rounded-md bg-primary/15 text-primary">
+              {selectedPool.spread}
+            </span>
+          </div>
+
+          {/* Pool Composition */}
+          <div className="rounded-2xl border border-white/10 p-6 mb-6" style={{ backgroundColor: "#131313" }}>
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-base text-foreground">Pool Composition</h2>
+              <span className="text-sm text-muted-foreground">Flexible Ratio</span>
+            </div>
+            <div className="flex w-full h-10 rounded-lg overflow-hidden">
+              <div
+                className="flex items-center justify-center text-xs font-semibold text-black bg-yellow-300"
+                style={{ width: `${ratioA}%` }}
+              >
+                {ratioA}% {selectedPool.symbolA}
+              </div>
+              <div
+                className="flex items-center justify-center text-xs font-semibold text-white bg-sky-500"
+                style={{ width: `${ratioB}%` }}
+              >
+                {ratioB}% {selectedPool.symbolB}
+              </div>
+            </div>
+          </div>
+
+          {/* Add Liquidity */}
+          <div className="rounded-2xl border border-white/10 p-6" style={{ backgroundColor: "#131313" }}>
+            <h2 className="text-base text-foreground mb-4">Add Liquidity</h2>
+
+            {/* Token A input */}
+            <div className="rounded-xl border border-white/10 bg-muted/20 p-4 mb-3">
+              <div className="flex items-center justify-end gap-2 mb-3">
+                <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                  <Wallet className="w-3.5 h-3.5" />
+                  0.00 {selectedPool.symbolA}
+                </div>
+                <button className="text-[10px] font-semibold px-1.5 py-0.5 rounded bg-white/10 text-foreground hover:bg-white/20 transition-colors">
+                  HALF
+                </button>
+                <button className="text-[10px] font-semibold px-1.5 py-0.5 rounded bg-white/10 text-foreground hover:bg-white/20 transition-colors">
+                  MAX
+                </button>
+              </div>
+              <div className="flex items-center justify-between gap-3">
+                <div className="flex items-center gap-2">
+                  <div className={`w-9 h-9 rounded-full bg-gradient-to-br ${selectedPool.colorA} flex items-center justify-center text-[10px] font-bold text-white`}>
+                    {selectedPool.symbolA.slice(0, 3)}
+                  </div>
+                  <span className="text-base text-foreground">{selectedPool.symbolA}</span>
+                </div>
+                <div className="flex flex-col items-end">
+                  <input
+                    type="text"
+                    inputMode="decimal"
+                    value={amountA}
+                    onChange={(e) => setAmountA(e.target.value)}
+                    placeholder="0.00"
+                    className="bg-transparent text-2xl text-foreground text-right outline-none w-40 placeholder:text-muted-foreground"
+                  />
+                  <span className="text-xs text-muted-foreground mt-0.5">$0.00</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Token B input */}
+            <div className="rounded-xl border border-white/10 bg-muted/20 p-4 mb-5">
+              <div className="flex items-center justify-end gap-2 mb-3">
+                <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                  <Wallet className="w-3.5 h-3.5" />
+                  0.00 {selectedPool.symbolB}
+                </div>
+                <button className="text-[10px] font-semibold px-1.5 py-0.5 rounded bg-white/10 text-foreground hover:bg-white/20 transition-colors">
+                  HALF
+                </button>
+                <button className="text-[10px] font-semibold px-1.5 py-0.5 rounded bg-white/10 text-foreground hover:bg-white/20 transition-colors">
+                  MAX
+                </button>
+              </div>
+              <div className="flex items-center justify-between gap-3">
+                <div className="flex items-center gap-2">
+                  <div className={`w-9 h-9 rounded-full bg-gradient-to-br ${selectedPool.colorB} flex items-center justify-center text-[10px] font-bold text-white`}>
+                    {selectedPool.symbolB.slice(0, 3)}
+                  </div>
+                  <span className="text-base text-foreground">{selectedPool.symbolB}</span>
+                </div>
+                <div className="flex flex-col items-end">
+                  <input
+                    type="text"
+                    inputMode="decimal"
+                    value={amountB}
+                    onChange={(e) => setAmountB(e.target.value)}
+                    placeholder="0.00"
+                    className="bg-transparent text-2xl text-foreground text-right outline-none w-40 placeholder:text-muted-foreground"
+                  />
+                  <span className="text-xs text-muted-foreground mt-0.5">$0.00</span>
+                </div>
+              </div>
+            </div>
+
+            <button className="w-full py-3 rounded-xl bg-primary text-primary-foreground text-base font-semibold hover:bg-primary/90 transition-colors">
+              Add Liquidity
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="relative w-full h-[calc(100vh-65px)] overflow-hidden z-20" style={{ fontFamily: "'Inter', sans-serif", fontWeight: 500 }}>
