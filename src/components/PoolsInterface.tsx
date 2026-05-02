@@ -128,7 +128,7 @@ const PoolsInterface = () => {
           </div>
 
           {/* Pool Composition */}
-          <div className="rounded-2xl border border-white/10 p-6 mb-6" style={{ backgroundColor: "#1A1A1A" }}>
+          <div className="rounded-2xl border border-white/10 p-6 mb-6" style={{ backgroundColor: "#1f263b" }}>
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-base text-foreground">Pool Composition</h2>
               <span className="text-sm text-muted-foreground">Flexible Ratio</span>
@@ -150,7 +150,7 @@ const PoolsInterface = () => {
           </div>
 
           {/* Add Liquidity */}
-          <div className="rounded-2xl border border-white/10 p-6" style={{ backgroundColor: "#1A1A1A" }}>
+          <div className="rounded-2xl border border-white/10 p-6" style={{ backgroundColor: "#1f263b" }}>
             <h2 className="text-base text-foreground mb-4">Add Liquidity</h2>
 
             {/* Token A input */}
@@ -272,7 +272,7 @@ const PoolsInterface = () => {
         {/* Pools Table Card */}
         <div className="rounded-2xl border border-white/10 overflow-hidden flex-1 min-h-0 flex flex-col" style={{ backgroundColor: "#131313" }}>
           {/* Tabs */}
-          <div className="flex items-center gap-6 px-6 pt-4 border-b border-white/10 flex-shrink-0" style={{ backgroundColor: "#1A1A1A" }}>
+          <div className="flex items-center gap-6 px-6 pt-4 border-b border-white/10 flex-shrink-0" style={{ backgroundColor: "#1f263b" }}>
             <button
               onClick={() => setActiveTab("all")}
               className={`pb-3 text-base transition-colors relative ${
@@ -298,7 +298,7 @@ const PoolsInterface = () => {
           </div>
 
           {/* Table Header */}
-          <div className="grid grid-cols-[40px_2fr_1fr_1fr_1fr_1fr_1fr_120px] items-center gap-4 px-6 py-3 text-xs tracking-wider text-muted-foreground border-b border-white/5 flex-shrink-0" style={{ backgroundColor: "#1A1A1A" }}>
+          <div className="grid grid-cols-[40px_2fr_1fr_1fr_1fr_1fr_1fr_120px] items-center gap-4 px-6 py-3 text-xs tracking-wider text-muted-foreground border-b border-white/5 flex-shrink-0" style={{ backgroundColor: "#1f263b" }}>
             <div>#</div>
             <div>Pool</div>
             <div>Spread</div>
