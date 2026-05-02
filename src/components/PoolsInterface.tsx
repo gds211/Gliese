@@ -108,16 +108,18 @@ const PoolsInterface = () => {
           className="absolute inset-0 pointer-events-none"
           style={{ background: "radial-gradient(ellipse at center, rgba(0,0,0,0.3) 0%, transparent 70%)" }}
         />
-        <div className="relative z-10 px-8 pt-4 pb-8 max-w-[1100px] mx-auto h-full overflow-y-auto no-scrollbar">
-          {/* Title row with inline Back */}
-          <div className="flex items-center gap-3 mb-4">
-            <button
-              onClick={closeAdd}
-              className="flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground transition-colors mr-2"
-            >
-              <ChevronLeft className="w-4 h-4" />
-              Back
-            </button>
+        <div className="relative z-10 px-8 pt-8 pb-8 max-w-[1100px] mx-auto h-full overflow-y-auto no-scrollbar">
+          {/* Back */}
+          <button
+            onClick={closeAdd}
+            className="flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground transition-colors mb-6"
+          >
+            <ChevronLeft className="w-4 h-4" />
+            Back
+          </button>
+
+          {/* Title */}
+          <div className="flex items-center gap-3 mb-6">
             <TokenPair colorA={selectedPool.colorA} colorB={selectedPool.colorB} symbolA={selectedPool.symbolA} symbolB={selectedPool.symbolB} />
             <h1 className="text-2xl text-foreground">{selectedPool.pair}</h1>
             <span className="text-xs font-medium px-2 py-0.5 rounded-md bg-primary/15 text-primary">
