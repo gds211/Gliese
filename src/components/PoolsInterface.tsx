@@ -128,7 +128,7 @@ const PoolsInterface = () => {
           </div>
 
           {/* Pool Composition */}
-          <div className="rounded-2xl border border-white/10 p-6 mb-6" style={{ backgroundColor: "#1f263b" }}>
+          <div className="rounded-2xl border border-white/10 p-6 mb-6" style={{ backgroundColor: "#202020" }}>
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-base text-foreground">Pool Composition</h2>
               <span className="text-sm text-muted-foreground">Flexible Ratio</span>
@@ -150,7 +150,7 @@ const PoolsInterface = () => {
           </div>
 
           {/* Add Liquidity */}
-          <div className="rounded-2xl border border-white/10 p-6" style={{ backgroundColor: "#1f263b" }}>
+          <div className="rounded-2xl border border-white/10 p-6" style={{ backgroundColor: "#202020" }}>
             <h2 className="text-base text-foreground mb-4">Add Liquidity</h2>
 
             {/* Token A input */}
