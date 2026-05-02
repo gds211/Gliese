@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Search, Plus, ArrowUp, ArrowDown } from "lucide-react";
+import { Search, Plus, ArrowUp, ArrowDown, ChevronLeft, Wallet } from "lucide-react";
 
 type Pool = {
   id: number;
@@ -40,11 +40,153 @@ const TokenPair = ({ colorA, colorB, symbolA, symbolB }: { colorA: string; color
   </div>
 );
 
+const SingleToken = ({ color, symbol }: { color: string; symbol: string }) => (
+  <div className={`w-9 h-9 rounded-full bg-gradient-to-br ${color} flex items-center justify-center text-[10px] font-bold text-white`}>
+    {symbol.slice(0, 3)}
+  </div>
+);
+
+const AddLiquidityView = ({ pool, onBack }: { pool: Pool; onBack: () => void }) => {
+  const [amountA, setAmountA] = useState("");
+  const [amountB, setAmountB] = useState("");
+
+  // Mocked ratio derived from the pool spread index — purely visual
+  const pctA = 57.1;
+  const pctB = 42.9;
+  const ratio = pctB / pctA; // amountB per amountA
+
+  const handleA = (v: string) => {
+    setAmountA(v);
+    const n = parseFloat(v);
+    setAmountB(isNaN(n) ? "" : (n * ratio).toFixed(4).replace(/\.?0+$/, ""));
+  };
+  const handleB = (v: string) => {
+    setAmountB(v);
+    const n = parseFloat(v);
+    setAmountA(isNaN(n) ? "" : (n / ratio).toFixed(4).replace(/\.?0+$/, ""));
+  };
+
+  const TokenInputRow = ({
+    color,
+    symbol,
+    value,
+    onChange,
+  }: {
+    color: string;
+    symbol: string;
+    value: string;
+    onChange: (v: string) => void;
+  }) => (
+    <div className="rounded-xl bg-muted/40 backdrop-blur-md border border-white/10 p-4">
+      <div className="flex items-center justify-end gap-2 mb-3">
+        <div className="flex items-center gap-1.5 px-2 py-1 rounded-md bg-white/5 text-xs text-muted-foreground">
+          <Wallet className="w-3 h-3" />
+          0.00 {symbol}
+        </div>
+        <button
+          onClick={() => onChange("0")}
+          className="px-2 py-1 rounded-md bg-primary/15 text-primary text-[10px] font-semibold tracking-wider hover:bg-primary/25 transition-colors"
+        >
+          HALF
+        </button>
+        <button
+          onClick={() => onChange("0")}
+          className="px-2 py-1 rounded-md bg-primary/15 text-primary text-[10px] font-semibold tracking-wider hover:bg-primary/25 transition-colors"
+        >
+          MAX
+        </button>
+      </div>
+      <div className="flex items-center justify-between gap-3">
+        <div className="flex items-center gap-2">
+          <SingleToken color={color} symbol={symbol} />
+          <span className="text-lg text-foreground">{symbol}</span>
+        </div>
+        <div className="flex flex-col items-end">
+          <input
+            type="text"
+            inputMode="decimal"
+            value={value}
+            onChange={(e) => onChange(e.target.value)}
+            placeholder="0.00"
+            className="bg-transparent text-right text-2xl text-foreground placeholder:text-muted-foreground focus:outline-none w-40"
+          />
+          <span className="text-xs text-muted-foreground mt-0.5">$0.00</span>
+        </div>
+      </div>
+    </div>
+  );
+
+  return (
+    <div className="relative z-10 px-8 pt-6 pb-0 max-w-[1400px] mx-auto h-full flex flex-col">
+      <button
+        onClick={onBack}
+        className="flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground transition-colors mb-6 self-start"
+      >
+        <ChevronLeft className="w-4 h-4" />
+        Back
+      </button>
+
+      <div className="flex items-center gap-3 mb-6">
+        <TokenPair colorA={pool.colorA} colorB={pool.colorB} symbolA={pool.symbolA} symbolB={pool.symbolB} />
+        <h1 className="text-2xl text-foreground">Add liquidity to {pool.pair}</h1>
+        <span className="text-xs font-medium px-2 py-0.5 rounded-md bg-primary/15 text-primary">
+          {pool.spread}
+        </span>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 flex-1 min-h-0">
+        {/* Pool Composition */}
+        <div className="rounded-2xl border border-white/10 p-6 h-fit" style={{ backgroundColor: "#131313" }}>
+          <div className="flex items-center justify-between mb-5">
+            <h2 className="text-lg text-foreground">Pool Composition</h2>
+            <span className="text-sm text-muted-foreground">Flexible Ratio</span>
+          </div>
+          <div className="flex w-full h-12 rounded-lg overflow-hidden border border-white/10">
+            <div
+              className={`bg-gradient-to-br ${pool.colorA} flex items-center justify-center text-xs font-semibold text-white`}
+              style={{ width: `${pctA}%` }}
+            >
+              {pctA}% {pool.symbolA}
+            </div>
+            <div
+              className={`bg-gradient-to-br ${pool.colorB} flex items-center justify-center text-xs font-semibold text-white`}
+              style={{ width: `${pctB}%` }}
+            >
+              {pctB}% {pool.symbolB}
+            </div>
+          </div>
+        </div>
+
+        {/* Add Liquidity */}
+        <div className="rounded-2xl border border-white/10 p-6 flex flex-col gap-4" style={{ backgroundColor: "#131313" }}>
+          <h2 className="text-lg text-foreground">Add Liquidity</h2>
+          <TokenInputRow
+            color={pool.colorA}
+            symbol={pool.symbolA}
+            value={amountA}
+            onChange={handleA}
+          />
+          <TokenInputRow
+            color={pool.colorB}
+            symbol={pool.symbolB}
+            value={amountB}
+            onChange={handleB}
+          />
+          <button className="mt-2 w-full py-3 rounded-lg bg-white text-black text-sm hover:bg-white/90 transition-colors">
+            Add Liquidity
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 const PoolsInterface = () => {
   const [activeTab, setActiveTab] = useState<"all" | "my">("all");
   const [search, setSearch] = useState("");
   const [sortKey, setSortKey] = useState<"tvl" | "volume" | "fees" | "apr" | null>("tvl");
   const [sortDir, setSortDir] = useState<"asc" | "desc">("desc");
+  const [selectedPool, setSelectedPool] = useState<Pool | null>(null);
 
   const filtered = POOLS.filter((p) => p.pair.toLowerCase().includes(search.toLowerCase()));
 
@@ -99,6 +241,9 @@ const PoolsInterface = () => {
         style={{ background: "radial-gradient(ellipse at center, rgba(0,0,0,0.3) 0%, transparent 70%)" }}
       />
 
+      {selectedPool ? (
+        <AddLiquidityView pool={selectedPool} onBack={() => setSelectedPool(null)} />
+      ) : (
       {/* Content */}
       <div className="relative z-10 px-8 pt-8 pb-0 max-w-[1800px] mx-auto h-full flex flex-col">
         {/* Header */}
