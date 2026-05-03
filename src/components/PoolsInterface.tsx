@@ -152,11 +152,12 @@ const PoolsInterface = () => {
           </div>
 
           {/* Add Liquidity */}
-          <div className="rounded-2xl border border-white/10 p-6" style={{ backgroundColor: "#262626" }}>
+          <div className="flex justify-end">
+          <div className="w-1/2 rounded-2xl border border-white/10 p-6" style={{ backgroundColor: "#262626" }}>
             <h2 className="text-base text-foreground mb-4">Add Liquidity</h2>
 
             {/* Token A input */}
-            <div className="rounded-xl border border-white/10 bg-muted/20 p-4 mb-3">
+            <div className="rounded-xl border border-white/10 bg-muted/20 p-4">
               <div className="flex items-center justify-end gap-2 mb-3">
                 <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
                   <Wallet className="w-3.5 h-3.5" />
@@ -187,6 +188,13 @@ const PoolsInterface = () => {
                   />
                   <span className="text-xs text-muted-foreground mt-0.5">$0.00</span>
                 </div>
+              </div>
+            </div>
+
+            {/* Plus divider */}
+            <div className="relative flex justify-center -my-3 z-10">
+              <div className="w-8 h-8 rounded-full bg-primary/20 border-4 flex items-center justify-center" style={{ borderColor: "#262626" }}>
+                <Plus className="w-4 h-4 text-primary" />
               </div>
             </div>
 
@@ -228,6 +236,7 @@ const PoolsInterface = () => {
             <button className="w-full py-3 rounded-xl bg-primary text-primary-foreground text-base font-semibold hover:bg-primary/90 transition-colors">
               Add Liquidity
             </button>
+          </div>
           </div>
         </div>
       </div>
