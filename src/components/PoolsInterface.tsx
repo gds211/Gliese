@@ -155,7 +155,7 @@ const PoolsInterface = () => {
 
           {/* Add Liquidity */}
           <div className="flex justify-end">
-          <div className="w-[60%] rounded-2xl border border-white/10 p-[26px] py-[38px]" style={{ backgroundColor: "#262626" }}>
+          <div className="w-[60%] rounded-2xl border border-white/10 p-[26px] py-[24px]" style={{ backgroundColor: "#262626" }}>
             <h2 className="text-base text-foreground -mt-3 mb-6">Add Liquidity</h2>
 
             {/* Token A input */}
@@ -172,7 +172,7 @@ const PoolsInterface = () => {
                   MAX
                 </button>
               </div>
-              <div className="flex items-center justify-between gap-3">
+              <div className="flex items-start justify-between gap-3">
                 <div className="flex items-center gap-2">
                   <div className={`w-9 h-9 rounded-full bg-gradient-to-br ${selectedPool.colorA} flex items-center justify-center text-[10px] font-bold text-white`}>
                     {selectedPool.symbolA.slice(0, 3)}
@@ -202,7 +202,7 @@ const PoolsInterface = () => {
             </div>
 
             {/* Token B input */}
-            <div onClick={() => inputBRef.current?.focus()} className="rounded-xl border border-white/10 bg-muted/20 px-4 py-6 mb-8 cursor-text">
+            <div onClick={() => inputBRef.current?.focus()} className="rounded-xl border border-white/10 bg-muted/20 px-4 py-6 mb-3 cursor-text">
               <div className="flex items-center justify-end gap-2 mb-6">
                 <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
                   <Wallet className="w-3.5 h-3.5" />
@@ -215,7 +215,7 @@ const PoolsInterface = () => {
                   MAX
                 </button>
               </div>
-              <div className="flex items-center justify-between gap-3">
+              <div className="flex items-start justify-between gap-3">
                 <div className="flex items-center gap-2">
                   <div className={`w-9 h-9 rounded-full bg-gradient-to-br ${selectedPool.colorB} flex items-center justify-center text-[10px] font-bold text-white`}>
                     {selectedPool.symbolB.slice(0, 3)}
@@ -237,7 +237,7 @@ const PoolsInterface = () => {
               </div>
             </div>
 
-            <button className="w-full py-3 mt-2 rounded-xl bg-white text-black text-base font-semibold hover:bg-white/90 transition-colors">
+            <button className="w-full py-3 mt-0 rounded-xl bg-white text-black text-base font-semibold hover:bg-white/90 transition-colors">
               Add Liquidity
             </button>
           </div>
