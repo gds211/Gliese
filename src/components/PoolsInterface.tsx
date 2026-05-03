@@ -111,7 +111,7 @@ const PoolsInterface = () => {
         {/* Back button - far left of viewport, aligned with title row */}
         <button
           onClick={closeAdd}
-          className="absolute left-[calc(50%-550px-100px)] top-[44px] z-20 flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground transition-colors"
+          className="absolute left-[calc(50%-550px-200px)] top-[40px] z-20 flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground transition-colors"
         >
           <ChevronLeft className="w-4 h-4" />
           Back
