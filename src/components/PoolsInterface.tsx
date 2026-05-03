@@ -111,7 +111,7 @@ const PoolsInterface = () => {
         {/* Back button - far left of viewport, aligned with title row */}
         <button
           onClick={closeAdd}
-          className="absolute left-[calc(50%-550px-200px)] top-[40px] z-20 flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground transition-colors"
+          className="absolute left-[calc(50%-550px-200px)] top-[34px] z-20 flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground transition-colors"
         >
           <ChevronLeft className="w-4 h-4" />
           Back
@@ -130,7 +130,7 @@ const PoolsInterface = () => {
           </div>
 
           {/* Pool Composition */}
-          <div className="rounded-2xl border border-white/10 p-6 mb-6" style={{ backgroundColor: "#202020" }}>
+          <div className="rounded-2xl border border-white/10 p-6 mb-6" style={{ backgroundColor: "#262626" }}>
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-base text-foreground">Pool Composition</h2>
               <span className="text-sm text-muted-foreground">Flexible Ratio</span>
@@ -152,7 +152,7 @@ const PoolsInterface = () => {
           </div>
 
           {/* Add Liquidity */}
-          <div className="rounded-2xl border border-white/10 p-6" style={{ backgroundColor: "#202020" }}>
+          <div className="rounded-2xl border border-white/10 p-6" style={{ backgroundColor: "#262626" }}>
             <h2 className="text-base text-foreground mb-4">Add Liquidity</h2>
 
             {/* Token A input */}
