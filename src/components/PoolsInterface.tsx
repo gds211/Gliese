@@ -132,7 +132,7 @@ const PoolsInterface = () => {
           </div>
 
           {/* Pool Composition */}
-          <div className="rounded-2xl border border-white/10 p-6 mb-6" style={{ backgroundColor: "#262626" }}>
+          <div className="rounded-2xl border border-white/10 p-6 mb-4" style={{ backgroundColor: "#262626" }}>
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-base text-foreground">Pool Composition</h2>
               <span className="text-sm text-muted-foreground">Flexible Ratio</span>
@@ -155,7 +155,7 @@ const PoolsInterface = () => {
 
           {/* Add Liquidity */}
           <div className="flex justify-end">
-          <div className="w-[60%] rounded-2xl border border-white/10 p-[26px] py-[34px]" style={{ backgroundColor: "#262626" }}>
+          <div className="w-[60%] rounded-2xl border border-white/10 p-[26px] py-[38px]" style={{ backgroundColor: "#262626" }}>
             <h2 className="text-base text-foreground mb-4">Add Liquidity</h2>
 
             {/* Token A input */}
@@ -173,14 +173,11 @@ const PoolsInterface = () => {
                 </button>
               </div>
               <div className="flex items-start justify-between gap-3">
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 self-center">
                   <div className={`w-9 h-9 rounded-full bg-gradient-to-br ${selectedPool.colorA} flex items-center justify-center text-[10px] font-bold text-white`}>
                     {selectedPool.symbolA.slice(0, 3)}
                   </div>
-                  <div className="flex flex-col">
-                    <span className="text-2xl text-foreground leading-tight">{selectedPool.symbolA}</span>
-                    <span className="text-xs text-transparent mt-0.5 select-none">$0.00</span>
-                  </div>
+                  <span className="text-2xl text-foreground leading-none">{selectedPool.symbolA}</span>
                 </div>
                 <div className="flex flex-col items-end">
                   <input
@@ -219,14 +216,11 @@ const PoolsInterface = () => {
                 </button>
               </div>
               <div className="flex items-start justify-between gap-3">
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 self-center">
                   <div className={`w-9 h-9 rounded-full bg-gradient-to-br ${selectedPool.colorB} flex items-center justify-center text-[10px] font-bold text-white`}>
                     {selectedPool.symbolB.slice(0, 3)}
                   </div>
-                  <div className="flex flex-col">
-                    <span className="text-2xl text-foreground leading-tight">{selectedPool.symbolB}</span>
-                    <span className="text-xs text-transparent mt-0.5 select-none">$0.00</span>
-                  </div>
+                  <span className="text-2xl text-foreground leading-none">{selectedPool.symbolB}</span>
                 </div>
                 <div className="flex flex-col items-end">
                   <input
