@@ -1,5 +1,4 @@
-import { useState } from "react";
-import { useRef } from "react";
+import { useState, useRef } from "react";
 import { Search, Plus, ArrowUp, ArrowDown, ChevronLeft, Wallet } from "lucide-react";
 
 type Pool = {
