@@ -137,19 +137,22 @@ const PoolsInterface = () => {
               <h2 className="text-base text-foreground">Pool Composition</h2>
               <span className="text-sm text-muted-foreground">Flexible Ratio</span>
             </div>
-            <div className="flex w-full h-10 rounded-lg overflow-hidden">
+            <div className="relative flex w-full h-10 rounded-lg overflow-hidden">
               <div
-                className="flex items-center justify-center text-xs font-semibold text-black bg-yellow-300"
+                className="flex items-center justify-start pl-3 text-xs font-semibold text-black bg-yellow-300"
                 style={{ width: `${ratioA}%` }}
               >
                 {ratioA}% {selectedPool.symbolA}
               </div>
               <div
-                className="flex items-center justify-center text-xs font-semibold text-white bg-sky-500"
+                className="flex items-center justify-end pr-3 text-xs font-semibold text-white bg-sky-500"
                 style={{ width: `${ratioB}%` }}
               >
                 {ratioB}% {selectedPool.symbolB}
               </div>
+              <div
+                className="absolute top-1 bottom-1 left-1/2 -translate-x-1/2 border-l-2 border-dotted border-white pointer-events-none"
+              />
             </div>
           </div>
 
