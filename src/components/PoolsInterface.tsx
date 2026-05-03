@@ -153,7 +153,7 @@ const PoolsInterface = () => {
 
           {/* Add Liquidity */}
           <div className="flex justify-end">
-          <div className="w-1/2 rounded-2xl border border-white/10 p-6" style={{ backgroundColor: "#262626" }}>
+          <div className="w-[60%] rounded-2xl border border-white/10 p-[26px] py-[30px]" style={{ backgroundColor: "#262626" }}>
             <h2 className="text-base text-foreground mb-4">Add Liquidity</h2>
 
             {/* Token A input */}
