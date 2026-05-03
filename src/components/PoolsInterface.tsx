@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { Search, Plus, ArrowUp, ArrowDown, ChevronLeft, Wallet } from "lucide-react";
 
 type Pool = {
@@ -48,6 +48,8 @@ const PoolsInterface = () => {
   const [selectedPool, setSelectedPool] = useState<Pool | null>(null);
   const [amountA, setAmountA] = useState("");
   const [amountB, setAmountB] = useState("");
+  const inputARef = useRef<HTMLInputElement>(null);
+  const inputBRef = useRef<HTMLInputElement>(null);
 
   const openAdd = (pool: Pool) => {
     setSelectedPool(pool);
@@ -153,11 +155,11 @@ const PoolsInterface = () => {
 
           {/* Add Liquidity */}
           <div className="flex justify-end">
-          <div className="w-[60%] rounded-2xl border border-white/10 p-[26px] py-[30px]" style={{ backgroundColor: "#262626" }}>
+          <div className="w-[60%] rounded-2xl border border-white/10 p-[26px] py-[34px]" style={{ backgroundColor: "#262626" }}>
             <h2 className="text-base text-foreground mb-4">Add Liquidity</h2>
 
             {/* Token A input */}
-            <div className="rounded-xl border border-white/10 bg-muted/20 p-4">
+            <div onClick={() => inputARef.current?.focus()} className="rounded-xl border border-white/10 bg-muted/20 p-4 cursor-text">
               <div className="flex items-center justify-end gap-2 mb-3">
                 <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
                   <Wallet className="w-3.5 h-3.5" />
@@ -170,21 +172,25 @@ const PoolsInterface = () => {
                   MAX
                 </button>
               </div>
-              <div className="flex items-center justify-between gap-3">
+              <div className="flex items-start justify-between gap-3">
                 <div className="flex items-center gap-2">
                   <div className={`w-9 h-9 rounded-full bg-gradient-to-br ${selectedPool.colorA} flex items-center justify-center text-[10px] font-bold text-white`}>
                     {selectedPool.symbolA.slice(0, 3)}
                   </div>
-                  <span className="text-base text-foreground">{selectedPool.symbolA}</span>
+                  <div className="flex flex-col">
+                    <span className="text-2xl text-foreground leading-tight">{selectedPool.symbolA}</span>
+                    <span className="text-xs text-transparent mt-0.5 select-none">$0.00</span>
+                  </div>
                 </div>
                 <div className="flex flex-col items-end">
                   <input
+                    ref={inputARef}
                     type="text"
                     inputMode="decimal"
                     value={amountA}
                     onChange={(e) => setAmountA(e.target.value)}
                     placeholder="0.00"
-                    className="bg-transparent text-2xl text-foreground text-right outline-none w-40 placeholder:text-muted-foreground"
+                    className="bg-transparent text-2xl text-foreground text-right outline-none w-40 placeholder:text-muted-foreground leading-tight"
                   />
                   <span className="text-xs text-muted-foreground mt-0.5">$0.00</span>
                 </div>
@@ -199,7 +205,7 @@ const PoolsInterface = () => {
             </div>
 
             {/* Token B input */}
-            <div className="rounded-xl border border-white/10 bg-muted/20 p-4 mb-5">
+            <div onClick={() => inputBRef.current?.focus()} className="rounded-xl border border-white/10 bg-muted/20 p-4 mb-5 cursor-text">
               <div className="flex items-center justify-end gap-2 mb-3">
                 <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
                   <Wallet className="w-3.5 h-3.5" />
@@ -212,28 +218,32 @@ const PoolsInterface = () => {
                   MAX
                 </button>
               </div>
-              <div className="flex items-center justify-between gap-3">
+              <div className="flex items-start justify-between gap-3">
                 <div className="flex items-center gap-2">
                   <div className={`w-9 h-9 rounded-full bg-gradient-to-br ${selectedPool.colorB} flex items-center justify-center text-[10px] font-bold text-white`}>
                     {selectedPool.symbolB.slice(0, 3)}
                   </div>
-                  <span className="text-base text-foreground">{selectedPool.symbolB}</span>
+                  <div className="flex flex-col">
+                    <span className="text-2xl text-foreground leading-tight">{selectedPool.symbolB}</span>
+                    <span className="text-xs text-transparent mt-0.5 select-none">$0.00</span>
+                  </div>
                 </div>
                 <div className="flex flex-col items-end">
                   <input
+                    ref={inputBRef}
                     type="text"
                     inputMode="decimal"
                     value={amountB}
                     onChange={(e) => setAmountB(e.target.value)}
                     placeholder="0.00"
-                    className="bg-transparent text-2xl text-foreground text-right outline-none w-40 placeholder:text-muted-foreground"
+                    className="bg-transparent text-2xl text-foreground text-right outline-none w-40 placeholder:text-muted-foreground leading-tight"
                   />
                   <span className="text-xs text-muted-foreground mt-0.5">$0.00</span>
                 </div>
               </div>
             </div>
 
-            <button className="w-full py-3 rounded-xl bg-primary text-primary-foreground text-base font-semibold hover:bg-primary/90 transition-colors">
+            <button className="w-full py-3 rounded-xl bg-white text-black text-base font-semibold hover:bg-white/90 transition-colors">
               Add Liquidity
             </button>
           </div>
