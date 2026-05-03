@@ -156,8 +156,37 @@ const PoolsInterface = () => {
             </div>
           </div>
 
-          {/* Add Liquidity */}
-          <div className="flex justify-end">
+          {/* Stats + Add Liquidity */}
+          <div className="flex gap-4 items-start">
+          <div className="w-[40%] rounded-2xl border border-white/10 p-6" style={{ backgroundColor: "#262626" }}>
+            <h2 className="text-base text-foreground mb-4">Stats</h2>
+            <div className="space-y-5">
+              <div>
+                <div className="text-sm text-muted-foreground mb-1">TVL</div>
+                <div className="flex items-baseline gap-2">
+                  <span className="text-3xl text-foreground">$133.6M</span>
+                  <span className="text-xs text-emerald-400 flex items-center gap-0.5">
+                    <ArrowUp className="w-3 h-3" />0.15%
+                  </span>
+                </div>
+              </div>
+              <div>
+                <div className="text-sm text-muted-foreground mb-1">24H volume</div>
+                <div className="flex items-baseline gap-2">
+                  <span className="text-3xl text-foreground">$23.2K</span>
+                  <span className="text-xs text-emerald-400 flex items-center gap-0.5">
+                    <ArrowUp className="w-3 h-3" />391.01%
+                  </span>
+                </div>
+              </div>
+              <div>
+                <div className="text-sm text-muted-foreground mb-1">24H fees</div>
+                <div className="flex items-baseline gap-2">
+                  <span className="text-3xl text-foreground">$69.49</span>
+                </div>
+              </div>
+            </div>
+          </div>
           <div className="w-[60%] rounded-2xl border border-white/10 p-[26px] py-[24px]" style={{ backgroundColor: "#262626" }}>
             <h2 className="text-base text-foreground -mt-3 mb-6">Add Liquidity</h2>
 
