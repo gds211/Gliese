@@ -133,7 +133,7 @@ const PoolsInterface = () => {
               href="#"
               className="ml-auto self-end inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground transition-colors"
             >
-              How does depositing into a Gliese pool works
+              How does depositing into a Gliese pool work
               <Info className="w-4 h-4" />
             </a>
           </div>
@@ -224,7 +224,7 @@ const PoolsInterface = () => {
                     placeholder="0.00"
                     className="bg-transparent text-2xl text-foreground text-right outline-none w-40 placeholder:text-muted-foreground leading-tight"
                   />
-                  <span className="text-xs text-muted-foreground mt-0.5">$0.00</span>
+                  <span className="text-xs text-muted-foreground mt-2">$0.00</span>
                 </div>
               </div>
             </div>
@@ -267,7 +267,7 @@ const PoolsInterface = () => {
                     placeholder="0.00"
                     className="bg-transparent text-2xl text-foreground text-right outline-none w-40 placeholder:text-muted-foreground leading-tight"
                   />
-                  <span className="text-xs text-muted-foreground mt-0.5">$0.00</span>
+                  <span className="text-xs text-muted-foreground mt-2">$0.00</span>
                 </div>
               </div>
             </div>
