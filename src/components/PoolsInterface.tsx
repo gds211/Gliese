@@ -1,5 +1,5 @@
 import { useState, useRef } from "react";
-import { Search, Plus, ArrowUp, ArrowDown, ChevronLeft, Wallet } from "lucide-react";
+import { Search, Plus, ArrowUp, ArrowDown, ChevronLeft, Wallet, Info } from "lucide-react";
 
 type Pool = {
   id: number;
@@ -131,9 +131,10 @@ const PoolsInterface = () => {
             </span>
             <a
               href="#"
-              className="ml-auto text-sm text-muted-foreground hover:text-foreground transition-colors"
+              className="ml-auto self-end inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground transition-colors"
             >
               How does depositing into a Gliese pool works
+              <Info className="w-4 h-4" />
             </a>
           </div>
 
@@ -141,7 +142,6 @@ const PoolsInterface = () => {
           <div className="rounded-2xl border border-white/10 p-6 mb-4" style={{ backgroundColor: "#262626" }}>
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-base text-foreground">Pool Composition</h2>
-              <span className="text-sm text-muted-foreground">Flexible Ratio</span>
             </div>
             <div className="flex w-full h-10 gap-1">
               <div
