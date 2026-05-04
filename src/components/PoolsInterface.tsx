@@ -129,6 +129,12 @@ const PoolsInterface = () => {
             <span className="text-xs font-medium px-2 py-0.5 rounded-sm bg-primary/15 text-primary">
               {selectedPool.spread}
             </span>
+            <a
+              href="#"
+              className="ml-auto text-sm text-muted-foreground hover:text-foreground transition-colors"
+            >
+              How does depositing into a Gliese pool works
+            </a>
           </div>
 
           {/* Pool Composition */}
