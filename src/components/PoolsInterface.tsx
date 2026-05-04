@@ -1,5 +1,6 @@
 import { useState, useRef } from "react";
 import { Search, Plus, ArrowUp, ArrowDown, ChevronLeft, Wallet, Info } from "lucide-react";
+import TopLoadingBar from "@/components/TopLoadingBar";
 
 type Pool = {
   id: number;
@@ -48,15 +49,34 @@ const PoolsInterface = () => {
   const [selectedPool, setSelectedPool] = useState<Pool | null>(null);
   const [amountA, setAmountA] = useState("");
   const [amountB, setAmountB] = useState("");
+  const [pendingPool, setPendingPool] = useState<Pool | null>(null);
+  const [pendingClose, setPendingClose] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   const inputARef = useRef<HTMLInputElement>(null);
   const inputBRef = useRef<HTMLInputElement>(null);
 
   const openAdd = (pool: Pool) => {
-    setSelectedPool(pool);
-    setAmountA("");
-    setAmountB("");
+    setPendingPool(pool);
+    setIsLoading(true);
   };
-  const closeAdd = () => setSelectedPool(null);
+  const closeAdd = () => {
+    setPendingClose(true);
+    setIsLoading(true);
+  };
+
+  const handleLoadingComplete = () => {
+    if (pendingPool) {
+      setSelectedPool(pendingPool);
+      setAmountA("");
+      setAmountB("");
+      setPendingPool(null);
+    }
+    if (pendingClose) {
+      setSelectedPool(null);
+      setPendingClose(false);
+    }
+    setIsLoading(false);
+  };
 
   const filtered = POOLS.filter((p) => p.pair.toLowerCase().includes(search.toLowerCase()));
 
@@ -105,6 +125,7 @@ const PoolsInterface = () => {
     const ratioB = 42.9;
     return (
       <div className="relative w-full h-[calc(100vh-65px)] overflow-hidden z-20" style={{ fontFamily: "'Inter', sans-serif", fontWeight: 500 }}>
+        <TopLoadingBar isLoading={isLoading} onComplete={handleLoadingComplete} duration={400} />
         <div className="absolute inset-0 bg-white/10 backdrop-blur-xl" />
         <div
           className="absolute inset-0 pointer-events-none"
@@ -284,6 +305,7 @@ const PoolsInterface = () => {
 
   return (
     <div className="relative w-full h-[calc(100vh-65px)] overflow-hidden z-20" style={{ fontFamily: "'Inter', sans-serif", fontWeight: 500 }}>
+      <TopLoadingBar isLoading={isLoading} onComplete={handleLoadingComplete} duration={400} />
       {/* Frosted Glass Effect - highly transparent with strong blur */}
       <div className="absolute inset-0 bg-white/10 backdrop-blur-xl" />
 
@@ -364,7 +386,7 @@ const PoolsInterface = () => {
             {sorted.map((pool, idx) => (
               <div
                 key={pool.id}
-                className="grid grid-cols-[40px_2fr_1fr_1fr_1fr_1fr_1fr_120px] items-center gap-4 px-6 py-4 border-b border-white/5 last:border-b-0 hover:bg-white/5 transition-colors"
+                className="grid grid-cols-[40px_2fr_1fr_1fr_1fr_1fr_1fr_120px] items-center gap-4 px-6 py-4 border-b border-white/5 last:border-b-0"
               >
                 <div className="text-base text-muted-foreground">{idx + 1}</div>
                 <div className="flex items-center gap-3">
