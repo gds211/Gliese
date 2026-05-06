@@ -354,7 +354,7 @@ const PoolsInterface = () => {
                 className="pl-10 pr-4 py-2.5 w-72 rounded-lg bg-muted/40 backdrop-blur-md border border-white/10 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/50 transition-colors"
               />
             </div>
-            <button className="flex items-center gap-2 px-4 py-2.5 rounded-lg bg-white text-black text-sm hover:bg-white/90 transition-colors">
+            <button onClick={openNewPool} className="flex items-center gap-2 px-4 py-2.5 rounded-lg bg-white text-black text-sm hover:bg-white/90 transition-colors">
               <Plus className="w-4 h-4" />
               New Pool
             </button>
