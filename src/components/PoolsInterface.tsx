@@ -1,5 +1,5 @@
 import { useState, useRef } from "react";
-import { Search, Plus, ArrowUp, ArrowDown, ChevronLeft, Wallet, Info } from "lucide-react";
+import { Search, Plus, ArrowUp, ArrowDown, ChevronLeft, Wallet, Info, ChevronDown } from "lucide-react";
 import TopLoadingBar from "@/components/TopLoadingBar";
 
 type Pool = {
@@ -52,6 +52,9 @@ const PoolsInterface = () => {
   const [pendingPool, setPendingPool] = useState<Pool | null>(null);
   const [pendingClose, setPendingClose] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [showNewPool, setShowNewPool] = useState(false);
+  const [pendingNewPool, setPendingNewPool] = useState(false);
+  const [pendingCloseNewPool, setPendingCloseNewPool] = useState(false);
   const inputARef = useRef<HTMLInputElement>(null);
   const inputBRef = useRef<HTMLInputElement>(null);
 
@@ -61,6 +64,15 @@ const PoolsInterface = () => {
   };
   const closeAdd = () => {
     setPendingClose(true);
+    setIsLoading(true);
+  };
+
+  const openNewPool = () => {
+    setPendingNewPool(true);
+    setIsLoading(true);
+  };
+  const closeNewPool = () => {
+    setPendingCloseNewPool(true);
     setIsLoading(true);
   };
 
@@ -74,6 +86,14 @@ const PoolsInterface = () => {
     if (pendingClose) {
       setSelectedPool(null);
       setPendingClose(false);
+    }
+    if (pendingNewPool) {
+      setShowNewPool(true);
+      setPendingNewPool(false);
+    }
+    if (pendingCloseNewPool) {
+      setShowNewPool(false);
+      setPendingCloseNewPool(false);
     }
     setIsLoading(false);
   };
