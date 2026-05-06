@@ -1,5 +1,5 @@
 import { useState, useRef } from "react";
-import { Search, Plus, ArrowUp, ArrowDown, ChevronLeft, Wallet, Info } from "lucide-react";
+import { Search, Plus, ArrowUp, ArrowDown, ChevronLeft, Wallet, Info, ChevronDown } from "lucide-react";
 import TopLoadingBar from "@/components/TopLoadingBar";
 
 type Pool = {
@@ -52,6 +52,9 @@ const PoolsInterface = () => {
   const [pendingPool, setPendingPool] = useState<Pool | null>(null);
   const [pendingClose, setPendingClose] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [showNewPool, setShowNewPool] = useState(false);
+  const [pendingNewPool, setPendingNewPool] = useState(false);
+  const [pendingCloseNewPool, setPendingCloseNewPool] = useState(false);
   const inputARef = useRef<HTMLInputElement>(null);
   const inputBRef = useRef<HTMLInputElement>(null);
 
@@ -61,6 +64,15 @@ const PoolsInterface = () => {
   };
   const closeAdd = () => {
     setPendingClose(true);
+    setIsLoading(true);
+  };
+
+  const openNewPool = () => {
+    setPendingNewPool(true);
+    setIsLoading(true);
+  };
+  const closeNewPool = () => {
+    setPendingCloseNewPool(true);
     setIsLoading(true);
   };
 
@@ -74,6 +86,14 @@ const PoolsInterface = () => {
     if (pendingClose) {
       setSelectedPool(null);
       setPendingClose(false);
+    }
+    if (pendingNewPool) {
+      setShowNewPool(true);
+      setPendingNewPool(false);
+    }
+    if (pendingCloseNewPool) {
+      setShowNewPool(false);
+      setPendingCloseNewPool(false);
     }
     setIsLoading(false);
   };
@@ -119,6 +139,102 @@ const PoolsInterface = () => {
       </button>
     );
   };
+
+  if (showNewPool) {
+    return (
+      <div className="relative w-full h-[calc(100vh-65px)] overflow-hidden z-20" style={{ fontFamily: "'Inter', sans-serif", fontWeight: 500 }}>
+        <TopLoadingBar isLoading={isLoading} onComplete={handleLoadingComplete} duration={400} />
+        <div className="absolute inset-0 bg-white/10 backdrop-blur-xl" />
+        <div
+          className="absolute inset-0 pointer-events-none"
+          style={{ background: "radial-gradient(ellipse at center, rgba(0,0,0,0.3) 0%, transparent 70%)" }}
+        />
+        <div className="relative z-10 px-8 pt-8 pb-8 max-w-[1100px] mx-auto h-full overflow-y-auto no-scrollbar">
+          <button
+            onClick={closeNewPool}
+            className="flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground transition-colors mb-6"
+          >
+            <ChevronLeft className="w-4 h-4" />
+            Back
+          </button>
+          <div className="grid grid-cols-[360px_1fr] gap-5 items-start">
+            {/* Steps panel */}
+            <div className="rounded-2xl border border-white/10 p-5" style={{ backgroundColor: "#262626" }}>
+              <div className="rounded-xl px-4 py-4 bg-primary/10 border border-primary/30">
+                <div className="flex items-center gap-3">
+                  <div className="w-8 h-8 rounded-full border-2 border-primary bg-primary/20 flex items-center justify-center text-sm font-semibold text-primary">1</div>
+                  <div>
+                    <div className="text-xs text-muted-foreground">Step 1</div>
+                    <div className="text-sm text-primary font-medium">Select token & fee tier</div>
+                  </div>
+                </div>
+              </div>
+              <div className="ml-[15px] h-6 w-px bg-white/10" />
+              <div className="px-4 py-2">
+                <div className="flex items-center gap-3">
+                  <div className="w-8 h-8 rounded-full border-2 border-white/20 flex items-center justify-center text-sm text-muted-foreground">2</div>
+                  <div>
+                    <div className="text-xs text-muted-foreground">Step 2</div>
+                    <div className="text-sm text-foreground font-medium">Set initial price & range</div>
+                  </div>
+                </div>
+              </div>
+              <div className="ml-[15px] h-6 w-px bg-white/10" />
+              <div className="px-4 py-2">
+                <div className="flex items-center gap-3">
+                  <div className="w-8 h-8 rounded-full border-2 border-white/20 flex items-center justify-center text-sm text-muted-foreground">3</div>
+                  <div>
+                    <div className="text-xs text-muted-foreground">Step 3</div>
+                    <div className="text-sm text-foreground font-medium">Enter deposit amount</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Form panel */}
+            <div>
+              <h2 className="text-lg text-foreground font-medium mb-4">First, select tokens & fee tier</h2>
+              <div className="rounded-2xl border border-white/10 p-6" style={{ backgroundColor: "#262626" }}>
+                <div className="text-sm text-foreground font-medium mb-3">Tokens</div>
+                <div className="grid grid-cols-2 gap-3 mb-5">
+                  <div className="rounded-xl border border-white/10 bg-muted/20 px-4 py-3">
+                    <div className="text-xs text-muted-foreground mb-2">Base token</div>
+                    <button className="flex items-center justify-between w-full">
+                      <div className="flex items-center gap-2">
+                        <div className="w-7 h-7 rounded-full bg-gradient-to-br from-purple-400 to-fuchsia-600 flex items-center justify-center text-[10px] font-bold text-white">SOL</div>
+                        <span className="text-base text-foreground">SOL</span>
+                      </div>
+                      <ChevronDown className="w-4 h-4 text-muted-foreground" />
+                    </button>
+                  </div>
+                  <div className="rounded-xl border border-white/10 bg-muted/20 px-4 py-3">
+                    <div className="text-xs text-muted-foreground mb-2">Quote token</div>
+                    <button className="flex items-center justify-between w-full">
+                      <div className="flex items-center gap-2">
+                        <div className="w-7 h-7 rounded-full bg-gradient-to-br from-amber-400 to-orange-600 flex items-center justify-center text-[10px] font-bold text-white">SDO</div>
+                        <span className="text-base text-foreground">SDOGE</span>
+                      </div>
+                      <ChevronDown className="w-4 h-4 text-muted-foreground" />
+                    </button>
+                  </div>
+                </div>
+
+                <div className="text-sm text-foreground font-medium mb-3">Fee Tier</div>
+                <button className="w-full flex items-center justify-between rounded-xl border border-white/10 bg-muted/20 px-4 py-3 mb-5">
+                  <span className="text-base text-foreground">0,02%</span>
+                  <ChevronDown className="w-4 h-4 text-muted-foreground" />
+                </button>
+
+                <button className="w-full py-3 rounded-xl text-base font-semibold text-black bg-gradient-to-r from-cyan-300 to-teal-300 hover:opacity-90 transition-opacity">
+                  Continue
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   if (selectedPool) {
     const ratioA = 57.1;
@@ -334,7 +450,7 @@ const PoolsInterface = () => {
                 className="pl-10 pr-4 py-2.5 w-72 rounded-lg bg-muted/40 backdrop-blur-md border border-white/10 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/50 transition-colors"
               />
             </div>
-            <button className="flex items-center gap-2 px-4 py-2.5 rounded-lg bg-white text-black text-sm hover:bg-white/90 transition-colors">
+            <button onClick={openNewPool} className="flex items-center gap-2 px-4 py-2.5 rounded-lg bg-white text-black text-sm hover:bg-white/90 transition-colors">
               <Plus className="w-4 h-4" />
               New Pool
             </button>
