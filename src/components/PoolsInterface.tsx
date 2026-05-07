@@ -154,7 +154,7 @@ const PoolsInterface = () => {
             {/* Back button aligned with steps panel left edge */}
             <button
               onClick={closeNewPool}
-              className="flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground transition-colors mb-6 self-start"
+              className="flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground transition-colors mb-6 self-start translate-y-12"
             >
               <ChevronLeft className="w-4 h-4" />
               Back
