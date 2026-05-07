@@ -149,7 +149,7 @@ const PoolsInterface = () => {
           className="absolute inset-0 pointer-events-none"
           style={{ background: "radial-gradient(ellipse at center, rgba(0,0,0,0.3) 0%, transparent 70%)" }}
         />
-        <div className="relative z-10 px-8 pt-8 pb-8 max-w-[1500px] mx-auto h-full overflow-y-auto no-scrollbar">
+        <div className="relative z-10 px-8 pt-8 pb-8 max-w-[1600px] mx-auto h-full overflow-y-auto no-scrollbar">
           <button
             onClick={closeNewPool}
             className="flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground transition-colors mb-6"
@@ -157,9 +157,12 @@ const PoolsInterface = () => {
             <ChevronLeft className="w-4 h-4" />
             Back
           </button>
-          <div className="flex items-stretch justify-center gap-6">
-            {/* Steps panel - left, matches form card height */}
-            <div className="w-[442px] rounded-2xl border border-white/10 p-5 flex flex-col justify-between self-stretch" style={{ backgroundColor: "#262626" }}>
+          <div className="grid grid-cols-[442px_616px_442px] gap-6 justify-center items-stretch">
+            {/* Steps column - aligned with form card top, same height */}
+            <div className="flex flex-col">
+              {/* Invisible heading to align panel top with card top */}
+              <h2 className="text-lg font-medium mb-4 invisible">.</h2>
+              <div className="flex-1 rounded-2xl border border-white/10 p-5 flex flex-col justify-between" style={{ backgroundColor: "#262626" }}>
               <div className="rounded-xl px-4 py-4 bg-primary/10 border border-primary/30">
                 <div className="flex items-center gap-3">
                   <div className="w-8 h-8 rounded-full border-2 border-primary bg-primary/20 flex items-center justify-center text-sm font-semibold text-primary">1</div>
@@ -188,9 +191,10 @@ const PoolsInterface = () => {
                 </div>
               </div>
             </div>
+            </div>
 
-            {/* Form column */}
-            <div className="w-[616px]">
+            {/* Form column - page-centered */}
+            <div>
               <h2 className="text-lg text-foreground font-medium mb-4">First, select tokens & fee tier</h2>
               <div className="rounded-2xl border border-white/10 p-6" style={{ backgroundColor: "#262626" }}>
                 <div className="text-sm text-foreground font-medium mb-3">Tokens</div>
@@ -228,6 +232,9 @@ const PoolsInterface = () => {
                 </button>
               </div>
             </div>
+
+            {/* Right spacer to keep form centered on the page */}
+            <div aria-hidden="true" />
           </div>
         </div>
       </div>
