@@ -201,8 +201,8 @@ const PoolsInterface = () => {
               </div>
             </div>
 
-            {/* Steps panel - overlays the form card */}
-            <div className="absolute left-1/2 -translate-x-1/2 top-0 bottom-0 w-[560px] z-20 rounded-2xl border border-white/10 p-5 flex flex-col justify-between" style={{ backgroundColor: "#262626" }}>
+            {/* Steps panel - far left, same height as form card */}
+            <div className="absolute left-0 top-0 bottom-0 w-[300px] rounded-2xl border border-white/10 p-5 flex flex-col justify-between" style={{ backgroundColor: "#262626" }}>
               <div className="rounded-xl px-4 py-4 bg-primary/10 border border-primary/30">
                 <div className="flex items-center gap-3">
                   <div className="w-8 h-8 rounded-full border-2 border-primary bg-primary/20 flex items-center justify-center text-sm font-semibold text-primary">1</div>
