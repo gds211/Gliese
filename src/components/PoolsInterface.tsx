@@ -150,7 +150,7 @@ const PoolsInterface = () => {
           style={{ background: "radial-gradient(ellipse at center, rgba(0,0,0,0.3) 0%, transparent 70%)" }}
         />
         <div className="relative z-10 px-8 pt-8 pb-8 max-w-[1600px] mx-auto h-full overflow-y-auto no-scrollbar">
-          <div className="grid grid-cols-[442px_616px_442px] gap-x-[72px] gap-y-0 justify-center items-stretch">
+          <div className="grid grid-cols-[442px_616px_334px] gap-x-[72px] gap-y-0 justify-center items-stretch">
             {/* Back button aligned with steps panel left edge */}
             <button
               onClick={closeNewPool}
