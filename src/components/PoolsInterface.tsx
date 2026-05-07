@@ -166,7 +166,9 @@ const PoolsInterface = () => {
             <div className="flex flex-col">
               {/* Invisible heading to align panel top with card top */}
               <h2 className="text-lg font-medium mb-4 invisible">.</h2>
-              <div className="flex-1 rounded-2xl border border-white/10 p-5 flex flex-col justify-between" style={{ backgroundColor: "#262626" }}>
+              <div className="flex-1 rounded-2xl border border-white/10 p-5 flex flex-col justify-between relative" style={{ backgroundColor: "#262626" }}>
+              {/* Vertical connector line behind step circles */}
+              <div aria-hidden="true" className="absolute left-[51px] top-[84px] bottom-[44px] w-px bg-white/15" />
               <div className="rounded-xl px-4 py-4 bg-primary/10 border border-primary/30">
                 <div className="flex items-center gap-3">
                   <div className="w-8 h-8 rounded-full border-2 border-primary bg-primary/20 flex items-center justify-center text-sm font-semibold text-primary">1</div>
