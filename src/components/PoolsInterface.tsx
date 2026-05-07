@@ -158,12 +158,12 @@ const PoolsInterface = () => {
             Back
           </button>
           <div>
-            <div className="mx-auto w-[560px]">
+            <div className="mx-auto w-[616px]">
               <h2 className="text-lg text-foreground font-medium mb-4">First, select tokens & fee tier</h2>
             </div>
             <div className="relative">
             {/* Form panel - centered */}
-            <div className="mx-auto w-[560px]">
+            <div className="mx-auto w-[616px]">
               <div className="rounded-2xl border border-white/10 p-6" style={{ backgroundColor: "#262626" }}>
                 <div className="text-sm text-foreground font-medium mb-3">Tokens</div>
                 <div className="grid grid-cols-2 gap-3 mb-5">
@@ -202,7 +202,7 @@ const PoolsInterface = () => {
             </div>
 
             {/* Steps panel - far left, same height as form card */}
-            <div className="absolute left-[-40px] top-0 bottom-0 w-[260px] rounded-2xl border border-white/10 p-5 flex flex-col justify-between" style={{ backgroundColor: "#262626" }}>
+            <div className="absolute left-[-240px] top-0 bottom-0 w-[442px] rounded-2xl border border-white/10 p-5 flex flex-col justify-between" style={{ backgroundColor: "#262626" }}>
               <div className="rounded-xl px-4 py-4 bg-primary/10 border border-primary/30">
                 <div className="flex items-center gap-3">
                   <div className="w-8 h-8 rounded-full border-2 border-primary bg-primary/20 flex items-center justify-center text-sm font-semibold text-primary">1</div>
