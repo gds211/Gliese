@@ -151,18 +151,21 @@ const PoolsInterface = () => {
         />
         <div className="relative z-10 px-6 pt-8 pb-8 max-w-[1640px] mx-auto h-full overflow-y-auto no-scrollbar">
           <div className="grid grid-cols-[442px_616px_442px] gap-x-[48px] gap-y-0 justify-center items-stretch">
+            {/* Back button aligned with steps panel left edge */}
+            <button
+              onClick={closeNewPool}
+              className="flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground transition-colors mb-6 self-start"
+            >
+              <ChevronLeft className="w-4 h-4" />
+              Back
+            </button>
+            <div aria-hidden="true" />
+            <div aria-hidden="true" />
+
             {/* Steps column - aligned with form card top, same height */}
             <div className="flex flex-col">
-              {/* Back button aligned with form heading */}
-              <div className="text-lg mb-4 flex items-center">
-                <button
-                  onClick={closeNewPool}
-                  className="flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground transition-colors"
-                >
-                  <ChevronLeft className="w-4 h-4" />
-                  Back
-                </button>
-              </div>
+              {/* Invisible heading to align panel top with card top */}
+              <h2 className="text-lg font-medium mb-4 invisible">.</h2>
               <div className="flex-1 rounded-2xl border border-white/10 p-5 flex flex-col justify-between" style={{ backgroundColor: "#262626" }}>
               <div className="rounded-xl px-4 py-4 bg-primary/10 border border-primary/30">
                 <div className="flex items-center gap-3">
@@ -228,7 +231,7 @@ const PoolsInterface = () => {
                   <ChevronDown className="w-4 h-4 text-muted-foreground" />
                 </button>
 
-                <button className="w-full py-3 rounded-xl text-base font-semibold text-black bg-white hover:bg-white/90 transition-colors">
+                <button className="w-full py-3 rounded-xl text-base font-semibold text-black bg-gradient-to-r from-cyan-300 to-teal-300 hover:opacity-90 transition-opacity">
                   Continue
                 </button>
               </div>
