@@ -157,10 +157,13 @@ const PoolsInterface = () => {
             <ChevronLeft className="w-4 h-4" />
             Back
           </button>
-          <div className="relative">
-            {/* Form panel - centered */}
+          <div>
             <div className="mx-auto w-[560px]">
               <h2 className="text-lg text-foreground font-medium mb-4">First, select tokens & fee tier</h2>
+            </div>
+            <div className="relative">
+            {/* Form panel - centered */}
+            <div className="mx-auto w-[560px]">
               <div className="rounded-2xl border border-white/10 p-6" style={{ backgroundColor: "#262626" }}>
                 <div className="text-sm text-foreground font-medium mb-3">Tokens</div>
                 <div className="grid grid-cols-2 gap-3 mb-5">
@@ -198,8 +201,8 @@ const PoolsInterface = () => {
               </div>
             </div>
 
-            {/* Steps panel - absolutely positioned to left, aligned with tokens card top */}
-            <div className="absolute left-0 top-[44px] w-[360px] rounded-2xl border border-white/10 p-5" style={{ backgroundColor: "#262626" }}>
+            {/* Steps panel - far left, same height as form card */}
+            <div className="absolute left-0 top-0 bottom-0 w-[300px] rounded-2xl border border-white/10 p-5 flex flex-col justify-between" style={{ backgroundColor: "#262626" }}>
               <div className="rounded-xl px-4 py-4 bg-primary/10 border border-primary/30">
                 <div className="flex items-center gap-3">
                   <div className="w-8 h-8 rounded-full border-2 border-primary bg-primary/20 flex items-center justify-center text-sm font-semibold text-primary">1</div>
@@ -209,7 +212,6 @@ const PoolsInterface = () => {
                   </div>
                 </div>
               </div>
-              <div className="ml-[15px] h-6 w-px bg-white/10" />
               <div className="px-4 py-2">
                 <div className="flex items-center gap-3">
                   <div className="w-8 h-8 rounded-full border-2 border-white/20 flex items-center justify-center text-sm text-muted-foreground">2</div>
@@ -219,7 +221,6 @@ const PoolsInterface = () => {
                   </div>
                 </div>
               </div>
-              <div className="ml-[15px] h-6 w-px bg-white/10" />
               <div className="px-4 py-2">
                 <div className="flex items-center gap-3">
                   <div className="w-8 h-8 rounded-full border-2 border-white/20 flex items-center justify-center text-sm text-muted-foreground">3</div>
@@ -229,6 +230,7 @@ const PoolsInterface = () => {
                   </div>
                 </div>
               </div>
+            </div>
             </div>
           </div>
         </div>
