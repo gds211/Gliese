@@ -150,14 +150,18 @@ const PoolsInterface = () => {
           style={{ background: "radial-gradient(ellipse at center, rgba(0,0,0,0.3) 0%, transparent 70%)" }}
         />
         <div className="relative z-10 px-8 pt-8 pb-8 max-w-[1600px] mx-auto h-full overflow-y-auto no-scrollbar">
-          <button
-            onClick={closeNewPool}
-            className="flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground transition-colors mb-6"
-          >
-            <ChevronLeft className="w-4 h-4" />
-            Back
-          </button>
-          <div className="grid grid-cols-[442px_616px_442px] gap-6 justify-center items-stretch">
+          <div className="grid grid-cols-[442px_616px_442px] gap-x-[72px] gap-y-0 justify-center items-stretch">
+            {/* Back button aligned with steps panel left edge */}
+            <button
+              onClick={closeNewPool}
+              className="flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground transition-colors mb-6 self-start"
+            >
+              <ChevronLeft className="w-4 h-4" />
+              Back
+            </button>
+            <div aria-hidden="true" />
+            <div aria-hidden="true" />
+
             {/* Steps column - aligned with form card top, same height */}
             <div className="flex flex-col">
               {/* Invisible heading to align panel top with card top */}
