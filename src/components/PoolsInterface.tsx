@@ -158,12 +158,12 @@ const PoolsInterface = () => {
             Back
           </button>
           <div>
-            <div className="mx-auto w-[560px]">
+            <div className="mx-auto w-[616px]">
               <h2 className="text-lg text-foreground font-medium mb-4">First, select tokens & fee tier</h2>
             </div>
             <div className="relative">
             {/* Form panel - centered */}
-            <div className="mx-auto w-[560px]">
+            <div className="mx-auto w-[616px]">
               <div className="rounded-2xl border border-white/10 p-6" style={{ backgroundColor: "#262626" }}>
                 <div className="text-sm text-foreground font-medium mb-3">Tokens</div>
                 <div className="grid grid-cols-2 gap-3 mb-5">
