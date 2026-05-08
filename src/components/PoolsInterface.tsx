@@ -212,20 +212,14 @@ const PoolsInterface = () => {
                   <div className="rounded-xl border border-white/10 bg-muted/20 px-4 py-3">
                     <div className="text-xs text-muted-foreground mb-2">Base token</div>
                     <button className="flex items-center justify-between w-full">
-                      <div className="flex items-center gap-2">
-                        <div className="w-7 h-7 rounded-full bg-gradient-to-br from-purple-400 to-fuchsia-600 flex items-center justify-center text-[10px] font-bold text-white">SOL</div>
-                        <span className="text-base text-foreground">SOL</span>
-                      </div>
+                      <span className="text-base text-foreground">Select</span>
                       <ChevronDown className="w-4 h-4 text-muted-foreground" />
                     </button>
                   </div>
                   <div className="rounded-xl border border-white/10 bg-muted/20 px-4 py-3">
                     <div className="text-xs text-muted-foreground mb-2">Quote token</div>
                     <button className="flex items-center justify-between w-full">
-                      <div className="flex items-center gap-2">
-                        <div className="w-7 h-7 rounded-full bg-gradient-to-br from-amber-400 to-orange-600 flex items-center justify-center text-[10px] font-bold text-white">SDO</div>
-                        <span className="text-base text-foreground">SDOGE</span>
-                      </div>
+                      <span className="text-base text-foreground">Select</span>
                       <ChevronDown className="w-4 h-4 text-muted-foreground" />
                     </button>
                   </div>
