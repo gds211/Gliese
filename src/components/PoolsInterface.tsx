@@ -232,7 +232,7 @@ const PoolsInterface = () => {
                 </div>
 
                 <div className="text-sm text-foreground font-medium mb-3">Fee Tier</div>
-                <div className="w-full px-4 py-3 mb-5">
+                <div className="w-full rounded-xl border border-white/10 bg-muted/20 px-4 py-3 mb-5">
                   <p className="text-sm text-muted-foreground leading-relaxed">
                     The amount earned providing liquidity. All Gliese pools have fixed 0.1% fees.
                   </p>
