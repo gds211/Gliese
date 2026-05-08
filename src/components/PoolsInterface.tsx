@@ -314,9 +314,7 @@ const PoolsInterface = () => {
           <DialogOverlay />
           <DialogContent className="sm:max-w-md bg-[#0b0f17]/95 border border-white/10 text-white">
             <DialogHeader>
-              <DialogTitle className="text-white">
-                {tokenPickerTarget === "base" ? "Select base token" : "Select quote token"}
-              </DialogTitle>
+              <DialogTitle className="text-white">Select a token</DialogTitle>
             </DialogHeader>
             <div className="relative">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-white/50" />
