@@ -232,10 +232,11 @@ const PoolsInterface = () => {
                 </div>
 
                 <div className="text-sm text-foreground font-medium mb-3">Fee Tier</div>
-                <button className="w-full flex items-center justify-between rounded-xl border border-white/10 bg-muted/20 px-4 py-3 mb-5">
-                  <span className="text-base text-foreground">0,02%</span>
-                  <ChevronDown className="w-4 h-4 text-muted-foreground" />
-                </button>
+                <div className="w-full rounded-xl border border-white/10 bg-muted/20 px-4 py-3 mb-5">
+                  <p className="text-sm text-muted-foreground leading-relaxed">
+                    The amount earned providing liquidity. All Gliese pools have fixed 0.1% fees.
+                  </p>
+                </div>
 
                 <button className="w-full py-3 rounded-xl text-base font-semibold text-black bg-gradient-to-r from-cyan-300 to-teal-300 hover:opacity-90 transition-opacity">
                   Continue
