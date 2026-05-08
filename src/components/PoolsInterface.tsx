@@ -172,7 +172,7 @@ const PoolsInterface = () => {
                     <div className="w-8 h-8 rounded-full border-2 border-primary bg-primary/20 flex items-center justify-center text-sm font-semibold text-primary">1</div>
                     <div>
                       <div className="text-xs text-muted-foreground">Step 1</div>
-                      <div className="text-sm text-primary font-medium">Select token & fee tier</div>
+                      <div className="text-sm text-primary font-medium">Select tokens</div>
                     </div>
                   </div>
                 </div>
@@ -184,7 +184,7 @@ const PoolsInterface = () => {
                     <div className="w-8 h-8 rounded-full border-2 border-white/20 flex items-center justify-center text-sm text-muted-foreground">2</div>
                     <div>
                       <div className="text-xs text-muted-foreground">Step 2</div>
-                      <div className="text-sm text-foreground font-medium">Set initial price & range</div>
+                      <div className="text-sm text-foreground font-medium">Set initial price & spread</div>
                     </div>
                   </div>
                 </div>
@@ -205,7 +205,7 @@ const PoolsInterface = () => {
 
             {/* Form column - page-centered */}
             <div>
-              <h2 className="text-lg text-foreground font-medium mb-4">First, select tokens & fee tier</h2>
+              <h2 className="text-lg text-foreground font-medium mb-4">First, select tokens</h2>
               <div className="rounded-2xl border border-white/10 p-6" style={{ backgroundColor: "#262626" }}>
                 <div className="text-sm text-foreground font-medium mb-3">Tokens</div>
                 <div className="grid grid-cols-2 gap-3 mb-5">
