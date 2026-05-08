@@ -1,6 +1,32 @@
 import { useState, useRef } from "react";
 import { Search, Plus, ArrowUp, ArrowDown, ChevronLeft, Wallet, Info, ChevronDown } from "lucide-react";
 import TopLoadingBar from "@/components/TopLoadingBar";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogOverlay } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Button } from "@/components/ui/button";
+import TokenAvatar from "@/components/TokenAvatar";
+
+type PoolToken = {
+  symbol: string;
+  name?: string;
+  address?: `0x${string}`;
+};
+
+const POOL_TOKENS: PoolToken[] = [
+  { symbol: "MON", name: "monad" },
+  { symbol: "USDC", name: "Circle USD", address: "0xf817257fed379853cDe0fa4F97AB987181B1E5Ea" },
+  { symbol: "USDT", name: "Tether USD", address: "0x88b8E2161DEDC77EF4ab7585569D2415a1C1055D" },
+  { symbol: "CHOG", name: "chog", address: "0xE0590015A873bF326bd645c3E1266d4db41C4E6B" },
+  { symbol: "DAK", name: "Molandak", address: "0x0F0BDEbF0F83cD1EE3974779Bcb7315f9808c714" },
+  { symbol: "aprMON", name: "apriori MON", address: "0xb2f82D0f38dc453D596Ad40A37799446Cc89274A" },
+  { symbol: "WMON", name: "Wrapped Monad", address: "0x760AfE86e5de5fa0Ee542fc7B7B713e1c5425701" },
+  { symbol: "gMON", name: "gMON", address: "0xaEef2f6B429Cb59C9B2D7bB2141ADa993E8571c3" },
+  { symbol: "shMON", name: "ShMonad", address: "0x3a98250F98Dd388C211206983453837C8365BDc1" },
+  { symbol: "YAKI", name: "Moyaki", address: "0xfe140e1dCe99Be9F4F15d657CD9b7BF622270C50" },
+  { symbol: "WETH", name: "Wrapped ETH", address: "0xB5a30b0FDc5EA94A52fDc42e3E9760Cb8449Fb37" },
+  { symbol: "WBTC", name: "Wrapped BTC", address: "0xcf5a6076cfa32686c0Df13aBaDa2b40dec133F1d" },
+];
 
 type Pool = {
   id: number;
@@ -55,8 +81,35 @@ const PoolsInterface = () => {
   const [showNewPool, setShowNewPool] = useState(false);
   const [pendingNewPool, setPendingNewPool] = useState(false);
   const [pendingCloseNewPool, setPendingCloseNewPool] = useState(false);
+  const [baseToken, setBaseToken] = useState<PoolToken | null>(null);
+  const [quoteToken, setQuoteToken] = useState<PoolToken | null>(null);
+  const [tokenPickerOpen, setTokenPickerOpen] = useState(false);
+  const [tokenPickerTarget, setTokenPickerTarget] = useState<"base" | "quote">("base");
+  const [tokenSearch, setTokenSearch] = useState("");
   const inputARef = useRef<HTMLInputElement>(null);
   const inputBRef = useRef<HTMLInputElement>(null);
+
+  const openTokenPicker = (target: "base" | "quote") => {
+    setTokenPickerTarget(target);
+    setTokenSearch("");
+    setTokenPickerOpen(true);
+  };
+
+  const handleSelectToken = (t: PoolToken) => {
+    if (tokenPickerTarget === "base") setBaseToken(t);
+    else setQuoteToken(t);
+    setTokenPickerOpen(false);
+  };
+
+  const filteredPoolTokens = POOL_TOKENS.filter((t) => {
+    const q = tokenSearch.trim().toLowerCase();
+    if (!q) return true;
+    return (
+      t.symbol.toLowerCase().includes(q) ||
+      (t.name || "").toLowerCase().includes(q) ||
+      (t.address || "").toLowerCase().includes(q)
+    );
+  });
 
   const openAdd = (pool: Pool) => {
     setPendingPool(pool);
@@ -211,15 +264,29 @@ const PoolsInterface = () => {
                 <div className="grid grid-cols-2 gap-3 mb-5">
                   <div className="rounded-xl border border-white/10 bg-muted/20 px-4 py-3">
                     <div className="text-xs text-muted-foreground mb-2">Base token</div>
-                    <button className="flex items-center justify-between w-full">
-                      <span className="text-base text-foreground">Select</span>
+                    <button onClick={() => openTokenPicker("base")} className="flex items-center justify-between w-full">
+                      {baseToken ? (
+                        <span className="flex items-center gap-2">
+                          <TokenAvatar symbol={baseToken.symbol} address={baseToken.address} size={20} />
+                          <span className="text-base text-foreground">{baseToken.symbol}</span>
+                        </span>
+                      ) : (
+                        <span className="text-base text-foreground">Select</span>
+                      )}
                       <ChevronDown className="w-4 h-4 text-muted-foreground" />
                     </button>
                   </div>
                   <div className="rounded-xl border border-white/10 bg-muted/20 px-4 py-3">
                     <div className="text-xs text-muted-foreground mb-2">Quote token</div>
-                    <button className="flex items-center justify-between w-full">
-                      <span className="text-base text-foreground">Select</span>
+                    <button onClick={() => openTokenPicker("quote")} className="flex items-center justify-between w-full">
+                      {quoteToken ? (
+                        <span className="flex items-center gap-2">
+                          <TokenAvatar symbol={quoteToken.symbol} address={quoteToken.address} size={20} />
+                          <span className="text-base text-foreground">{quoteToken.symbol}</span>
+                        </span>
+                      ) : (
+                        <span className="text-base text-foreground">Select</span>
+                      )}
                       <ChevronDown className="w-4 h-4 text-muted-foreground" />
                     </button>
                   </div>
@@ -242,6 +309,46 @@ const PoolsInterface = () => {
             <div aria-hidden="true" />
           </div>
         </div>
+
+        <Dialog open={tokenPickerOpen} onOpenChange={setTokenPickerOpen}>
+          <DialogOverlay />
+          <DialogContent className="sm:max-w-md bg-[#0b0f17]/95 border border-white/10 text-white">
+            <DialogHeader>
+              <DialogTitle className="text-white">Select a token</DialogTitle>
+            </DialogHeader>
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-white/50" />
+              <Input
+                placeholder="Search tokens"
+                value={tokenSearch}
+                onChange={(e) => setTokenSearch(e.target.value)}
+                className="pl-10 bg-white/5 border border-white/10 text-white placeholder:text-white/40 focus:border-white/40 focus:bg-white/10 focus-visible:ring-0 focus-visible:ring-offset-0"
+              />
+            </div>
+            <ScrollArea className="h-[30.5rem] w-full pr-4">
+              <div className="space-y-2">
+                {filteredPoolTokens.map((t) => (
+                  <Button
+                    key={t.address ?? `sym:${t.symbol}`}
+                    variant="ghost"
+                    className="w-full py-3 px-3 rounded-xl border border-white/10 hover:bg-white/5 transition-colors h-auto"
+                    onClick={() => handleSelectToken(t)}
+                  >
+                    <div className="flex items-center gap-3 w-full">
+                      <div className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center shrink-0">
+                        <TokenAvatar symbol={t.symbol} address={t.address} size={30} title={t.name || t.symbol} />
+                      </div>
+                      <div className="flex-1 text-left">
+                        <div className="font-semibold text-white text-base">{t.symbol}</div>
+                        <div className="text-sm text-white/60">{t.name || "Unknown"}</div>
+                      </div>
+                    </div>
+                  </Button>
+                ))}
+              </div>
+            </ScrollArea>
+          </DialogContent>
+        </Dialog>
       </div>
     );
   }
