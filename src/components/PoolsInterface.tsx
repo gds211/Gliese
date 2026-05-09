@@ -248,6 +248,7 @@ const PoolsInterface = () => {
 
   if (showNewPool) {
     return (
+      <>
       <div className="relative w-full h-[calc(100vh-65px)] overflow-hidden z-20" style={{ fontFamily: "'Inter', sans-serif", fontWeight: 500 }}>
         <TopLoadingBar isLoading={isLoading} onComplete={handleLoadingComplete} duration={400} />
         <div className="absolute inset-0 bg-white/10 backdrop-blur-xl" />
@@ -362,70 +363,71 @@ const PoolsInterface = () => {
             <div aria-hidden="true" />
           </div>
         </div>
+      </div>
 
-        <Dialog open={tokenPickerOpen} onOpenChange={setTokenPickerOpen}>
-          <DialogOverlay />
-          <DialogContent className="sm:max-w-md bg-[#0b0f17]/95 border border-white/10 text-white">
-            <DialogHeader>
-              <DialogTitle className="text-white">
-                {tokenPickerTarget === "base" ? "Select base token" : "Select Quote token"}
-              </DialogTitle>
-            </DialogHeader>
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-white/50" />
-              <Input
-                placeholder="Search any token. Include '0x' for exact match."
-                value={tokenSearch}
-                onChange={(e) => setTokenSearch(e.target.value)}
-                className="pl-10 bg-white/5 border border-white/10 text-white placeholder:text-white/40 focus:border-white/40 focus:bg-white/10 focus-visible:ring-0 focus-visible:ring-offset-0"
-              />
+      <Dialog open={tokenPickerOpen} onOpenChange={setTokenPickerOpen}>
+        <DialogOverlay />
+        <DialogContent className="sm:max-w-md bg-[#0b0f17]/95 border border-white/10 text-white">
+          <DialogHeader>
+            <DialogTitle className="text-white">
+              {tokenPickerTarget === "base" ? "Select base token" : "Select Quote token"}
+            </DialogTitle>
+          </DialogHeader>
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-white/50" />
+            <Input
+              placeholder="Search any token. Include '0x' for exact match."
+              value={tokenSearch}
+              onChange={(e) => setTokenSearch(e.target.value)}
+              className="pl-10 bg-white/5 border border-white/10 text-white placeholder:text-white/40 focus:border-white/40 focus:bg-white/10 focus-visible:ring-0 focus-visible:ring-offset-0"
+            />
+          </div>
+          {tokenSearch.trim() && tokenSearching && (
+            <div className="flex items-center gap-2 text-xs text-white/60 py-1">
+              <Loader2 className="h-3.5 w-3.5 animate-spin" />
+              <span>Searching DEXes…</span>
             </div>
-            {tokenSearch.trim() && tokenSearching && (
-              <div className="flex items-center gap-2 text-xs text-white/60 py-1">
-                <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                <span>Searching DEXes…</span>
-              </div>
-            )}
-            <ScrollArea className="h-[30.5rem] w-full pr-4">
-              <div className="space-y-2">
-                {filteredPoolTokens.map((t) => (
-                  <Button
-                    key={t.address ?? `sym:${t.symbol}`}
-                    variant="ghost"
-                    className="w-full py-3 px-3 rounded-xl border border-white/10 hover:bg-white/5 transition-colors h-auto"
-                    onClick={() => handleSelectToken(t)}
-                  >
-                    <div className="flex items-center gap-3 w-full">
-                      <div className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center shrink-0">
-                        <TokenAvatar symbol={t.symbol} address={t.address} size={30} title={t.name || t.symbol} />
+          )}
+          <ScrollArea className="h-[30.5rem] w-full pr-4">
+            <div className="space-y-2">
+              {filteredPoolTokens.map((t) => (
+                <Button
+                  key={t.address ?? `sym:${t.symbol}`}
+                  variant="ghost"
+                  className="w-full py-3 px-3 rounded-xl border border-white/10 hover:bg-white/5 transition-colors h-auto"
+                  onClick={() => handleSelectToken(t)}
+                >
+                  <div className="flex items-center gap-3 w-full">
+                    <div className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center shrink-0">
+                      <TokenAvatar symbol={t.symbol} address={t.address} size={30} title={t.name || t.symbol} />
+                    </div>
+                    <div className="flex-1 text-left">
+                      <div className="font-semibold text-white text-base flex items-center justify-between gap-2">
+                        <div className="flex items-center gap-1">
+                          {t.symbol}
+                          {isVerifiedPoolToken(t) && (
+                            <img src={verifiedBadge} alt="verified" className="w-3.5 h-3.5 inline-block" />
+                          )}
+                        </div>
+                        <TokenBalanceDisplay
+                          tokenAddress={t.address as Address | undefined}
+                          walletAddress={walletAddress}
+                        />
                       </div>
-                      <div className="flex-1 text-left">
-                        <div className="font-semibold text-white text-base flex items-center justify-between gap-2">
-                          <div className="flex items-center gap-1">
-                            {t.symbol}
-                            {isVerifiedPoolToken(t) && (
-                              <img src={verifiedBadge} alt="verified" className="w-3.5 h-3.5 inline-block" />
-                            )}
-                          </div>
-                          <TokenBalanceDisplay
-                            tokenAddress={t.address as Address | undefined}
-                            walletAddress={walletAddress}
-                          />
-                        </div>
-                        <div className="text-sm text-white/60">{t.name || "Unknown"}</div>
-                        <div className="text-sm text-white/60 font-mono">
-                          {t.address ? formatAddress(t.address) : "Native coin"}
-                        </div>
+                      <div className="text-sm text-white/60">{t.name || "Unknown"}</div>
+                      <div className="text-sm text-white/60 font-mono">
+                        {t.address ? formatAddress(t.address) : "Native coin"}
                       </div>
                     </div>
-                  </Button>
-                ))}
-              </div>
-            </ScrollArea>
-          </DialogContent>
-        </Dialog>
-      </div>
-    );
+                  </div>
+                </Button>
+              ))}
+            </div>
+          </ScrollArea>
+        </DialogContent>
+      </Dialog>
+    </>
+  );
   }
 
   if (selectedPool) {
