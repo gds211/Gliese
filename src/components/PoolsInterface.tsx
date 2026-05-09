@@ -276,45 +276,90 @@ const PoolsInterface = () => {
               {/* Invisible heading to align panel top with card top */}
               <h2 className="text-lg font-medium mb-4 invisible">.</h2>
               <div className="flex-1 rounded-2xl border border-white/10 p-5 flex flex-col relative" style={{ backgroundColor: "#262626" }}>
-                <div className="shrink-0 rounded-xl px-4 py-4 bg-primary/10 border border-primary/30">
-                  <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 rounded-full border-2 border-primary bg-primary/20 flex items-center justify-center text-sm font-semibold text-primary">1</div>
-                    <div>
-                      <div className="text-xs text-muted-foreground">Step 1</div>
-                      <div className="text-sm text-primary font-medium">Select tokens</div>
-                    </div>
-                  </div>
-                </div>
-                <div className="flex-1 flex flex-col items-start justify-center min-h-[8px]">
-                  <div className="ml-[31px] w-px flex-1 bg-white/15 my-1" />
-                </div>
-                <div className="shrink-0 px-4 py-2">
-                  <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 rounded-full border-2 border-white/20 flex items-center justify-center text-sm text-muted-foreground">2</div>
-                    <div>
-                      <div className="text-xs text-muted-foreground">Step 2</div>
-                      <div className="text-sm text-foreground font-medium">Set initial price & spread</div>
-                    </div>
-                  </div>
-                </div>
-                <div className="flex-1 flex flex-col items-start justify-center min-h-[8px]">
-                  <div className="ml-[31px] w-px flex-1 bg-white/15 my-1" />
-                </div>
-                <div className="shrink-0 px-4 py-2">
-                  <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 rounded-full border-2 border-white/20 flex items-center justify-center text-sm text-muted-foreground">3</div>
-                    <div>
-                      <div className="text-xs text-muted-foreground">Step 3</div>
-                      <div className="text-sm text-foreground font-medium">Enter deposit amount</div>
-                    </div>
-                  </div>
-                </div>
+                {[
+                  { n: 1, label: "Select tokens" },
+                  { n: 2, label: "Set initial price & spread" },
+                  { n: 3, label: "Enter deposit amount" },
+                ].map((s, i) => {
+                  const active = newPoolStep === s.n;
+                  return (
+                    <>
+                      <div
+                        key={s.n}
+                        className={`shrink-0 rounded-xl px-4 py-4 ${active ? "bg-primary/10 border border-primary/30" : ""}`}
+                      >
+                        <div className="flex items-center gap-3">
+                          <div
+                            className={`w-8 h-8 rounded-full border-2 flex items-center justify-center text-sm font-semibold ${
+                              active
+                                ? "border-primary bg-primary/20 text-primary"
+                                : "border-white/20 text-muted-foreground"
+                            }`}
+                          >
+                            {s.n}
+                          </div>
+                          <div>
+                            <div className="text-xs text-muted-foreground">Step {s.n}</div>
+                            <div className={`text-sm font-medium ${active ? "text-primary" : "text-foreground"}`}>
+                              {s.label}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                      {i < 2 && (
+                        <div key={`sep-${s.n}`} className="flex-1 flex flex-col items-start justify-center min-h-[8px]">
+                          <div className="ml-[31px] w-px flex-1 bg-white/15 my-1" />
+                        </div>
+                      )}
+                    </>
+                  );
+                })}
               </div>
             </div>
 
             {/* Form column - page-centered */}
             <div>
-              <h2 className="text-lg text-foreground font-medium mb-4">First, select tokens</h2>
+              <h2 className="text-lg text-foreground font-medium mb-4">
+                {newPoolStep === 1
+                  ? "First, select tokens"
+                  : "Next, set initial token price & position price range"}
+              </h2>
+              {newPoolStep > 1 && (
+                <div
+                  className="rounded-2xl border border-white/10 px-5 py-4 mb-4 flex items-center justify-between"
+                  style={{ backgroundColor: "#262626" }}
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="flex items-center -space-x-2">
+                      {baseToken && (
+                        <div className="ring-2 ring-[#262626] rounded-full">
+                          <TokenAvatar symbol={baseToken.symbol} address={baseToken.address} size={24} />
+                        </div>
+                      )}
+                      {quoteToken && (
+                        <div className="ring-2 ring-[#262626] rounded-full">
+                          <TokenAvatar symbol={quoteToken.symbol} address={quoteToken.address} size={24} />
+                        </div>
+                      )}
+                    </div>
+                    <span className="text-base text-foreground font-medium">
+                      {baseToken?.symbol} / {quoteToken?.symbol}
+                    </span>
+                    <span className="text-xs text-primary bg-primary/10 border border-primary/30 rounded-full px-2.5 py-1">
+                      Fee 0.1%
+                    </span>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setNewPoolStep(1)}
+                    className="text-muted-foreground hover:text-foreground transition-colors"
+                    aria-label="Edit tokens"
+                  >
+                    <Pencil className="w-4 h-4" />
+                  </button>
+                </div>
+              )}
+              {newPoolStep === 1 && (
               <div className="rounded-2xl border border-white/10 p-6" style={{ backgroundColor: "#262626" }}>
                 <div className="text-sm text-foreground font-medium mb-3">Tokens</div>
                 <div className="grid grid-cols-2 gap-3 mb-5">
@@ -366,11 +411,13 @@ const PoolsInterface = () => {
                 <button
                   type="button"
                   disabled={!baseToken || !quoteToken}
+                  onClick={() => setNewPoolStep(2)}
                   className="w-full py-3 rounded-xl text-base font-semibold text-black bg-gradient-to-r from-cyan-300 to-teal-300 hover:opacity-90 transition-opacity disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:opacity-40"
                 >
                   Continue
                 </button>
               </div>
+              )}
             </div>
 
             {/* Right spacer to keep form centered on the page */}
