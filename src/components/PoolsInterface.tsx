@@ -1,5 +1,5 @@
 import { useState, useRef } from "react";
-import { Search, Plus, ArrowUp, ArrowDown, ChevronLeft, Wallet, Info, ChevronDown, Loader2 } from "lucide-react";
+import { Search, Plus, ArrowUp, ArrowDown, ChevronLeft, Wallet, Info, ChevronDown, Loader2, Pencil } from "lucide-react";
 import TopLoadingBar from "@/components/TopLoadingBar";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogOverlay } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
@@ -117,6 +117,7 @@ const PoolsInterface = () => {
   const [tokenPickerOpen, setTokenPickerOpen] = useState(false);
   const [tokenPickerTarget, setTokenPickerTarget] = useState<"base" | "quote">("base");
   const [tokenSearch, setTokenSearch] = useState("");
+  const [newPoolStep, setNewPoolStep] = useState<1 | 2 | 3>(1);
   const inputARef = useRef<HTMLInputElement>(null);
   const inputBRef = useRef<HTMLInputElement>(null);
   const { address: walletAddress } = useAccount();
@@ -195,10 +196,12 @@ const PoolsInterface = () => {
     }
     if (pendingNewPool) {
       setShowNewPool(true);
+      setNewPoolStep(1);
       setPendingNewPool(false);
     }
     if (pendingCloseNewPool) {
       setShowNewPool(false);
+      setNewPoolStep(1);
       setPendingCloseNewPool(false);
     }
     setIsLoading(false);
