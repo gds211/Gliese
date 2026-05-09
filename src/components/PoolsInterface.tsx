@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useState, useRef, Fragment } from "react";
 import { Search, Plus, ArrowUp, ArrowDown, ChevronLeft, Wallet, Info, ChevronDown, Loader2, Pencil } from "lucide-react";
 import TopLoadingBar from "@/components/TopLoadingBar";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogOverlay } from "@/components/ui/dialog";
@@ -283,9 +283,8 @@ const PoolsInterface = () => {
                 ].map((s, i) => {
                   const active = newPoolStep === s.n;
                   return (
-                    <>
+                    <Fragment key={s.n}>
                       <div
-                        key={s.n}
                         className={`shrink-0 rounded-xl px-4 py-4 ${active ? "bg-primary/10 border border-primary/30" : ""}`}
                       >
                         <div className="flex items-center gap-3">
@@ -307,11 +306,11 @@ const PoolsInterface = () => {
                         </div>
                       </div>
                       {i < 2 && (
-                        <div key={`sep-${s.n}`} className="flex-1 flex flex-col items-start justify-center min-h-[8px]">
+                        <div className="flex-1 flex flex-col items-start justify-center min-h-[8px]">
                           <div className="ml-[31px] w-px flex-1 bg-white/15 my-1" />
                         </div>
                       )}
-                    </>
+                    </Fragment>
                   );
                 })}
               </div>
