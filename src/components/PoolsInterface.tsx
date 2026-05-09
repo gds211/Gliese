@@ -315,9 +315,13 @@ const PoolsInterface = () => {
               <div className="rounded-2xl border border-white/10 p-6" style={{ backgroundColor: "#262626" }}>
                 <div className="text-sm text-foreground font-medium mb-3">Tokens</div>
                 <div className="grid grid-cols-2 gap-3 mb-5">
-                  <div className="rounded-xl border border-white/10 bg-muted/20 px-4 py-3">
+                  <button
+                    type="button"
+                    onClick={() => openTokenPicker("base")}
+                    className="text-left rounded-xl border border-white/10 bg-muted/20 px-4 py-3 hover:bg-muted/30 transition-colors"
+                  >
                     <div className="text-xs text-muted-foreground mb-2">Base token</div>
-                    <button onClick={() => openTokenPicker("base")} className="flex items-center justify-between w-full">
+                    <div className="flex items-center justify-between w-full">
                       {baseToken ? (
                         <span className="flex items-center gap-2">
                           <TokenAvatar symbol={baseToken.symbol} address={baseToken.address} size={20} />
@@ -327,11 +331,15 @@ const PoolsInterface = () => {
                         <span className="text-base text-foreground">Select</span>
                       )}
                       <ChevronDown className="w-4 h-4 text-muted-foreground" />
-                    </button>
-                  </div>
-                  <div className="rounded-xl border border-white/10 bg-muted/20 px-4 py-3">
+                    </div>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => openTokenPicker("quote")}
+                    className="text-left rounded-xl border border-white/10 bg-muted/20 px-4 py-3 hover:bg-muted/30 transition-colors"
+                  >
                     <div className="text-xs text-muted-foreground mb-2">Quote token</div>
-                    <button onClick={() => openTokenPicker("quote")} className="flex items-center justify-between w-full">
+                    <div className="flex items-center justify-between w-full">
                       {quoteToken ? (
                         <span className="flex items-center gap-2">
                           <TokenAvatar symbol={quoteToken.symbol} address={quoteToken.address} size={20} />
@@ -341,8 +349,8 @@ const PoolsInterface = () => {
                         <span className="text-base text-foreground">Select</span>
                       )}
                       <ChevronDown className="w-4 h-4 text-muted-foreground" />
-                    </button>
-                  </div>
+                    </div>
+                  </button>
                 </div>
 
                 <div className="text-sm text-foreground font-medium mb-3">Fee Tier</div>
@@ -352,7 +360,11 @@ const PoolsInterface = () => {
                   </p>
                 </div>
 
-                <button className="w-full py-3 rounded-xl text-base font-semibold text-black bg-gradient-to-r from-cyan-300 to-teal-300 hover:opacity-90 transition-opacity">
+                <button
+                  type="button"
+                  disabled={!baseToken || !quoteToken}
+                  className="w-full py-3 rounded-xl text-base font-semibold text-black bg-gradient-to-r from-cyan-300 to-teal-300 hover:opacity-90 transition-opacity disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:opacity-40"
+                >
                   Continue
                 </button>
               </div>
