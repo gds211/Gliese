@@ -1,11 +1,42 @@
 import { useState, useRef } from "react";
-import { Search, Plus, ArrowUp, ArrowDown, ChevronLeft, Wallet, Info, ChevronDown } from "lucide-react";
+import { Search, Plus, ArrowUp, ArrowDown, ChevronLeft, Wallet, Info, ChevronDown, Loader2 } from "lucide-react";
 import TopLoadingBar from "@/components/TopLoadingBar";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogOverlay } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Button } from "@/components/ui/button";
 import TokenAvatar from "@/components/TokenAvatar";
+import { useAccount } from "wagmi";
+import { Address } from "viem";
+import { useTokenBalance } from "@/hooks/useTokenBalance";
+import { useTokenSearch } from "@/hooks/useTokenSearch";
+import { useDebouncedValue } from "@/hooks/useDebouncedValue";
+import { formatBalanceWithScale } from "@/lib/utils";
+import verifiedBadge from "@/assets/verified-badge.svg";
+
+function formatAddress(addr: string): string {
+  return `${addr.slice(0, 6)}...${addr.slice(-6)}`;
+}
+
+const TokenBalanceDisplay = ({
+  tokenAddress,
+  walletAddress,
+}: {
+  tokenAddress?: Address;
+  walletAddress?: Address;
+}) => {
+  const { formatted, isLoading } = useTokenBalance({
+    address: walletAddress,
+    token: tokenAddress,
+  });
+  if (!walletAddress) return <span className="text-xs text-white font-medium tabular-nums">0.0000</span>;
+  if (isLoading) return <span className="text-xs text-white font-medium tabular-nums">...</span>;
+  return (
+    <span className="text-xs text-white font-medium tabular-nums">
+      {formatted ? formatBalanceWithScale(parseFloat(formatted)) : "0.0000"}
+    </span>
+  );
+};
 
 type PoolToken = {
   symbol: string;
@@ -88,6 +119,9 @@ const PoolsInterface = () => {
   const [tokenSearch, setTokenSearch] = useState("");
   const inputARef = useRef<HTMLInputElement>(null);
   const inputBRef = useRef<HTMLInputElement>(null);
+  const { address: walletAddress } = useAccount();
+  const debouncedTokenSearch = useDebouncedValue(tokenSearch, 250);
+  const { data: tokenSearchResults = [], isLoading: tokenSearching } = useTokenSearch(debouncedTokenSearch);
 
   const openTokenPicker = (target: "base" | "quote") => {
     setTokenPickerTarget(target);
@@ -101,15 +135,34 @@ const PoolsInterface = () => {
     setTokenPickerOpen(false);
   };
 
-  const filteredPoolTokens = POOL_TOKENS.filter((t) => {
+  const isVerifiedPoolToken = (t: { symbol: string; address?: `0x${string}` }) =>
+    POOL_TOKENS.some((p) => {
+      if (p.address && t.address) return p.address.toLowerCase() === t.address.toLowerCase();
+      if (!p.address && !t.address) return p.symbol.toUpperCase() === t.symbol.toUpperCase();
+      return false;
+    });
+
+  const filteredPoolTokens: PoolToken[] = (() => {
     const q = tokenSearch.trim().toLowerCase();
-    if (!q) return true;
-    return (
-      t.symbol.toLowerCase().includes(q) ||
-      (t.name || "").toLowerCase().includes(q) ||
-      (t.address || "").toLowerCase().includes(q)
+    if (!q) return POOL_TOKENS;
+    const local = POOL_TOKENS.filter(
+      (t) =>
+        t.symbol.toLowerCase().includes(q) ||
+        (t.name || "").toLowerCase().includes(q) ||
+        (t.address || "").toLowerCase().includes(q)
     );
-  });
+    const seen = new Set<string>(
+      local.map((t) => (t.address ? `a:${t.address.toLowerCase()}` : `s:${t.symbol.toUpperCase()}`))
+    );
+    const remote: PoolToken[] = [];
+    for (const r of tokenSearchResults as any[]) {
+      const key = r.address ? `a:${r.address.toLowerCase()}` : `s:${(r.symbol || "").toUpperCase()}`;
+      if (seen.has(key)) continue;
+      seen.add(key);
+      remote.push({ symbol: r.symbol || "", name: r.name, address: r.address });
+    }
+    return [...local, ...remote];
+  })();
 
   const openAdd = (pool: Pool) => {
     setPendingPool(pool);
@@ -314,17 +367,25 @@ const PoolsInterface = () => {
           <DialogOverlay />
           <DialogContent className="sm:max-w-md bg-[#0b0f17]/95 border border-white/10 text-white">
             <DialogHeader>
-              <DialogTitle className="text-white">Select a token</DialogTitle>
+              <DialogTitle className="text-white">
+                {tokenPickerTarget === "base" ? "Select base token" : "Select Quote token"}
+              </DialogTitle>
             </DialogHeader>
             <div className="relative">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-white/50" />
               <Input
-                placeholder="Search tokens"
+                placeholder="Search any token. Include '0x' for exact match."
                 value={tokenSearch}
                 onChange={(e) => setTokenSearch(e.target.value)}
                 className="pl-10 bg-white/5 border border-white/10 text-white placeholder:text-white/40 focus:border-white/40 focus:bg-white/10 focus-visible:ring-0 focus-visible:ring-offset-0"
               />
             </div>
+            {tokenSearch.trim() && tokenSearching && (
+              <div className="flex items-center gap-2 text-xs text-white/60 py-1">
+                <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                <span>Searching DEXes…</span>
+              </div>
+            )}
             <ScrollArea className="h-[30.5rem] w-full pr-4">
               <div className="space-y-2">
                 {filteredPoolTokens.map((t) => (
@@ -339,8 +400,22 @@ const PoolsInterface = () => {
                         <TokenAvatar symbol={t.symbol} address={t.address} size={30} title={t.name || t.symbol} />
                       </div>
                       <div className="flex-1 text-left">
-                        <div className="font-semibold text-white text-base">{t.symbol}</div>
+                        <div className="font-semibold text-white text-base flex items-center justify-between gap-2">
+                          <div className="flex items-center gap-1">
+                            {t.symbol}
+                            {isVerifiedPoolToken(t) && (
+                              <img src={verifiedBadge} alt="verified" className="w-3.5 h-3.5 inline-block" />
+                            )}
+                          </div>
+                          <TokenBalanceDisplay
+                            tokenAddress={t.address as Address | undefined}
+                            walletAddress={walletAddress}
+                          />
+                        </div>
                         <div className="text-sm text-white/60">{t.name || "Unknown"}</div>
+                        <div className="text-sm text-white/60 font-mono">
+                          {t.address ? formatAddress(t.address) : "Native coin"}
+                        </div>
                       </div>
                     </div>
                   </Button>
