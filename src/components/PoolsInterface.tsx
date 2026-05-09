@@ -426,7 +426,8 @@ const PoolsInterface = () => {
           </ScrollArea>
         </DialogContent>
       </Dialog>
-    </>;
+    </>
+  );
   }
 
   if (selectedPool) {
