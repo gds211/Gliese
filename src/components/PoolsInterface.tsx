@@ -248,6 +248,7 @@ const PoolsInterface = () => {
 
   if (showNewPool) {
     return (
+      <>
       <div className="relative w-full h-[calc(100vh-65px)] overflow-hidden z-20" style={{ fontFamily: "'Inter', sans-serif", fontWeight: 500 }}>
         <TopLoadingBar isLoading={isLoading} onComplete={handleLoadingComplete} duration={400} />
         <div className="absolute inset-0 bg-white/10 backdrop-blur-xl" />
