@@ -1,11 +1,42 @@
 import { useState, useRef } from "react";
-import { Search, Plus, ArrowUp, ArrowDown, ChevronLeft, Wallet, Info, ChevronDown } from "lucide-react";
+import { Search, Plus, ArrowUp, ArrowDown, ChevronLeft, Wallet, Info, ChevronDown, Loader2 } from "lucide-react";
 import TopLoadingBar from "@/components/TopLoadingBar";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogOverlay } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Button } from "@/components/ui/button";
 import TokenAvatar from "@/components/TokenAvatar";
+import { useAccount } from "wagmi";
+import { Address } from "viem";
+import { useTokenBalance } from "@/hooks/useTokenBalance";
+import { useTokenSearch } from "@/hooks/useTokenSearch";
+import { useDebouncedValue } from "@/hooks/useDebouncedValue";
+import { formatBalanceWithScale } from "@/lib/utils";
+import verifiedBadge from "@/assets/verified-badge.svg";
+
+function formatAddress(addr: string): string {
+  return `${addr.slice(0, 6)}...${addr.slice(-6)}`;
+}
+
+const TokenBalanceDisplay = ({
+  tokenAddress,
+  walletAddress,
+}: {
+  tokenAddress?: Address;
+  walletAddress?: Address;
+}) => {
+  const { formatted, isLoading } = useTokenBalance({
+    address: walletAddress,
+    token: tokenAddress,
+  });
+  if (!walletAddress) return <span className="text-xs text-white font-medium tabular-nums">0.0000</span>;
+  if (isLoading) return <span className="text-xs text-white font-medium tabular-nums">...</span>;
+  return (
+    <span className="text-xs text-white font-medium tabular-nums">
+      {formatted ? formatBalanceWithScale(parseFloat(formatted)) : "0.0000"}
+    </span>
+  );
+};
 
 type PoolToken = {
   symbol: string;
