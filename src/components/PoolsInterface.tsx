@@ -118,6 +118,8 @@ const PoolsInterface = () => {
   const [tokenPickerTarget, setTokenPickerTarget] = useState<"base" | "quote">("base");
   const [tokenSearch, setTokenSearch] = useState("");
   const [newPoolStep, setNewPoolStep] = useState<1 | 2 | 3>(1);
+  const [feeTier, setFeeTier] = useState<"0.3%" | "0.05%" | "1%" | "0.01%">("1%");
+  const [priceInverted, setPriceInverted] = useState(false);
   const inputARef = useRef<HTMLInputElement>(null);
   const inputBRef = useRef<HTMLInputElement>(null);
   const { address: walletAddress } = useAccount();
@@ -416,6 +418,103 @@ const PoolsInterface = () => {
                   Continue
                 </button>
               </div>
+              )}
+              {newPoolStep === 2 && (
+                <div className="rounded-2xl border border-white/10 p-6" style={{ backgroundColor: "#262626" }}>
+                  <div className="text-base text-foreground font-semibold mb-1">Set initial price</div>
+                  <p className="text-sm text-muted-foreground leading-relaxed mb-4">
+                    When creating a new pool, you must set the starting exchange rate for both tokens. This rate will reflect the initial market price.
+                  </p>
+
+                  <div className="rounded-xl border border-white/10 bg-muted/20 px-5 py-4 mb-3">
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="min-w-0">
+                        <div className="text-xs text-muted-foreground mb-1">Initial price</div>
+                        <div className="text-3xl text-foreground font-semibold tabular-nums">0.491985</div>
+                        <div className="text-xs text-muted-foreground mt-2">
+                          {(priceInverted ? baseToken?.symbol : quoteToken?.symbol) || "—"} = 1 {(priceInverted ? quoteToken?.symbol : baseToken?.symbol) || "—"}
+                        </div>
+                      </div>
+                      <div className="flex items-center bg-muted/30 border border-white/10 rounded-full p-1 shrink-0">
+                        <button
+                          type="button"
+                          onClick={() => setPriceInverted(false)}
+                          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium transition-colors ${!priceInverted ? "bg-muted/60 text-foreground" : "text-muted-foreground hover:text-foreground"}`}
+                        >
+                          {baseToken && <TokenAvatar symbol={baseToken.symbol} address={baseToken.address} size={16} />}
+                          {baseToken?.symbol || "Base"}
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setPriceInverted(true)}
+                          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium transition-colors ${priceInverted ? "bg-muted/60 text-foreground" : "text-muted-foreground hover:text-foreground"}`}
+                        >
+                          {quoteToken && <TokenAvatar symbol={quoteToken.symbol} address={quoteToken.address} size={16} />}
+                          {quoteToken?.symbol || "Quote"}
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="rounded-xl border border-white/10 bg-muted/20 px-5 py-3 mb-6 flex items-center justify-between">
+                    <div>
+                      <div className="text-xs text-muted-foreground">Current price</div>
+                      <div className="text-sm text-foreground font-medium">
+                        0.49199 {baseToken?.symbol || "—"}/{quoteToken?.symbol || "—"} <span className="text-muted-foreground">($2,321.50)</span>
+                      </div>
+                    </div>
+                    <button type="button" className="text-xs text-foreground hover:text-primary transition-colors">
+                      Use market price
+                    </button>
+                  </div>
+
+                  <div className="text-base text-foreground font-semibold mb-1">Fee tier</div>
+                  <p className="text-sm text-muted-foreground leading-relaxed mb-4">
+                    The amount earned providing liquidity. Choose an amount that suits your risk tolerance and strategy.
+                  </p>
+
+                  <div className="grid grid-cols-4 gap-3 mb-4">
+                    {([
+                      { tier: "0.3%", desc: "Best for most pairs.", tvl: "$97.6K TVL", pct: "98.933% select" },
+                      { tier: "0.05%", desc: "Best for stable pairs.", tvl: "$1.1K TVL", pct: "1.065% select" },
+                      { tier: "1%", desc: "Best for exotic pairs.", tvl: "$2.78 TVL", pct: "0.002% select" },
+                      { tier: "0.01%", desc: "Best for very stable pairs.", tvl: "0 TVL", pct: "" },
+                    ] as const).map((f) => {
+                      const active = feeTier === f.tier;
+                      return (
+                        <button
+                          key={f.tier}
+                          type="button"
+                          onClick={() => setFeeTier(f.tier)}
+                          className={`relative text-left rounded-xl border px-3 py-3 transition-colors ${active ? "border-primary/40 bg-muted/40" : "border-white/10 bg-muted/20 hover:bg-muted/30"}`}
+                        >
+                          {active && (
+                            <div className="absolute top-2 right-2 w-4 h-4 rounded-full bg-primary/20 border border-primary/40 flex items-center justify-center">
+                              <div className="w-1.5 h-1.5 rounded-full bg-primary" />
+                            </div>
+                          )}
+                          <div className="text-sm text-foreground font-semibold mb-1">{f.tier}</div>
+                          <div className="text-xs text-muted-foreground mb-3 leading-snug">{f.desc}</div>
+                          <div className="text-xs text-foreground">{f.tvl}</div>
+                          {f.pct && <div className="text-xs text-muted-foreground">{f.pct}</div>}
+                        </button>
+                      );
+                    })}
+                  </div>
+
+                  <button type="button" className="flex items-center gap-2 text-xs text-muted-foreground hover:text-foreground transition-colors mb-5">
+                    <Search className="w-3.5 h-3.5" />
+                    Search or create other fee tiers <span className="text-muted-foreground/70">(Advanced)</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => setNewPoolStep(3)}
+                    className="w-full py-3 rounded-xl text-base font-semibold text-black bg-white hover:opacity-90 transition-opacity"
+                  >
+                    Continue
+                  </button>
+                </div>
               )}
             </div>
 
