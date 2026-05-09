@@ -119,6 +119,9 @@ const PoolsInterface = () => {
   const [tokenSearch, setTokenSearch] = useState("");
   const inputARef = useRef<HTMLInputElement>(null);
   const inputBRef = useRef<HTMLInputElement>(null);
+  const { address: walletAddress } = useAccount();
+  const debouncedTokenSearch = useDebouncedValue(tokenSearch, 250);
+  const { data: tokenSearchResults = [], isLoading: tokenSearching } = useTokenSearch(debouncedTokenSearch);
 
   const openTokenPicker = (target: "base" | "quote") => {
     setTokenPickerTarget(target);
@@ -132,15 +135,34 @@ const PoolsInterface = () => {
     setTokenPickerOpen(false);
   };
 
-  const filteredPoolTokens = POOL_TOKENS.filter((t) => {
+  const isVerifiedPoolToken = (t: { symbol: string; address?: `0x${string}` }) =>
+    POOL_TOKENS.some((p) => {
+      if (p.address && t.address) return p.address.toLowerCase() === t.address.toLowerCase();
+      if (!p.address && !t.address) return p.symbol.toUpperCase() === t.symbol.toUpperCase();
+      return false;
+    });
+
+  const filteredPoolTokens: PoolToken[] = (() => {
     const q = tokenSearch.trim().toLowerCase();
-    if (!q) return true;
-    return (
-      t.symbol.toLowerCase().includes(q) ||
-      (t.name || "").toLowerCase().includes(q) ||
-      (t.address || "").toLowerCase().includes(q)
+    if (!q) return POOL_TOKENS;
+    const local = POOL_TOKENS.filter(
+      (t) =>
+        t.symbol.toLowerCase().includes(q) ||
+        (t.name || "").toLowerCase().includes(q) ||
+        (t.address || "").toLowerCase().includes(q)
     );
-  });
+    const seen = new Set<string>(
+      local.map((t) => (t.address ? `a:${t.address.toLowerCase()}` : `s:${t.symbol.toUpperCase()}`))
+    );
+    const remote: PoolToken[] = [];
+    for (const r of tokenSearchResults as any[]) {
+      const key = r.address ? `a:${r.address.toLowerCase()}` : `s:${(r.symbol || "").toUpperCase()}`;
+      if (seen.has(key)) continue;
+      seen.add(key);
+      remote.push({ symbol: r.symbol || "", name: r.name, address: r.address });
+    }
+    return [...local, ...remote];
+  })();
 
   const openAdd = (pool: Pool) => {
     setPendingPool(pool);
