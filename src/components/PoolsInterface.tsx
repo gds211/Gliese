@@ -120,6 +120,7 @@ const PoolsInterface = () => {
   const [newPoolStep, setNewPoolStep] = useState<1 | 2 | 3>(1);
   const [feeTier, setFeeTier] = useState<"0.3%" | "0.05%" | "1%" | "0.01%">("1%");
   const [priceInverted, setPriceInverted] = useState(false);
+  const [initialPrice, setInitialPrice] = useState("0.491985");
   const inputARef = useRef<HTMLInputElement>(null);
   const inputBRef = useRef<HTMLInputElement>(null);
   const { address: walletAddress } = useAccount();
@@ -430,7 +431,17 @@ const PoolsInterface = () => {
                     <div className="flex items-start justify-between gap-3">
                       <div className="min-w-0">
                         <div className="text-xs text-muted-foreground mb-1">Initial price</div>
-                        <div className="text-3xl text-foreground font-semibold tabular-nums">0.491985</div>
+                        <input
+                          type="text"
+                          inputMode="decimal"
+                          value={initialPrice}
+                          onChange={(e) => {
+                            const v = e.target.value;
+                            if (v === "" || /^[0-9]*\.?[0-9]*$/.test(v)) setInitialPrice(v);
+                          }}
+                          placeholder="0.00"
+                          className="w-full bg-transparent border-0 outline-none p-0 text-xl text-foreground font-semibold tabular-nums focus:ring-0"
+                        />
                         <div className="text-xs text-muted-foreground mt-2">
                           {(priceInverted ? baseToken?.symbol : quoteToken?.symbol) || "—"} = 1 {(priceInverted ? quoteToken?.symbol : baseToken?.symbol) || "—"}
                         </div>
