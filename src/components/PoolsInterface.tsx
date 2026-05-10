@@ -275,10 +275,10 @@ const PoolsInterface = () => {
             <div aria-hidden="true" />
 
             {/* Steps column - aligned with form card top, same height */}
-            <div className="flex flex-col self-start">
+            <div className="flex flex-col">
               {/* Invisible heading to align panel top with card top */}
               <h2 className="text-lg font-medium mb-4 invisible">.</h2>
-              <div className="rounded-2xl border border-white/10 p-5 flex flex-col relative" style={{ backgroundColor: "#262626" }}>
+              <div className="flex-1 rounded-2xl border border-white/10 p-5 flex flex-col relative" style={{ backgroundColor: "#262626" }}>
                 {[
                   { n: 1, label: "Select tokens" },
                   { n: 2, label: "Set initial price & spread" },
