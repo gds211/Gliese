@@ -274,11 +274,11 @@ const PoolsInterface = () => {
             <div aria-hidden="true" />
             <div aria-hidden="true" />
 
-            {/* Steps column - aligned with form card top, same height */}
-            <div className="flex flex-col">
+            {/* Steps column - fixed height, does not stretch with form */}
+            <div className="flex flex-col self-start">
               {/* Invisible heading to align panel top with card top */}
               <h2 className="text-lg font-medium mb-4 invisible">.</h2>
-              <div className="flex-1 rounded-2xl border border-white/10 p-5 flex flex-col relative" style={{ backgroundColor: "#262626" }}>
+              <div className="rounded-2xl border border-white/10 p-5 flex flex-col relative" style={{ backgroundColor: "#262626" }}>
                 {[
                   { n: 1, label: "Select tokens" },
                   { n: 2, label: "Set initial price & spread" },
@@ -309,8 +309,8 @@ const PoolsInterface = () => {
                         </div>
                       </div>
                       {i < 2 && (
-                        <div className="flex-1 flex flex-col items-start justify-center min-h-[8px]">
-                          <div className="ml-[31px] w-px flex-1 bg-white/15 my-1" />
+                        <div className="flex flex-col items-start justify-center h-6">
+                          <div className="ml-[31px] w-px h-full bg-white/15" />
                         </div>
                       )}
                     </Fragment>
