@@ -260,8 +260,8 @@ const PoolsInterface = () => {
           className="absolute inset-0 pointer-events-none"
           style={{ background: "radial-gradient(ellipse at center, rgba(0,0,0,0.3) 0%, transparent 70%)" }}
         />
-        <div className="relative z-10 px-6 pt-8 pb-8 max-w-[1640px] mx-auto h-full overflow-y-auto no-scrollbar">
-          <div className="grid grid-cols-[442px_616px_442px] gap-x-[48px] gap-y-0 justify-center items-stretch">
+          <div className="relative z-10 px-6 pt-8 pb-8 max-w-[1740px] mx-auto h-full overflow-y-auto no-scrollbar">
+            <div className="grid grid-cols-[442px_708px_442px] gap-x-[48px] gap-y-0 justify-center items-stretch">
             {/* Back button aligned with steps panel left edge */}
             <button
               onClick={closeNewPool}
