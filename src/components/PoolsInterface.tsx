@@ -502,11 +502,6 @@ const PoolsInterface = () => {
                     })}
                   </div>
 
-                  <button type="button" className="flex items-center gap-2 text-xs text-muted-foreground hover:text-foreground transition-colors mb-5">
-                    <Search className="w-3.5 h-3.5" />
-                    Search or create other fee tiers <span className="text-muted-foreground/70">(Advanced)</span>
-                  </button>
-
                   <button
                     type="button"
                     onClick={() => setNewPoolStep(3)}
