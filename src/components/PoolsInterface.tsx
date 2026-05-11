@@ -555,19 +555,19 @@ const PoolsInterface = () => {
                     </button>
                   </div>
 
-                  <div className="rounded-2xl border border-white/10 p-4 relative" style={{ backgroundColor: "#262626" }}>
+                  <div className="rounded-2xl border border-white/10 p-5 relative" style={{ backgroundColor: "#262626" }}>
                     {/* Token A deposit */}
-                    <div className="rounded-xl border border-white/10 bg-muted/20 px-4 py-4">
+                    <div className="rounded-xl border border-white/10 bg-muted/20 px-4 py-5">
                       <div className="flex items-center justify-end gap-2 text-xs text-muted-foreground mb-2">
                         <Wallet className="w-3.5 h-3.5" />
                         <span>0.00 {baseToken?.symbol || "—"}</span>
                         <button type="button" className="px-2 py-0.5 rounded bg-muted/40 text-foreground text-[10px] font-semibold hover:bg-muted/60 transition-colors">HALF</button>
                         <button type="button" className="px-2 py-0.5 rounded bg-muted/40 text-foreground text-[10px] font-semibold hover:bg-muted/60 transition-colors">MAX</button>
                       </div>
-                      <div className="flex items-center justify-between gap-3">
+                      <div className="flex items-start justify-between gap-3">
                         <div className="flex items-center gap-2 shrink-0">
                           {baseToken && <TokenAvatar symbol={baseToken.symbol} address={baseToken.address} size={28} />}
-                          <span className="text-base text-foreground font-semibold">{baseToken?.symbol || "—"}</span>
+                          <span className="text-2xl text-foreground font-semibold leading-none">{baseToken?.symbol || "—"}</span>
                         </div>
                         <div className="flex flex-col items-end">
                           <input
@@ -594,17 +594,17 @@ const PoolsInterface = () => {
                     </div>
 
                     {/* Token B deposit */}
-                    <div className="rounded-xl border border-white/10 bg-muted/20 px-4 py-4">
+                    <div className="rounded-xl border border-white/10 bg-muted/20 px-4 py-5">
                       <div className="flex items-center justify-end gap-2 text-xs text-muted-foreground mb-2">
                         <Wallet className="w-3.5 h-3.5" />
                         <span>0.00 {quoteToken?.symbol || "—"}</span>
                         <button type="button" className="px-2 py-0.5 rounded bg-muted/40 text-foreground text-[10px] font-semibold hover:bg-muted/60 transition-colors">HALF</button>
                         <button type="button" className="px-2 py-0.5 rounded bg-muted/40 text-foreground text-[10px] font-semibold hover:bg-muted/60 transition-colors">MAX</button>
                       </div>
-                      <div className="flex items-center justify-between gap-3">
+                      <div className="flex items-start justify-between gap-3">
                         <div className="flex items-center gap-2 shrink-0">
                           {quoteToken && <TokenAvatar symbol={quoteToken.symbol} address={quoteToken.address} size={28} />}
-                          <span className="text-base text-foreground font-semibold">{quoteToken?.symbol || "—"}</span>
+                          <span className="text-2xl text-foreground font-semibold leading-none">{quoteToken?.symbol || "—"}</span>
                         </div>
                         <div className="flex flex-col items-end">
                           <input
