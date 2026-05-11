@@ -561,8 +561,8 @@ const PoolsInterface = () => {
                       <div className="flex items-center justify-end gap-2 text-xs text-muted-foreground mb-2">
                         <Wallet className="w-3.5 h-3.5" />
                         <span>0.00 {baseToken?.symbol || "—"}</span>
-                        <button type="button" className="px-2 py-0.5 rounded bg-muted/40 text-foreground text-[10px] font-semibold hover:bg-muted/60 transition-colors">HALF</button>
-                        <button type="button" className="px-2 py-0.5 rounded bg-muted/40 text-foreground text-[10px] font-semibold hover:bg-muted/60 transition-colors">MAX</button>
+                        <button type="button" className="text-[10px] font-semibold px-1.5 py-0.5 rounded bg-white/10 text-foreground hover:bg-white/20 transition-colors">HALF</button>
+                        <button type="button" className="text-[10px] font-semibold px-1.5 py-0.5 rounded bg-white/10 text-foreground hover:bg-white/20 transition-colors">MAX</button>
                       </div>
                       <div className="flex items-start justify-between gap-3">
                         <div className="flex items-center gap-2 shrink-0">
@@ -598,8 +598,8 @@ const PoolsInterface = () => {
                       <div className="flex items-center justify-end gap-2 text-xs text-muted-foreground mb-2">
                         <Wallet className="w-3.5 h-3.5" />
                         <span>0.00 {quoteToken?.symbol || "—"}</span>
-                        <button type="button" className="px-2 py-0.5 rounded bg-muted/40 text-foreground text-[10px] font-semibold hover:bg-muted/60 transition-colors">HALF</button>
-                        <button type="button" className="px-2 py-0.5 rounded bg-muted/40 text-foreground text-[10px] font-semibold hover:bg-muted/60 transition-colors">MAX</button>
+                        <button type="button" className="text-[10px] font-semibold px-1.5 py-0.5 rounded bg-white/10 text-foreground hover:bg-white/20 transition-colors">HALF</button>
+                        <button type="button" className="text-[10px] font-semibold px-1.5 py-0.5 rounded bg-white/10 text-foreground hover:bg-white/20 transition-colors">MAX</button>
                       </div>
                       <div className="flex items-start justify-between gap-3">
                         <div className="flex items-center gap-2 shrink-0">
@@ -836,8 +836,8 @@ const PoolsInterface = () => {
 
             {/* Plus divider */}
             <div className="relative flex justify-center -my-3 z-10">
-              <div className="w-8 h-8 rounded-full bg-primary/20 border-4 flex items-center justify-center" style={{ borderColor: "#262626" }}>
-                <Plus className="w-4 h-4 text-primary" />
+              <div className="w-7 h-7 rounded-md bg-primary flex items-center justify-center ring-4 ring-[#262626]">
+                <Plus className="w-4 h-4 text-black" />
               </div>
             </div>
 
