@@ -526,8 +526,8 @@ const PoolsInterface = () => {
               {newPoolStep === 3 && (
                 <>
                   <div
-                    className="rounded-2xl border border-primary/30 px-5 py-3 mb-4 flex items-start justify-between gap-3"
-                    style={{ backgroundColor: "#1a1f2e" }}
+                    className="rounded-2xl border border-white/10 px-5 py-3 mb-4 flex items-start justify-between gap-3"
+                    style={{ backgroundColor: "#262626" }}
                   >
                     <div className="space-y-1 text-sm">
                       <div className="flex items-baseline gap-2">
