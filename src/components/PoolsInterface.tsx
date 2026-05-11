@@ -522,6 +522,116 @@ const PoolsInterface = () => {
                   </button>
                 </div>
               )}
+
+              {newPoolStep === 3 && (
+                <>
+                  <div
+                    className="rounded-2xl border border-primary/30 px-5 py-3 mb-4 flex items-start justify-between gap-3"
+                    style={{ backgroundColor: "#1a1f2e" }}
+                  >
+                    <div className="space-y-1 text-sm">
+                      <div className="flex items-baseline gap-2">
+                        <span className="text-muted-foreground">Initial price:</span>
+                        <span className="text-foreground font-semibold tabular-nums">{initialPrice || "0"}</span>
+                        <span className="text-muted-foreground text-xs">
+                          {(priceInverted ? baseToken?.symbol : quoteToken?.symbol) || "—"} per {(priceInverted ? quoteToken?.symbol : baseToken?.symbol) || "—"}
+                        </span>
+                      </div>
+                      <div className="flex items-baseline gap-2">
+                        <span className="text-muted-foreground">Price range:</span>
+                        <span className="text-foreground font-semibold tabular-nums">0 - 18.446.051T</span>
+                        <span className="text-muted-foreground text-xs">
+                          {(priceInverted ? baseToken?.symbol : quoteToken?.symbol) || "—"} per {(priceInverted ? quoteToken?.symbol : baseToken?.symbol) || "—"}
+                        </span>
+                      </div>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setNewPoolStep(2)}
+                      className="text-muted-foreground hover:text-foreground transition-colors mt-0.5"
+                      aria-label="Edit price"
+                    >
+                      <Pencil className="w-4 h-4" />
+                    </button>
+                  </div>
+
+                  <div className="rounded-2xl border border-white/10 p-4 relative" style={{ backgroundColor: "#262626" }}>
+                    {/* Token A deposit */}
+                    <div className="rounded-xl border border-white/10 bg-muted/20 px-4 py-4">
+                      <div className="flex items-center justify-end gap-2 text-xs text-muted-foreground mb-2">
+                        <Wallet className="w-3.5 h-3.5" />
+                        <span>0.00 {baseToken?.symbol || "—"}</span>
+                        <button type="button" className="px-2 py-0.5 rounded bg-muted/40 text-foreground text-[10px] font-semibold hover:bg-muted/60 transition-colors">HALF</button>
+                        <button type="button" className="px-2 py-0.5 rounded bg-muted/40 text-foreground text-[10px] font-semibold hover:bg-muted/60 transition-colors">MAX</button>
+                      </div>
+                      <div className="flex items-center justify-between gap-3">
+                        <div className="flex items-center gap-2 shrink-0">
+                          {baseToken && <TokenAvatar symbol={baseToken.symbol} address={baseToken.address} size={28} />}
+                          <span className="text-base text-foreground font-semibold">{baseToken?.symbol || "—"}</span>
+                        </div>
+                        <div className="flex flex-col items-end">
+                          <input
+                            type="text"
+                            inputMode="decimal"
+                            value={amountA}
+                            onChange={(e) => {
+                              const v = e.target.value;
+                              if (v === "" || /^[0-9]*\.?[0-9]*$/.test(v)) setAmountA(v);
+                            }}
+                            placeholder="0.00"
+                            className="w-40 bg-transparent border-0 outline-none p-0 text-2xl text-foreground font-semibold tabular-nums text-right focus:ring-0"
+                          />
+                          <span className="text-xs text-muted-foreground">$0.00</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Plus connector */}
+                    <div className="flex justify-center -my-2 relative z-10">
+                      <div className="w-7 h-7 rounded-md bg-primary flex items-center justify-center ring-4 ring-[#262626]">
+                        <Plus className="w-4 h-4 text-black" />
+                      </div>
+                    </div>
+
+                    {/* Token B deposit */}
+                    <div className="rounded-xl border border-white/10 bg-muted/20 px-4 py-4">
+                      <div className="flex items-center justify-end gap-2 text-xs text-muted-foreground mb-2">
+                        <Wallet className="w-3.5 h-3.5" />
+                        <span>0.00 {quoteToken?.symbol || "—"}</span>
+                        <button type="button" className="px-2 py-0.5 rounded bg-muted/40 text-foreground text-[10px] font-semibold hover:bg-muted/60 transition-colors">HALF</button>
+                        <button type="button" className="px-2 py-0.5 rounded bg-muted/40 text-foreground text-[10px] font-semibold hover:bg-muted/60 transition-colors">MAX</button>
+                      </div>
+                      <div className="flex items-center justify-between gap-3">
+                        <div className="flex items-center gap-2 shrink-0">
+                          {quoteToken && <TokenAvatar symbol={quoteToken.symbol} address={quoteToken.address} size={28} />}
+                          <span className="text-base text-foreground font-semibold">{quoteToken?.symbol || "—"}</span>
+                        </div>
+                        <div className="flex flex-col items-end">
+                          <input
+                            type="text"
+                            inputMode="decimal"
+                            value={amountB}
+                            onChange={(e) => {
+                              const v = e.target.value;
+                              if (v === "" || /^[0-9]*\.?[0-9]*$/.test(v)) setAmountB(v);
+                            }}
+                            placeholder="0.00"
+                            className="w-40 bg-transparent border-0 outline-none p-0 text-2xl text-foreground font-semibold tabular-nums text-right focus:ring-0"
+                          />
+                          <span className="text-xs text-muted-foreground">$0.00</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    <button
+                      type="button"
+                      className="mt-4 w-full py-3 rounded-xl text-base font-semibold text-black bg-white hover:opacity-90 transition-opacity"
+                    >
+                      Add Liquidity
+                    </button>
+                  </div>
+                </>
+              )}
             </div>
 
             {/* Right spacer to keep form centered on the page */}
