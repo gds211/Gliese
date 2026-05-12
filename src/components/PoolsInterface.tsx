@@ -415,7 +415,7 @@ const PoolsInterface = () => {
                   type="button"
                   disabled={!baseToken || !quoteToken}
                   onClick={() => setNewPoolStep(2)}
-                  className="w-full py-3 rounded-xl text-base font-semibold text-black bg-gradient-to-r from-cyan-300 to-teal-300 hover:opacity-90 transition-opacity disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:opacity-40"
+                  className="w-full py-3 rounded-xl text-base font-semibold text-black bg-white hover:bg-white/90 transition-colors disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:opacity-40"
                 >
                   Continue
                 </button>
