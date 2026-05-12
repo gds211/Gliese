@@ -118,7 +118,7 @@ const PoolsInterface = () => {
   const [tokenPickerTarget, setTokenPickerTarget] = useState<"base" | "quote">("base");
   const [tokenSearch, setTokenSearch] = useState("");
   const [newPoolStep, setNewPoolStep] = useState<1 | 2 | 3>(1);
-  const [feeTier, setFeeTier] = useState<"0.3%" | "0.05%" | "1%" | "0.01%">("1%");
+  const [feeTier, setFeeTier] = useState<"Tight" | "Moderate" | "Broad" | "Wide">("Broad");
   const [priceInverted, setPriceInverted] = useState(false);
   const [initialPrice, setInitialPrice] = useState("0.491985");
   const inputARef = useRef<HTMLInputElement>(null);
@@ -488,15 +488,15 @@ const PoolsInterface = () => {
 
                   <div className="text-base text-foreground font-semibold mb-1">Liquidity spread</div>
                   <p className="text-sm text-muted-foreground leading-relaxed mb-4">
-                    Choose an amount that suits your risk tolerance and strategy to controls how widely liquidity is distributed around the market price. Lower spread gives tighter execution, higher spread gives LP's more protection in volatile markets.
+                    controls how widely liquidity is distributed around the market price. Lower spread gives tighter execution, higher spread gives LP's more protection in volatile markets.
                   </p>
 
                   <div className="grid grid-cols-4 gap-3 mb-4">
                     {([
-                      { tier: "0.3%", desc: "Best for most pairs.", tvl: "$97.6K TVL", pct: "98.933% select" },
-                      { tier: "0.05%", desc: "Best for stable pairs.", tvl: "$1.1K TVL", pct: "1.065% select" },
-                      { tier: "1%", desc: "Best for exotic pairs.", tvl: "$2.78 TVL", pct: "0.002% select" },
-                      { tier: "0.01%", desc: "Best for very stable pairs.", tvl: "0 TVL", pct: "" },
+                      { tier: "Tight", desc: "Best for most pairs.", tvl: "$97.6K TVL", pct: "98.933% select" },
+                      { tier: "Moderate", desc: "Best for stable pairs.", tvl: "$1.1K TVL", pct: "1.065% select" },
+                      { tier: "Broad", desc: "Best for exotic pairs.", tvl: "$2.78 TVL", pct: "0.002% select" },
+                      { tier: "Wide", desc: "Best for very stable pairs.", tvl: "0 TVL", pct: "" },
                     ] as const).map((f) => {
                       const active = feeTier === f.tier;
                       return (
