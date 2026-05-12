@@ -118,7 +118,7 @@ const PoolsInterface = () => {
   const [tokenPickerTarget, setTokenPickerTarget] = useState<"base" | "quote">("base");
   const [tokenSearch, setTokenSearch] = useState("");
   const [newPoolStep, setNewPoolStep] = useState<1 | 2 | 3>(1);
-  const [feeTier, setFeeTier] = useState<"0.3%" | "0.05%" | "1%" | "0.01%">("1%");
+  const [feeTier, setFeeTier] = useState<"Tight" | "Moderate" | "Broad" | "Wide">("Broad");
   const [priceInverted, setPriceInverted] = useState(false);
   const [initialPrice, setInitialPrice] = useState("0.491985");
   const inputARef = useRef<HTMLInputElement>(null);
