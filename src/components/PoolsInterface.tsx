@@ -511,10 +511,7 @@ const PoolsInterface = () => {
                               <div className="w-1.5 h-1.5 rounded-full bg-primary" />
                             </div>
                           )}
-                          <div className="text-sm text-foreground font-semibold mb-1">{f.tier}</div>
-                          <div className="text-xs text-muted-foreground mb-3 leading-snug">{f.desc}</div>
-                          <div className="text-xs text-foreground">{f.tvl}</div>
-                          {f.pct && <div className="text-xs text-muted-foreground">{f.pct}</div>}
+                          <div className="text-xs text-muted-foreground leading-snug">{f.desc}</div>
                         </button>
                       );
                     })}
