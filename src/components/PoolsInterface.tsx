@@ -1,5 +1,5 @@
 import { useState, useRef, Fragment } from "react";
-import { Search, Plus, ArrowUp, ArrowDown, ChevronLeft, Wallet, Info, ChevronDown, Loader2, Pencil } from "lucide-react";
+import { Search, Plus, ArrowUp, ArrowDown, ChevronLeft, Wallet, Info, ChevronDown, Loader2, Pencil, Check } from "lucide-react";
 import TopLoadingBar from "@/components/TopLoadingBar";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogOverlay } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
@@ -285,6 +285,7 @@ const PoolsInterface = () => {
                   { n: 3, label: "Enter deposit amount" },
                 ].map((s, i) => {
                   const active = newPoolStep === s.n;
+                  const completed = newPoolStep > s.n;
                   return (
                     <Fragment key={s.n}>
                       <div
@@ -295,10 +296,16 @@ const PoolsInterface = () => {
                             className={`w-8 h-8 rounded-full border-2 flex items-center justify-center text-sm font-semibold ${
                               active
                                 ? "border-primary bg-primary/20 text-primary"
+                                : completed
+                                ? "border-white/20 bg-white/20 text-muted-foreground"
                                 : "border-white/20 text-muted-foreground"
                             }`}
                           >
-                            {s.n}
+                            {completed ? (
+                              <Check className="w-4 h-4" strokeWidth={3} style={{ color: "#262626" }} />
+                            ) : (
+                              s.n
+                            )}
                           </div>
                           <div>
                             <div className="text-xs text-muted-foreground">Step {s.n}</div>
@@ -309,7 +316,7 @@ const PoolsInterface = () => {
                         </div>
                       </div>
                       {i < 2 && (
-                        <div className="flex flex-col items-start justify-center h-6">
+                        <div className="flex flex-col items-start justify-center h-9">
                           <div className="ml-[31px] w-px h-full bg-white/15" />
                         </div>
                       )}
