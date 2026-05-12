@@ -493,10 +493,10 @@ const PoolsInterface = () => {
 
                   <div className="grid grid-cols-4 gap-3 mb-4">
                     {([
-                      { tier: "Tight", desc: "Best for most pairs.", tvl: "$97.6K TVL", pct: "98.933% select" },
-                      { tier: "Moderate", desc: "Best for stable pairs.", tvl: "$1.1K TVL", pct: "1.065% select" },
-                      { tier: "Broad", desc: "Best for exotic pairs.", tvl: "$2.78 TVL", pct: "0.002% select" },
-                      { tier: "Wide", desc: "Best for very stable pairs.", tvl: "0 TVL", pct: "" },
+                      { tier: "Tight", desc: "Best for most pairs." },
+                      { tier: "Moderate", desc: "Best for stable pairs." },
+                      { tier: "Broad", desc: "Best for exotic pairs." },
+                      { tier: "Wide", desc: "Best for very stable pairs." },
                     ] as const).map((f) => {
                       const active = feeTier === f.tier;
                       return (
@@ -512,9 +512,7 @@ const PoolsInterface = () => {
                             </div>
                           )}
                           <div className="text-sm text-foreground font-semibold mb-1">{f.tier}</div>
-                          <div className="text-xs text-muted-foreground mb-3 leading-snug">{f.desc}</div>
-                          <div className="text-xs text-foreground">{f.tvl}</div>
-                          {f.pct && <div className="text-xs text-muted-foreground">{f.pct}</div>}
+                          <div className="text-xs text-muted-foreground">{f.desc}</div>
                         </button>
                       );
                     })}
