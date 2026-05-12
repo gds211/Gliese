@@ -446,11 +446,11 @@ const PoolsInterface = () => {
                           {(priceInverted ? baseToken?.symbol : quoteToken?.symbol) || "—"} = 1 {(priceInverted ? quoteToken?.symbol : baseToken?.symbol) || "—"}
                         </div>
                       </div>
-                      <div className="flex items-center bg-muted/30 border border-white/10 rounded-full p-1 shrink-0">
+                      <div className="flex items-center bg-muted/30 border border-white/10 rounded-md p-1 shrink-0">
                         <button
                           type="button"
                           onClick={() => setPriceInverted(false)}
-                          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium transition-colors ${!priceInverted ? "bg-muted/60 text-foreground" : "text-muted-foreground hover:text-foreground"}`}
+                          className={`flex items-center gap-1.5 px-3 py-1.5 rounded text-xs font-medium transition-colors ${!priceInverted ? "bg-white/10 text-foreground" : "text-muted-foreground hover:text-foreground"}`}
                         >
                           {baseToken && <TokenAvatar symbol={baseToken.symbol} address={baseToken.address} size={16} />}
                           {baseToken?.symbol || "Base"}
@@ -458,7 +458,7 @@ const PoolsInterface = () => {
                         <button
                           type="button"
                           onClick={() => setPriceInverted(true)}
-                          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium transition-colors ${priceInverted ? "bg-muted/60 text-foreground" : "text-muted-foreground hover:text-foreground"}`}
+                          className={`flex items-center gap-1.5 px-3 py-1.5 rounded text-xs font-medium transition-colors ${priceInverted ? "bg-white/10 text-foreground" : "text-muted-foreground hover:text-foreground"}`}
                         >
                           {quoteToken && <TokenAvatar symbol={quoteToken.symbol} address={quoteToken.address} size={16} />}
                           {quoteToken?.symbol || "Quote"}
