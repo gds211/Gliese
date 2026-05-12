@@ -263,21 +263,15 @@ const PoolsInterface = () => {
         />
           <div className="relative z-10 px-6 pt-8 pb-8 max-w-[1740px] mx-auto h-full overflow-y-auto no-scrollbar">
             <div className="grid grid-cols-[442px_708px_442px] gap-x-[48px] gap-y-0 justify-center items-stretch">
-            {/* Back button aligned with steps panel left edge */}
-            <button
-              onClick={closeNewPool}
-              className="flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground transition-colors mb-6 self-start translate-y-12"
-            >
-              <ChevronLeft className="w-4 h-4" />
-              Back
-            </button>
-            <div aria-hidden="true" />
-            <div aria-hidden="true" />
-
             {/* Steps column - fixed height, does not stretch with form */}
             <div className="flex flex-col self-start">
-              {/* Invisible heading to align panel top with card top */}
-              <h2 className="text-lg font-medium mb-4 invisible">.</h2>
+              <button
+                onClick={closeNewPool}
+                className="flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground transition-colors mb-4 self-start"
+              >
+                <ChevronLeft className="w-4 h-4" />
+                Back
+              </button>
               <div className="rounded-2xl border border-white/10 p-5 flex flex-col relative" style={{ backgroundColor: "#262626" }}>
                 {[
                   { n: 1, label: "Select tokens" },
