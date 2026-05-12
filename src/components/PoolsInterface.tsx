@@ -486,9 +486,9 @@ const PoolsInterface = () => {
                     </button>
                   </div>
 
-                  <div className="text-base text-foreground font-semibold mb-1">Fee tier</div>
+                  <div className="text-base text-foreground font-semibold mb-1">Liquidity spread</div>
                   <p className="text-sm text-muted-foreground leading-relaxed mb-4">
-                    The amount earned providing liquidity. Choose an amount that suits your risk tolerance and strategy.
+                    Choose an amount that suits your risk tolerance and strategy to controls how widely liquidity is distributed around the market price. Lower spread gives tighter execution, higher spread gives LP's more protection in volatile markets.
                   </p>
 
                   <div className="grid grid-cols-4 gap-3 mb-4">
