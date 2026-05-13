@@ -495,7 +495,7 @@ const PoolsInterface = () => {
 
                   <div className="grid grid-cols-4 gap-3 mb-4">
                     {([
-                      { tier: "Tight", desc: "Best for stable pairs.", tvl: "$97.6K TVL", pct: "98.933% select" },
+                      { tier: "Tight", desc: "Best for most pairs.", tvl: "$97.6K TVL", pct: "98.933% select" },
                       { tier: "Moderate", desc: "Best for stable pairs.", tvl: "$1.1K TVL", pct: "1.065% select" },
                       { tier: "Broad", desc: "Best for volatile pairs.", tvl: "$2.78 TVL", pct: "0.002% select" },
                       { tier: "Wide", desc: "Best for very volatile pairs.", tvl: "0 TVL", pct: "" },
