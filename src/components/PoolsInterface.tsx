@@ -511,9 +511,9 @@ const PoolsInterface = () => {
                               <div className="w-1.5 h-1.5 rounded-full bg-primary" />
                             </div>
                           )}
-                          <div className="text-sm text-foreground font-semibold mb-1">{f.tier}</div>
+                          <div className="text-sm text-foreground font-semibold mb-1 min-h-[1.25rem] leading-snug">{f.tier}</div>
                           <div className="text-xs text-muted-foreground mb-3 leading-snug" aria-hidden="true">&nbsp;</div>
-                          <div className="text-xs text-muted-foreground leading-snug">{f.desc}</div>
+                          <div className="text-xs text-muted-foreground leading-snug min-h-[2.25rem]">{f.desc}</div>
                         </button>
                       );
                     })}
