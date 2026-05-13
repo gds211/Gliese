@@ -331,7 +331,7 @@ const PoolsInterface = () => {
               <h2 className="text-lg text-foreground font-medium mb-4">
                 {newPoolStep === 1
                   ? "First, select tokens"
-                  : "Last, enter token deposit amount"}
+                  : "Next, set initial token price & liquidity spread"}
               </h2>
               {newPoolStep > 1 && (
                 <div
