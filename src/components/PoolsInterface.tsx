@@ -546,7 +546,8 @@ const PoolsInterface = () => {
                         </span>
                       </div>
                       <div className="flex items-baseline gap-2">
-                        <span className="text-muted-foreground">Price range:</span>
+                        <span className="text-muted-foreground">Liquidity spread:</span>
+                        <span className="text-foreground font-semibold">{feeTier}</span>
                         <span className="text-foreground font-semibold tabular-nums">0 - 18.446.051T</span>
                         <span className="text-muted-foreground text-xs">
                           {(priceInverted ? baseToken?.symbol : quoteToken?.symbol) || "—"} per {(priceInverted ? quoteToken?.symbol : baseToken?.symbol) || "—"}
