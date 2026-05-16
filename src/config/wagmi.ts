@@ -1,7 +1,8 @@
 // src/config/wagmi.ts
-import type { Chain } from "viem";
-import { getDefaultConfig } from "@rainbow-me/rainbowkit";
-import { http } from "wagmi";
+import type { Chain } from "@rainbow-me/rainbowkit";
+import { connectorsForWallets } from "@rainbow-me/rainbowkit";
+import { injectedWallet } from "@rainbow-me/rainbowkit/wallets";
+import { createConfig, http } from "wagmi";
 import { PUBLIC_CONFIG, WALLETCONNECT_PROJECT_ID } from "@/config/public";
 
 export const localDevnet = {
@@ -23,12 +24,25 @@ export const localDevnet = {
   testnet: true,
 } as const satisfies Chain;
 
-export const config = getDefaultConfig({
-  appName: PUBLIC_CONFIG.APP_NAME,
-  projectId: WALLETCONNECT_PROJECT_ID,
+const connectors = connectorsForWallets(
+  [
+    {
+      groupName: "Browser Wallet",
+      wallets: [injectedWallet],
+    },
+  ],
+  {
+    appName: PUBLIC_CONFIG.APP_NAME,
+    projectId: WALLETCONNECT_PROJECT_ID,
+  }
+);
+
+export const config = createConfig({
   chains: [localDevnet],
+  connectors,
   transports: {
-    [localDevnet.id]: http(PUBLIC_CONFIG.RPC_URL, { batch: true }),
+    [localDevnet.id]: http(PUBLIC_CONFIG.RPC_URL),
   },
+  multiInjectedProviderDiscovery: false,
   ssr: false,
 });
