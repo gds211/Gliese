@@ -1,32 +1,34 @@
 // src/config/wagmi.ts
-import { fallback } from "viem";
+import type { Chain } from "viem";
 import { getDefaultConfig } from "@rainbow-me/rainbowkit";
-import { http, webSocket} from "wagmi";
+import { http } from "wagmi";
 import { PUBLIC_CONFIG, WALLETCONNECT_PROJECT_ID } from "@/config/public";
 
-export const monadTestnet = {
+export const localDevnet = {
   id: PUBLIC_CONFIG.CHAIN_ID,
-  name: "Monad Testnet",
-  nativeCurrency: { name: "Monad", symbol: PUBLIC_CONFIG.NATIVE_SYMBOL, decimals: PUBLIC_CONFIG.NATIVE_DECIMALS },
+  name: "Local Ethereum",
+  nativeCurrency: {
+    name: "Ether",
+    symbol: PUBLIC_CONFIG.NATIVE_SYMBOL,
+    decimals: PUBLIC_CONFIG.NATIVE_DECIMALS,
+  },
   rpcUrls: {
     default: {
       http: [PUBLIC_CONFIG.RPC_URL],
-      // If RPC_WS_URL is not set, we derive ws(s):// from RPC_URL
-      webSocket: [PUBLIC_CONFIG.RPC_WS_URL ?? (PUBLIC_CONFIG.RPC_URL.replace(/^http/i, "ws"))],
+    },
+    public: {
+      http: [PUBLIC_CONFIG.RPC_URL],
     },
   },
-  blockExplorers: { default: { name: PUBLIC_CONFIG.EXPLORER_NAME, url: PUBLIC_CONFIG.EXPLORER_URL } },
   testnet: true,
-} as const;
+} as const satisfies Chain;
 
 export const config = getDefaultConfig({
   appName: PUBLIC_CONFIG.APP_NAME,
   projectId: WALLETCONNECT_PROJECT_ID,
-  chains: [monadTestnet],
+  chains: [localDevnet],
   transports: {
-    [monadTestnet.id]: fallback([
-      webSocket(PUBLIC_CONFIG.RPC_WS_URL ?? (PUBLIC_CONFIG.RPC_URL.replace(/^http/i, "ws"))),
-      http(PUBLIC_CONFIG.RPC_URL, { batch: true }),
-    ]),
+    [localDevnet.id]: http(PUBLIC_CONFIG.RPC_URL, { batch: true }),
   },
+  ssr: false,
 });
