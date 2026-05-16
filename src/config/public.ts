@@ -8,7 +8,7 @@ export const PUBLIC_CONFIG = {
 
   // --- Chain target (Monad Testnet) ---
   CHAIN_ID: 31337,
-  RPC_URL: "http://127.0.0.1:8545",
+  RPC_URL: "https://127.0.0.1:8546",
   RPC_WS_URL: undefined,
   EXPLORER_NAME: "Local",
   EXPLORER_URL: "",
