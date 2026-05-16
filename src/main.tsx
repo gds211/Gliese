@@ -8,7 +8,7 @@ import { WagmiProvider } from "wagmi";
 import { RainbowKitProvider } from "@rainbow-me/rainbowkit";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 
-import { config, monadTestnet } from "@/config/wagmi"; // <-- use your config here
+import { config, localDevnet } from "@/config/wagmi"; // <-- use your config here
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -25,7 +25,7 @@ const queryClient = new QueryClient({
 createRoot(document.getElementById("root")!).render(
   <WagmiProvider config={config}>
     <QueryClientProvider client={queryClient}>
-      <RainbowKitProvider initialChain={monadTestnet}>
+      <RainbowKitProvider initialChain={localDevnet}>
         <App />
       </RainbowKitProvider>
     </QueryClientProvider>
