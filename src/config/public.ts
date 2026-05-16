@@ -7,12 +7,12 @@ export const PUBLIC_CONFIG = {
   APP_VERSION: "1.0.0",
 
   // --- Chain target (Monad Testnet) ---
-  CHAIN_ID: 10143,
-  RPC_URL: "https://testnet-rpc.monad.xyz",
-  RPC_WS_URL: "wss://monad-testnet.drpc.org",
-  EXPLORER_NAME: "SocialScan",
-  EXPLORER_URL: "https://monad-testnet.socialscan.io",
-  NATIVE_SYMBOL: "MON",
+  CHAIN_ID: 31337,
+  RPC_URL: "https://127.0.0.1:8546",
+  RPC_WS_URL: undefined,
+  EXPLORER_NAME: "Local",
+  EXPLORER_URL: "",
+  NATIVE_SYMBOL: "ETH",
   NATIVE_DECIMALS: 18,
 
   // --- Yak integration ---
