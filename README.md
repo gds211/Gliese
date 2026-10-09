@@ -1,4 +1,5 @@
 Gliese
+
 Gliese is a React and TypeScript web application prototype for exploring wallet-based token swaps through a YakRouter smart contract.
 The project focuses on the user interface, blockchain integration, quote updates and the transaction workflow.
 
